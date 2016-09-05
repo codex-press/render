@@ -1,0 +1,34 @@
+{
+  "scripts": {
+    "start": "npm run watch-app & npm run watch-app-dev & npm run watch-core & npm run watch-core-dev & npm run watch-core-module & npm run watch-app-module",
+    "watch-dev": "watchify src/index.es6 -d -x dom -x log -o index.dev.js --extension=.es6",
+    "watch": "watchify src/index.es6 -x dom -x log -o index.js --extension=.es6",
+    "watch-module": "babel src -w -d ../server/renderer"
+  },
+  "babel": {
+    "presets": [
+      "es2015"
+    ]
+  },
+  "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            "es2015-loose"
+          ]
+        }
+      ]
+    ]
+  },
+  "dependencies": {
+    "babel-cli": "^6.10.1",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-es2015-loose": "^7.0.0",
+    "babelify": "^7.3.0",
+    "dateformat": "^1.0.12",
+    "handlebars": "^4.0.5",
+    "watchify": "^3.7.0"
+  }
+}

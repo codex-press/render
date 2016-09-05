@@ -1,6 +1,18 @@
-import templates, {unscopeLinks} from '../templates';
-import View  from './base';
+import View  from './view';
 import Index from './index';
+import compile from '../templates';
+import {unscopeLinks} from '../utility';
+
+let template = compile(`
+  <{{  tagName  }} class="article {{  classes  }}">
+    {{{  content  }}}
+  </{{  tagName  }}>
+`);
+
+let defaultTemplate = compile(`
+  <h3><a href="{{  url  }}"> {{  title  }} </a></h3>
+  <p class=description>{{  description  }}</p>
+`);
 
 
 // This class is used for children of an Index and for articles that are
@@ -20,8 +32,7 @@ export default class ArticleEmbed extends View {
       this.attrs.article.classed_content,
       this.attrs.article.metadata,
       this.attrs.article,
-      {attrs: this.attrs},
-      {content_origin: this.article.attrs.content_origin}
+      {attrs: this.attrs}
     );
   }
 
@@ -37,13 +48,8 @@ export default class ArticleEmbed extends View {
       t.descriptor === this.attrs.template
     );
 
-    if (!contentTemplate) {
-      contentTemplate = this.article.templates.find(t => 
-        t.descriptor === 'template.article-embed-default'
-      );
-    }
-
-    contentTemplate = contentTemplate.compiled;
+    if (!contentTemplate)
+      contentTemplate = defaultTemplate;
 
     let html = this.template({
       attrs: this.attrs,

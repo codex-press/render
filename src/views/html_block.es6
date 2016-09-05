@@ -1,5 +1,15 @@
-import {unscopeLinks} from '../templates';
-import View from './base';
+import View from './view';
+import {unscopeLinks} from '../utility';
+import compile from '../templates';
+
+
+let template = compile(`
+<{{  tagName  ~}}
+  {{#if id }} data-cp-id={{  id  }}{{/if ~}}
+  {{#if classes}} class="{{  classes  }}"{{/if}}>
+    {{{  content  }}}
+</{{ tagName  }}>
+`);
 
 export default class HTMLBlock extends View {
 
@@ -10,7 +20,7 @@ export default class HTMLBlock extends View {
       this.article.attrs.path_prefix
     );
 
-    return this.template({
+    return template({
       content,
       attrs: this.attrs,
       classes: this.classes(),

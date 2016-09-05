@@ -1,7 +1,14 @@
-import * as u        from 'utility';
-import templates     from '../templates';
+import compile from '../templates';
 
 var tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table th tr td'.split(' ');
+
+let template = compile(`
+<{{tagName}}
+  {{#if attrs.id}}id=cp-{{attrs.id}}{{/if}}
+  {{#if classes}} class="{{classes}}"{{/if}}>
+  {{{children}}}
+</{{tagName}}>
+`);
 
 export default class View {
 
@@ -13,18 +20,11 @@ export default class View {
   }
 
 
-  template(data) {
-    let fn = templates[u.toSnakeCase(this.attrs.type || '')];
-    fn = fn || templates.basic;
-    return fn(data);
-  }
-
-
   html() {
     return this.template({
       attrs: this.attrs,
       children: this.childrenHTML(),
-      javascript: this.article.attrs.javascript,
+      javascript: (this.article || this).attrs.javascript,
       classes: this.classes(),
       tagName: this.tagName() || 'div',
     });
@@ -70,4 +70,6 @@ export default class View {
   }
 
 }
+
+View.prototype.template = template;
 

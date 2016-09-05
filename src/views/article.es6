@@ -1,7 +1,5 @@
-import handlebars            from 'handlebars/runtime';
-import templates, {snippets} from '../templates';
-
-import View          from './base';
+import Handlebars from 'handlebars';
+import View          from './view';
 import Audio         from './audio';
 import Block         from './block';
 import Graf          from './graf';
@@ -14,82 +12,62 @@ import Index         from './index';
 export default class ArticleView extends View {
 
   constructor(attrs) {
-    super();
+    super(attrs);
 
-    if (attrs)
-      this.set(attrs);
-  }
+    // fresh factory
+    this.handlebars = Handlebars.create();
 
-
-  set(attrs) {
-    this.attrs = attrs;
-
-    // console.log('article view', this.attrs.title);
-
-    this.article = this;
-
-    let snippetChildren = this.attrs.content.filter(c => {
-      return (
-        c.type === 'HTMLBlock' &&
-        c.classes &&
-        c.classes[0] ==='snippet'
-      );
-    });
-
-    let snippetsHash = snippetChildren.reduce((hash, s) => {
-      hash[s.classes[1]] = s.body;
-      return hash;
-    },{});
+    // could do UA testing here
+    // if (!this.attrs.javascript)
+      this.attrs.quality = 'high';
 
     // kinda terrible to do this here
     this.templateAttrs = Object.assign(
       {},
-      snippets,
       {
         title: this.attrs.title,
         canonical_url: this.attrs.canonical_url,
         twitter_handle: this.attrs.twitter_handle,
         facebook_app_id: this.attrs.facebook_app_id || '1092197300805177',
       },
-      this.attrs.metadata,
-      snippetsHash
+      this.attrs.metadata
     );
 
     if (!this.templateAttrs.share_message)
       this.templateAttrs.share_message = this.attrs.title;
 
-    this.templates = this.attrs.content.filter(c => {
+    this.templates = this.attrs.content.filter(c => (
+      c.type === 'HTMLBlock' &&
+      c.classes &&
+      c.classes[0] ==='template'
+    ));
+
+    let partials = this.attrs.content.filter(c => {
       return (
         c.type === 'HTMLBlock' &&
         c.classes &&
-        c.classes[0] ==='template'
+        c.classes[0] ==='partial'
       );
     });
-
-    // makes the precomipled Handlebars template into  a function again.
-    // very weird syntax... 
-    this.templates.map(t => {
-      t.descriptor = t.classes.join('.');
-      let evaled = (new Function('return ' + t.precompiled))();
-      t.compiled = handlebars.template(evaled);
-    });
-
-    this.templates.push({
-      descriptor: 'template.article-embed-default',
-      compiled: templates.article_embed_default,
-    });
-
-    this.templates.push({
-      descriptor: 'template.index-default',
-      compiled: templates.index_entry_default,
-    });
-
-    // filter out templates and snippets
+    this.partials = (this.attrs.partials || []).concat(partials);
+ 
+    // filter out templates and partials
     let content = this.attrs.content.filter(c => {
-      return !this.templates.includes(c) && !snippetChildren.includes(c);
+      return !this.templates.includes(c) && !partials.includes(c);
     });
 
-    this.views = this.makeViews(content);
+    this.views = content.map(c => {
+      switch (c.type) {
+        case 'Graf':         return new Graf(c);
+        case 'Image':        return new Figure(c);
+        case 'Video':        return new Figure(c);
+        case 'Audio':        return new Audio(c);
+        case 'Block':        return new Block(c);
+        case 'Index':        return new Index(c);
+        case 'HTMLBlock':    return new HTMLBlock(c);
+        case 'ArticleEmbed': return new ArticleEmbed(c);
+      }
+    });
 
     this.views = this.views.filter(c => !c.is_empty);
     this.views.map(c => c.article = this);
@@ -114,22 +92,6 @@ export default class ArticleView extends View {
       return list;
     },[]);
 
-  }
-
-
-  makeViews(content) {
-    return content.map(c => {
-      switch (c.type) {
-        case 'Graf':         return new Graf(c);
-        case 'Image':        return new Figure(c);
-        case 'Video':        return new Figure(c);
-        case 'Audio':        return new Audio(c);
-        case 'Block':        return new Block(c);
-        case 'Index':        return new Index(c);
-        case 'HTMLBlock':    return new HTMLBlock(c);
-        case 'ArticleEmbed': return new ArticleEmbed(c);
-      }
-    });
   }
 
 

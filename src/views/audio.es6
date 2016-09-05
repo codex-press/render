@@ -1,5 +1,12 @@
-import View         from './base';
-import {findSource} from 'utility';
+import View         from './view';
+import compile      from '../templates';
+import {findSource} from '../utility';
+
+let template = compile(`
+<div id=cp-{{attrs.id}} class="audio-button icon-audio {{classes}}">
+  <audio {{#if javascript}}preload=none{{/if}} src="{{sourceUrl}}" type="audio/mp3"></audio>
+</div>
+`);
 
 export default class Audio extends View {
 

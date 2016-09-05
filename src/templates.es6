@@ -1,25 +1,9 @@
-import handlebars from 'handlebars/runtime';
-
+import Handlebars from 'handlebars';
 import dateFormat from 'dateformat';
 
-import * as u     from 'utility';
+export default Handlebars.compile;
 
-import './templates/compiled';
-export default handlebars.templates;
-
-
-export const unscopeLinks = function unscopeLinks(html, pathPrefix) {
-  return html.replace(/<a[^>]* href="?([^" >]*?)[" >]/g, (string, url) => {
-    // if it's an absolute path, fix the path
-    if (/^\//.test(url))
-      return string.replace(url, u.unscopedPath(pathPrefix, url));
-    else
-      return string;
-  });
-};
-
-
-export const snippets = {
+Handlebars.registerPartial({
 
   br:          '<br>',
 
@@ -37,11 +21,12 @@ export const snippets = {
   reddit_icon:      '<span class="icon-reddit"></span>',
   twitter_icon:     '<span class="icon-twitter"></span>',
   facebook_icon:    '<span class="icon-facebook"></span>',
-};
+
+});
 
 
 // uses dateFormat library: https://github.com/felixge/node-dateformat
-handlebars.registerHelper('date', function(format, options) {
+Handlebars.registerHelper('formatDate', function(format, options) {
   options = arguments[arguments.length - 1];
   format = arguments.length > 1 ? arguments[0] : 'longDate';
   return dateFormat(options.data.root.publication_date, format);
@@ -49,12 +34,12 @@ handlebars.registerHelper('date', function(format, options) {
 
 
 // used in video
-handlebars.registerHelper('printTime', seconds => {
+Handlebars.registerHelper('printTime', seconds => {
   return u.printTime(seconds);
 });
 
 
-handlebars.registerHelper('cover', function() {
+Handlebars.registerHelper('cover', function() {
   let options = arguments[arguments.length - 1];
 
   // size is optional first argument
@@ -77,7 +62,7 @@ handlebars.registerHelper('cover', function() {
 });
 
 
-handlebars.registerHelper('facebook', function(options) {
+Handlebars.registerHelper('facebook', function(options) {
 
   let urlToShare = (
     options.data.root.canonical_url +
@@ -98,7 +83,8 @@ handlebars.registerHelper('facebook', function(options) {
 });
 
 
-handlebars.registerHelper('twitter', function() {
+
+Handlebars.registerHelper('twitter', function() {
 
   let options = arguments[arguments.length - 1];
 
@@ -129,7 +115,7 @@ handlebars.registerHelper('twitter', function() {
 });
 
 
-handlebars.registerHelper('reddit', function(options) {
+Handlebars.registerHelper('reddit', function(options) {
 
   let urlToShare = encodeURIComponent(
     options.data.root.canonical_url +
@@ -149,7 +135,7 @@ handlebars.registerHelper('reddit', function(options) {
 });
 
 
-handlebars.registerHelper('email', function() {
+Handlebars.registerHelper('email', function() {
 
   let options = arguments[arguments.length - 1];
 

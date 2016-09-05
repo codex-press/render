@@ -1,9 +1,15 @@
-import handlebars     from 'handlebars/runtime';
-import {unscopeLinks} from '../templates';
-import View           from './base';
+import View           from './view';
+import compile  from '../templates';
+import {unscopeLinks} from '../utility';
+
+let template = compile(`
+<{{tagName}} {{#if classes}} class="{{classes}}"{{/if}}>
+  {{{content}}}
+</{{tagName}}>
+`);
+
 
 export default class Graf extends View {
-
 
   constructor(attrs) {
     super(attrs);
@@ -16,7 +22,7 @@ export default class Graf extends View {
     let content;
     if (this.attrs.template) {
       let precompiled = (new Function('return ' + this.attrs.template))();
-      content = handlebars.template(precompiled)(this.article.templateAttrs);
+      content = template(this.article.templateAttrs);
     }
     // this graf is not a template or server would have sent it
     else

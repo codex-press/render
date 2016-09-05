@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "npm run watch-app & npm run watch-app-dev & npm run watch-core & npm run watch-core-dev & npm run watch-core-module & npm run watch-app-module",
+    "start": "npm run watch & npm run watch-dev & npm run watch-module",
     "watch-dev": "watchify src/index.es6 -d -x dom -x log -o index.dev.js --extension=.es6",
     "watch": "watchify src/index.es6 -x dom -x log -o index.js --extension=.es6",
     "watch-module": "babel src -w -d ../server/renderer"

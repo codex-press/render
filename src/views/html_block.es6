@@ -5,7 +5,7 @@ import compile from '../templates';
 
 let template = compile(`
 <{{  tagName  ~}}
-  {{#if id }} data-cp-id={{  id  }}{{/if ~}}
+  {{#if cpId }}x-cp-id={{  id  }}{{/if ~}}
   {{#if classes}} class="{{  classes  }}"{{/if}}>
     {{{  content  }}}
 </{{ tagName  }}>
@@ -22,7 +22,7 @@ export default class HTMLBlock extends View {
 
     return template({
       content,
-      attrs: this.attrs,
+      cpID: this.article.attrs.client ? this.attrs.id : '',
       classes: this.classes(),
       tagName: this.tagName() || 'div',
     });

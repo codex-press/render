@@ -1,18 +1,28 @@
 import compile from '../templates';
+import EventEmitter from 'events';
 
-var tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table th tr td'.split(' ');
+var tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table th tr td pre figure figcaption'.split(' ');
 
 let template = compile(`
-<{{tagName}}
-  {{#if attrs.id}}id=cp-{{attrs.id}}{{/if}}
-  {{#if classes}} class="{{classes}}"{{/if}}>
-  {{{children}}}
-</{{tagName}}>
+<{{  tagName  ~}}
+  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}
+  {{#if classes }} class="{{  classes  }}"{{/if }}>
+  {{{  children  }}}
+</{{  tagName  }}>
 `);
 
-export default class View {
+// FIRST TIME WE NEEDED TO DO SERVER CHECK
+// creeep begins
+let Super;
+if (typeof window === 'undefined')
+  Super = class NotNodeEventEmitterSilly { }
+else
+  Super = EventEmitter();
+
+export default class View extends Super {
 
   constructor(attrs = {}) {
+    super();
     this.attrs = attrs;
     this.attrs.classes = this.attrs.classes || [];
     this.parent = undefined;
@@ -23,10 +33,11 @@ export default class View {
   html() {
     return this.template({
       attrs: this.attrs,
+      cpID: this.article.attrs.client ? this.attrs.id : '',
       children: this.childrenHTML(),
       javascript: (this.article || this).attrs.javascript,
       classes: this.classes(),
-      tagName: this.tagName() || 'div',
+      tagName: this.tagName(),
     });
   }
 
@@ -37,7 +48,7 @@ export default class View {
     return tags.includes(tag) ? classes[0] : this.defaultTagName();
   }
 
-  
+
   defaultTagName() {
     return 'div';
   }

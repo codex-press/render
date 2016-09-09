@@ -1,14 +1,17 @@
 {
   "scripts": {
     "start": "npm run watch & npm run watch-dev & npm run watch-module",
-    "watch-dev": "watchify src/index.es6 -d -x dom -x log -o index.dev.js --extension=.es6",
-    "watch": "watchify src/index.es6 -x dom -x log -o index.js --extension=.es6",
+    "watch-dev": "watchify src/index.es6 -d -r ./src/render:render -x dom -x log -x article -x events -o index.dev.js --extension=.es6",
+    "watch": "watchify src/index.es6 -r ./src/render:render -x dom -x log -x article -x events -o index.js --extension=.es6",
     "watch-module": "babel src -w -d ../server/render"
   },
   "babel": {
     "presets": [
       "es2015"
     ]
+  },
+  "browser": {
+    "highlight.js": "./vendor/highlight.js"
   },
   "browserify": {
     "transform": [
@@ -29,6 +32,7 @@
     "babelify": "^7.3.0",
     "dateformat": "^1.0.12",
     "handlebars": "^4.0.5",
+    "marked": "^0.3.6",
     "watchify": "^3.7.0"
   }
 }

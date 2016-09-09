@@ -2,9 +2,22 @@ import View         from './view';
 import compile      from '../templates';
 import {findSource} from '../utility';
 
+let simpleTemplate = compile(`
+  <audio
+    class="{{classes}}">
+    {{#if javascript  }}preload=none{{/if  }}
+    src="{{  sourceUrl  }}"
+    type="audio/mp3">
+  </audio>
+`);
+
 let template = compile(`
-<div id=cp-{{attrs.id}} class="audio-button icon-audio {{classes}}">
-  <audio {{#if javascript}}preload=none{{/if}} src="{{sourceUrl}}" type="audio/mp3"></audio>
+<div x-cp-id={{  id  }} class="{{  classes  }}">
+  <audio
+    {{#if javascript }}preload=none{{/if }}
+    src="{{sourceUrl}}"
+    type="audio/mp3">
+  </audio>
 </div>
 `);
 

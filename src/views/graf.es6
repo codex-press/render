@@ -1,13 +1,13 @@
 import View           from './view';
-import compile  from '../templates';
 import {unscopeLinks} from '../utility';
 
-let template = compile(`
-<{{tagName}} {{#if classes}} class="{{classes}}"{{/if}}>
-  {{{content}}}
-</{{tagName}}>
+let template = (`
+  <{{  tagName  ~}}
+    {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}
+    {{#if classes}} class="{{  classes  }}"{{/if}}>
+    {{{  content  }}}
+  </{{  tagName  }}>
 `);
-
 
 export default class Graf extends View {
 
@@ -19,14 +19,35 @@ export default class Graf extends View {
 
   html() {
 
-    let content;
-    if (this.attrs.template) {
-      let precompiled = (new Function('return ' + this.attrs.template))();
-      content = template(this.article.templateAttrs);
-    }
-    // this graf is not a template or server would have sent it
-    else
+    let content = '';
+    // normal paragraph
+    if (this.attrs.body.indexOf('{') < 0)
       content = this.attrs.body;
+    // make the body into a template so things like {>date} work
+    else {
+
+      // single mustache for {{> so it renders partial works and is not
+      // escaped. single curly bracket itself escaped with \
+
+      let partials = this.attrs.body.match(/\{(.+?)\}/g).map(s => {
+        return s.replace(/[{}]/g,'').trim();
+      });
+
+      let bracketRe = /([^\\]*?)\{{1}(.*?[^\\])\}{1}/g;
+      let source = this.attrs.body.replace(bracketRe, '$1{{>$2}}');
+      try {
+        let compiled = this.article.handlebars.compile(source);
+        content = compiled(this.article.templateAttrs)
+      }
+      catch (e) {
+        console.log(e);
+        this.article.trigger('assetMissing', this, partials);
+        if (this.article.attrs.client)
+          content = 'Loading... ' + partials.join(' ');
+        else
+          content = e.message;
+      }
+    }
 
     // escaped curly brackets turned to normal curly brackets
     content = content.replace(/\\{/g, '{').replace(/\\}/g, '}');
@@ -34,9 +55,9 @@ export default class Graf extends View {
     // change links for virtual hosts
     content = unscopeLinks(content, this.article.attrs.path_prefix);
 
-    return this.template({
+    return this.article.handlebars.compile(template)({
       content,
-      attrs: this.attrs,
+      cpID: this.article.attrs.client ? this.attrs.id : '',
       classes: this.classes(),
       tagName: this.tagName(),
     });

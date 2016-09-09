@@ -1,12 +1,17 @@
-import Handlebars from 'handlebars';
-import View          from './view';
-import Audio         from './audio';
-import Block         from './block';
-import Graf          from './graf';
-import Figure        from './figure';
-import HTMLBlock     from './html_block';
-import ArticleEmbed  from './article_embed';
-import Index         from './index';
+import Handlebars   from 'handlebars';
+import hljs         from 'highlight.js';
+import marked       from 'marked';
+
+import View         from './view';
+
+import Audio        from './audio';
+import Block        from './block';
+import Graf         from './graf';
+import Image        from './image';
+import Video        from './video';
+import HTMLBlock    from './html_block';
+import ArticleEmbed from './article_embed';
+import Index        from './index';
 
 
 export default class ArticleView extends View {
@@ -17,9 +22,13 @@ export default class ArticleView extends View {
     // fresh factory
     this.handlebars = Handlebars.create();
 
-    // could do UA testing here
-    // if (!this.attrs.javascript)
-      this.attrs.quality = 'high';
+    // needed for templating
+    this.article = this;
+
+    this.views = [];
+
+    // XXX could do UA testing here...
+    this.attrs.quality = 'high';
 
     // kinda terrible to do this here
     this.templateAttrs = Object.assign(
@@ -42,35 +51,23 @@ export default class ArticleView extends View {
       c.classes[0] ==='template'
     ));
 
-    let partials = this.attrs.content.filter(c => {
+    this.partials = []
+    let htmlBlockPartials = this.attrs.content.filter(c => {
       return (
         c.type === 'HTMLBlock' &&
         c.classes &&
         c.classes[0] ==='partial'
       );
     });
-    this.partials = (this.attrs.partials || []).concat(partials);
+    htmlBlockPartials.map(this.addPartialFromHTMLBlock, this);
+    this.attrs.inline_assets.map(this.addPartial, this);
  
     // filter out templates and partials
     let content = this.attrs.content.filter(c => {
-      return !this.templates.includes(c) && !partials.includes(c);
+      return !this.templates.includes(c) && !htmlBlockPartials.includes(c);
     });
 
-    this.views = content.map(c => {
-      switch (c.type) {
-        case 'Graf':         return new Graf(c);
-        case 'Image':        return new Figure(c);
-        case 'Video':        return new Figure(c);
-        case 'Audio':        return new Audio(c);
-        case 'Block':        return new Block(c);
-        case 'Index':        return new Index(c);
-        case 'HTMLBlock':    return new HTMLBlock(c);
-        case 'ArticleEmbed': return new ArticleEmbed(c);
-      }
-    });
-
-    this.views = this.views.filter(c => !c.is_empty);
-    this.views.map(c => c.article = this);
+    content.map(this.makeView, this);
 
     // we make the content array a tree
     this.children = this.views.reduce((list, item, i, children) => {
@@ -95,9 +92,111 @@ export default class ArticleView extends View {
   }
 
 
+  addPartialFromHTMLBlock(data) {
+    this.handlebars.registerPartial(data.classes.slice(1).join('.'), source);
+    this.handlebars.registerPartial(data.asset_path.slice(0, -4), source);
+  }
+
+
+  addPartial(data) {
+    let source; 
+    if (/\.es6$/.test(data.asset_path))
+      source = renderJavascriptSource(data.source);
+    else
+      source = p.source;
+
+    this.handlebars.registerPartial(data.asset_path, source);
+    this.handlebars.registerPartial(data.asset_path.slice(0, -4), source);
+  }
+
+
+  makeView(data) {
+
+    let v;
+    switch (data.type) {
+      case 'Graf':         v = new Graf(data);         break;
+      case 'Image':        v = new Image(data);        break;
+      case 'Video':        v = new Video(data);        break;
+      case 'Audio':        v = new Audio(data);        break;
+      case 'Block':        v = new Block(data);        break;
+      case 'Index':        v = new Index(data);        break;
+      case 'HTMLBlock':    v = new HTMLBlock(data);    break;
+      case 'ArticleEmbed': v = new ArticleEmbed(data); break;
+    }
+
+    if (v.is_empty)
+      return;
+
+    this.views.push(v);
+    v.article = this;
+    return v;
+  }
+
+
   defaultTagName() {
     return 'article';
   }
 
+
+  set(data) {
+    v = this.views.find(v => v.attrs.id == data.id);
+    v.attrs = data;
+    return v;
+  }
+
+
+  remove(id) {
+    this.views.find(v => v.id).remove();
+  }
+
+  add(data) {
+
+  }
+
 }
+
+
+// Thanks to Docco and Jeremy Ashkenas:
+// https://jashkenas.github.io/docco/
+
+function renderJavascriptSource(source) {
+  let sections = [];
+  let commentRe = RegExp('^\s*//');
+  let code, docs;
+  code = docs = '';
+  let saveSection = () => {
+    sections.push({code, docs});
+    code = docs = '';
+  }
+
+  source.split('\n').map(line => {
+    if (commentRe.test(line)) {
+      if (code)
+        saveSection();
+      docs += line.replace(commentRe, '') + '\n';
+    }
+    else {
+      code += line + '\n';
+    }
+  });
+  saveSection();
+
+  return sections.map(({code, docs}) => {
+
+    let highlighted = hljs.highlight('javascript', code).value;
+
+    let markdowned = marked(docs, {
+      smartypants: true,
+      highlight: code => hljs.highlight('javascript', code).value
+    });
+
+    return (`
+      <section>
+        <div class=comment>${markdowned}</div>
+        <pre class=hljs>${highlighted}</pre>
+      </section>`
+    );
+  }).join('');
+}
+
 

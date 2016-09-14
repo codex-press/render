@@ -1,9 +1,9 @@
-import compile from '../templates';
+import Handlebars from 'handlebars';
 import EventEmitter from 'events';
 
-var tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table th tr td pre figure figcaption'.split(' ');
+export let tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table th tr td pre figure figcaption'.split(' ');
 
-let template = compile(`
+let template = Handlebars.compile(`
 <{{  tagName  ~}}
   {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}
   {{#if classes }} class="{{  classes  }}"{{/if }}>

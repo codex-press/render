@@ -1,6 +1,8 @@
 import EventEmitter from 'events';
 import article from 'article';
 import * as log from 'log';
+import * as env from 'env';
+import dom from 'dom';
 import ArticleView from './views/article';
 
 let instance;
@@ -9,34 +11,32 @@ export {instance as default};
 let callbacks = {
   set              : 'set',
 
-  change           : 'change',
-  add              : 'add',
-  remove           : 'remove',
+  change        : 'change',
+  add           : 'add',
+  remove        : 'remove',
 
   // used in Editor's preview functionality
-  setScroll        : 'setScroll',
-  setStyle         : 'setStyle',
+  setScroll     : 'setScroll',
+  setStyle      : 'setStyle',
 
   // used for developmentServer
-  developmentRepos : 'developmentRepos',
-  updateAsset      : 'updateAsset',
-
+  devFileList   : 'devFileList',
+  updateAsset   : 'updateAsset',
 }
 
 let articleViewEvents = {
   assetMissing : 'fetchAsset',
 };
 
-let developmentRepos = [];
+let devFileList = [];
 
-let resolve;
-export let ready = new Promise(r => resolve = r);
+let _resolve;
+export let ready = new Promise(r => _resolve = r);
 
-export class Render extends EventEmitter() {
-
+export class ClientRenderer extends EventEmitter() {
 
   constructor() {
-    super();
+   super();
 
     // singleton
     if (instance)
@@ -64,9 +64,9 @@ export class Render extends EventEmitter() {
     this.articleView = new ArticleView(data);
     this.bind(articleViewEvents, this.articleView);
 
-    dom().prepend(this.articleView.html());
+    dom.body().prepend(this.articleView.html());
 
-    return this.attachAssets().then(() => resolve(this));
+    return this.attachAssets().then(() => _resolve(this));
   }
 
 
@@ -76,22 +76,39 @@ export class Render extends EventEmitter() {
       if (found)
          return Promise.resolve();
 
-      return fetch('/' + path + '.json')
+      if (!/\.(svg|hbs|es6)/.test(path))
+        path += '.hbs';
+
+      let url;
+      let repo = path.match(RegExp('(.*?)([./]|$)'))[1];
+
+      console.log(repo, devFileList[repo]);
+
+      if (devFileList[repo] && devFileList[repo].includes(path)) {
+        url = 'https://localhost:8000/' + path;
+        log.info(`fetching from development: ${path}`);
+      }
+      else
+        url = env.contentOrigin + '/' + path;
+
+      return fetch(url)
       .then(response => {
         if (response.ok)
-          return response.json();
+          return response.text();
         else {
           console.error('Failed to load asset');
           let data = {
             type: 'Not Found',
-            filename: path,
-            message: 'Could not load asset'
+            message: 'Could not load asset',
+            assetPath: path,
+            viewId: view.id,
           };
           article.send('assetError', data);
-          view.el.textContent = 'failed to load ' + path;
+          let message = 'failed to load ' + path;
+          view.el.textContent = message;
         }
       })
-      .then(data => this.articleView.addPartial(data));
+      .then(text => this.articleView.addPartialFromAsset(path, text));
     }))
     .then(() => this.replaceViewHTML(view))
     .catch(err => console.error(err));
@@ -101,40 +118,45 @@ export class Render extends EventEmitter() {
 
   attachAssets() {
 
-    let js = article.attrs.scripts.map(s =>  {
-      let el = document.createElement('script');
-      // not necessary obviously but just to help people understand
-      el.async = true;
-      // crossorigin attribute allows better error events
-      el.setAttribute('crossorigin','');
-      let repo = s.match(/^(.*?)[-./]/)[1];
-      if (developmentRepos.includes(repo)) {
-        let base = s.match(/(.*?)(-[a-f0-9]{32})?\.js$/)[1];
-        log.info('serving from development: ', base + '.js');
-        el.src = `https://localhost:8000/${base}.js`;
-      }
-      else
-        el.src = env.contentOrigin + '/' + s;
-      return el;
-    });
-
-    let css = article.attrs.stylesheets.map(s => {
-      let repo = s.match(/^(.*?)[-./]/)[1];
-      if (developmentRepos.includes(repo)) {
-        let base = s.match(/(.*?)(-[a-f0-9]{32})?\.css$/)[1];
-        log.info('serving from development: ', base + '.css');
-        s = `https://localhost:8000/${base}.css`;
-      }
-      else
-        s = env.contentOrigin + '/' + s;
-      return dom.create(`<link rel=stylesheet href="${s}">`)
-    });
-
-    // Editor-side article preview sends style as well
     if (article.attrs.style)
-      dom('head').append(`<style>${article.attrs.style}</style>`);
+      dom('head').append(`<style>${artcle.attrs.style}</style>`);
 
-    return Promise.all(js.concat(css).map(el => {
+    let tags = article.attrs.assets.reduce((tags, base_path) => {
+
+      // serve from development
+      let repo = base_path.match(/^(.*?)([-./]|$)/)[1];
+      if (devFileList[repo]) {
+        let url = 'https://localhost:8000/';
+        if (devFileList[repo].includes(base_path + '.js')) {
+          tags.push(makeScriptTag(url+ base_path + '.js'));
+          log.info(`fetching from development: ${base_path}.js`);
+        }
+        if (devFileList[repo].includes(base_path + '.css')) {
+          tags.push(dom.create(
+            `<link rel=stylesheet href="${url}${base_path}.css">`
+          ));
+          log.info(`fetching from development: ${base_path}.css`);
+        }
+        return tags;
+      }
+
+      // serve normally
+      article.attrs.asset_data.map(data => {
+        let url;
+        if (env.development)
+          url = env.contentOrigin + '/' + data.asset_path;
+        else
+          url = env.contentOrigin + '/' + data.digest_path;
+        if (data.asset_path == base_path + '.js')
+          tags.push(makeScriptTag(url));
+        else if (data.asset_path == base_path + '.css')
+          tags.push(dom.create(`<link rel=stylesheet href="${url}">`));
+      });
+
+      return tags;
+    },[]);
+
+    return Promise.all(tags.map(el => {
       dom.append(document.head, el);
       return new Promise((resolve, reject) => {
         el.onload = resolve;
@@ -183,14 +205,14 @@ export class Render extends EventEmitter() {
 
 
   setStyle(style) {
-    dom.find(document, 'head style').innerHTML = style;
+    dom.first(document, 'head style').innerHTML = style;
   }
 
 
   // DEVELOPMENT SERVER
 
-  developmentRepos(repos) {
-    developmentRepos = repos;
+  devFileList(list) {
+    devFileList = list;
 
     // swap CSS
     let repoRegex = RegExp('^/(.*?)(\/|\.js|\.css|-[0-9a-f]{32})')
@@ -198,11 +220,11 @@ export class Render extends EventEmitter() {
     dom('link').map(tag => {
       let url = new URL(tag.href);
       let repo = url.pathname.match(repoRegex)[1];
-      if (repo === 'app') return;
+      if (['app','render'].includes(repo)) return;
       let basePath = url.pathname.match(baseRegex)[1];
-      if (repos.includes(repo)) {
-        log.info('serving from development: ', basePath + '.css');
-        tag.href = 'https://localhost:8000/' + basePath + '.css';
+      if (devFileList[repo]) {
+        log.info(`fetching from development: ${basePath}.css`);
+        tag.href = `https://localhost:8000/${basePath}.css`;
       }
     });
 
@@ -211,11 +233,11 @@ export class Render extends EventEmitter() {
       if (!tag.src) return;
       let url = new URL(tag.src);
       let repo = url.pathname.match(repoRegex)[1];
-      if (repo === 'app') return;
+      if (['app','render'].includes(repo)) return;
       let basePath = url.pathname.match(baseRegex)[1];
-      if (repos.includes(repo)) {
-        log.info('serving from development: ', basePath + '.js');
-        tag.src = 'https://localhost:8000/' + basePath + '.js';
+      if (devFileList[repo]) {
+        log.info(`fetching from development: ${basePath}.js`);
+        tag.src = `https://localhost:8000/${basePath}.js`;
       }
     });
   }
@@ -223,16 +245,20 @@ export class Render extends EventEmitter() {
 
   updateAsset(path) {
 
+    // inline asset
+    if (this.articleView.handlebars.partials[path])
+      location.reload();
     // JS update checks if it's in this frame then reloads
-    if (path.match(/js$/)) { 
+    else if (path.match(/js$/)) { 
       let selector = `script[src^="https://localhost:8000/${path}"]`;
-      if (dom.find(document, selector))
+      // external asset
+      if (dom.first(document, selector))
         location.reload();
     }
     // CSS update does a hot reload
     else if (path.match(/css$/)) {
       let selector = `link[href^="https://localhost:8000/${path}"]`;
-      let tag = dom.find(document, selector)
+      let tag = dom.first(document, selector)
 
       if (tag) {
         log.info('update: ', path);
@@ -251,5 +277,15 @@ export class Render extends EventEmitter() {
 
 }
 
-new Render();
+new ClientRenderer();
 
+
+function makeScriptTag(url) {
+  let el = document.createElement('script');
+  // not necessary obviously but just to help people understand
+  el.async = true;
+  // crossorigin attribute allows better error events
+  el.setAttribute('crossorigin','');
+  el.src = url;
+  return el;
+}

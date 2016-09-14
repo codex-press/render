@@ -1,5 +1,5 @@
 
-import render from './render';
+import client_renderer from './client_renderer';
 
-window.render = render;
+window.render = client_renderer;
 

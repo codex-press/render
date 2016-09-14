@@ -1,17 +1,18 @@
-import Handlebars   from 'handlebars';
-import hljs         from 'highlight.js';
-import marked       from 'marked';
+import hljs from 'highlight.js';
+import marked from 'marked';
 
-import View         from './view';
+import handlebarsFactory from '../templates';
 
-import Audio        from './audio';
-import Block        from './block';
-import Graf         from './graf';
-import Image        from './image';
-import Video        from './video';
-import HTMLBlock    from './html_block';
+import View from './view';
+
+import Audio from './audio';
+import Block from './block';
+import Graf from './graf';
+import Image from './image';
+import Video from './video';
+import Index from './index';
+import HTMLBlock from './html_block';
 import ArticleEmbed from './article_embed';
-import Index        from './index';
 
 
 export default class ArticleView extends View {
@@ -20,14 +21,15 @@ export default class ArticleView extends View {
     super(attrs);
 
     // fresh factory
-    this.handlebars = Handlebars.create();
+    this.handlebars = handlebarsFactory();
 
     // needed for templating
     this.article = this;
 
     this.views = [];
 
-    // XXX could do UA testing here...
+    // XXX could do UA testing here... so that fallback also has responsive
+    // images
     this.attrs.quality = 'high';
 
     // kinda terrible to do this here
@@ -45,13 +47,19 @@ export default class ArticleView extends View {
     if (!this.templateAttrs.share_message)
       this.templateAttrs.share_message = this.attrs.title;
 
-    this.templates = this.attrs.content.filter(c => (
+    let templates = this.attrs.content.filter(c => (
       c.type === 'HTMLBlock' &&
       c.classes &&
       c.classes[0] ==='template'
     ));
 
+    this.templates = templates.map(t => ({
+      descriptor: t.classes.join('.'),
+      compiled: this.handlebars.compile(t.body),
+    }));
+
     this.partials = []
+
     let htmlBlockPartials = this.attrs.content.filter(c => {
       return (
         c.type === 'HTMLBlock' &&
@@ -60,12 +68,15 @@ export default class ArticleView extends View {
       );
     });
     htmlBlockPartials.map(this.addPartialFromHTMLBlock, this);
-    this.attrs.inline_assets.map(this.addPartial, this);
+
+    this.attrs.inline_assets.map(a => {
+      this.addPartialFromAsset(a.asset_path, a.source)
+    });
  
     // filter out templates and partials
-    let content = this.attrs.content.filter(c => {
-      return !this.templates.includes(c) && !htmlBlockPartials.includes(c);
-    });
+    let content = this.attrs.content.filter(c =>
+      !templates.includes(c) && !htmlBlockPartials.includes(c)
+    );
 
     content.map(this.makeView, this);
 
@@ -98,15 +109,12 @@ export default class ArticleView extends View {
   }
 
 
-  addPartial(data) {
-    let source; 
-    if (/\.es6$/.test(data.asset_path))
-      source = renderJavascriptSource(data.source);
-    else
-      source = p.source;
-
-    this.handlebars.registerPartial(data.asset_path, source);
-    this.handlebars.registerPartial(data.asset_path.slice(0, -4), source);
+  addPartialFromAsset(path, source) {
+    if (/\.es6$/.test(path))
+      source = renderJavascriptSource(source);
+    if (/\.hbs/.test(path))
+      this.handlebars.registerPartial(path.slice(0,-4), source);
+    this.handlebars.registerPartial(path, source);
   }
 
 

@@ -1,6 +1,7 @@
+import Handlebars from 'handlebars';
+
 import View from './view';
 import {findSource} from '../utility';
-import compile from '../templates';
 
 let attributes = `
   src="{{sourceURL}}"
@@ -13,14 +14,14 @@ let attributes = `
 
 
 // when specified with tag <video>
-let simpleTemplate = compile(`
+let simpleTemplate = Handlebars.compile(`
   <video x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}" ${attributes}>
   </video>
 `);
 
 
 // no crop
-let figureTemplate = compile(`
+let figureTemplate = Handlebars.compile(`
   <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}">
 
     {{#if javascript}}
@@ -42,7 +43,7 @@ let figureTemplate = compile(`
 
 
 // with cropping, JS only
-let cropTemplate = compile(`
+let cropTemplate = Handlebars.compile(`
   <figure x-cp-figure x-cp-video x-cp-crop x-cp-id={{  cpID  }}
     class="{{classes}}">
 

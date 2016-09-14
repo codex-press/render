@@ -1,8 +1,9 @@
+import Handlebars from 'handlebars';
+
 import View         from './view';
-import compile      from '../templates';
 import {findSource} from '../utility';
 
-let simpleTemplate = compile(`
+let simpleTemplate = Handlebars.compile(`
   <audio
     class="{{classes}}">
     {{#if javascript  }}preload=none{{/if  }}
@@ -11,7 +12,7 @@ let simpleTemplate = compile(`
   </audio>
 `);
 
-let template = compile(`
+let template = Handlebars.compile(`
 <div x-cp-id={{  id  }} class="{{  classes  }}">
   <audio
     {{#if javascript }}preload=none{{/if }}

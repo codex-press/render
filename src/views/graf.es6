@@ -40,8 +40,10 @@ export default class Graf extends View {
         content = compiled(this.article.templateAttrs)
       }
       catch (e) {
-        console.log(e);
-        this.article.trigger('assetMissing', this, partials);
+        if (this.article.trigger)
+          this.article.trigger('assetMissing', this, partials);
+        else
+          console.error(e);
         if (this.article.attrs.client)
           content = 'Loading... ' + partials.join(' ');
         else

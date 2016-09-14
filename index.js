@@ -9842,18 +9842,19 @@ process.umask = function() { return 0; };
 },{}],48:[function(require,module,exports){
 'use strict';
 
-var _render = require('./render');
+var _client_renderer = require('./client_renderer');
 
-var _render2 = _interopRequireDefault(_render);
+var _client_renderer2 = _interopRequireDefault(_client_renderer);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-window.render = _render2.default;
+window.render = _client_renderer2.default;
 
-},{"./render":"render"}],49:[function(require,module,exports){
+},{"./client_renderer":"client_renderer"}],49:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
+exports.default = factory;
 
 var _handlebars = require('handlebars');
 
@@ -9863,113 +9864,147 @@ var _dateformat = require('dateformat');
 
 var _dateformat2 = _interopRequireDefault(_dateformat);
 
+var _utility = require('./utility');
+
+var u = _interopRequireWildcard(_utility);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-exports.default = _handlebars2.default.compile;
+function factory() {
 
+  var handlebars = _handlebars2.default.create();
 
-_handlebars2.default.registerPartial({
+  handlebars.registerPartial({
 
-  br: '<br>',
+    br: '<br>',
 
-  play: '<span class="play-button icon-play"></span>',
-  audio: '<span class="audio-button icon-audio"></span>',
-  share: '<span class="share-button icon-share"></span>',
-  fullscreen: '<span class="fullscreen-button icon-fullscreen"></span>',
+    date: '{{ formatDate publication_date "longDate" }}',
 
-  play_icon: '<span class="icon-play"></span>',
-  audio_icon: '<span class="icon-audio"></span>',
-  share_icon: '<span class="icon-share"></span>',
-  fullscreen_icon: '<span class="icon-fullscreen"></span>',
+    play: '<span class="play-button icon-play"></span>',
+    audio: '<span class="audio-button icon-audio"></span>',
+    share: '<span class="share-button icon-share"></span>',
+    fullscreen: '<span class="fullscreen-button icon-fullscreen"></span>',
 
-  email_icon: '<span class="icon-email"></span>',
-  reddit_icon: '<span class="icon-reddit"></span>',
-  twitter_icon: '<span class="icon-twitter"></span>',
-  facebook_icon: '<span class="icon-facebook"></span>'
+    play_icon: '<span class="icon-play"></span>',
+    audio_icon: '<span class="icon-audio"></span>',
+    share_icon: '<span class="icon-share"></span>',
+    fullscreen_icon: '<span class="icon-fullscreen"></span>',
 
-});
+    email_icon: '<span class="icon-email"></span>',
+    reddit_icon: '<span class="icon-reddit"></span>',
+    twitter_icon: '<span class="icon-twitter"></span>',
+    facebook_icon: '<span class="icon-facebook"></span>'
 
-// uses dateFormat library: https://github.com/felixge/node-dateformat
-_handlebars2.default.registerHelper('formatDate', function (format, options) {
-  options = arguments[arguments.length - 1];
-  format = arguments.length > 1 ? arguments[0] : 'longDate';
-  return (0, _dateformat2.default)(options.data.root.publication_date, format);
-});
+  });
 
-// used in video
-_handlebars2.default.registerHelper('printTime', function (seconds) {
-  return u.printTime(seconds);
-});
+  // uses dateFormat library: https://github.com/felixge/node-dateformat
+  handlebars.registerHelper('formatDate', function (date, format, options) {
+    try {
+      options = arguments[arguments.length - 1];
+      format = arguments.length > 2 ? arguments[1] : 'longDate';
+      return (0, _dateformat2.default)(date, format);
+    } catch (e) {
+      return e.message;
+    }
+  });
 
-_handlebars2.default.registerHelper('cover', function () {
-  var options = arguments[arguments.length - 1];
+  // used in video
+  handlebars.registerHelper('printTime', function (seconds) {
+    return u.printTime(seconds);
+  });
 
-  // size is optional first argument
-  var size = arguments.length > 1 ? arguments[0] : 'thumb';
+  handlebars.registerHelper('cover', function () {
+    var options = arguments[arguments.length - 1];
 
-  // there is no cover image
-  var cover = options.data.root.cover;
-  if (!cover) return '';
+    // there is no cover image
+    var cover = options.data.root.cover;
+    if (!cover) {
+      if (options.fn) return '<div>' + options.fn(this) + '</div>';else return '';
+    }
 
-  var source = u.findSource(cover.media.srcset, size);
+    var source = u.findSource(cover.media.srcset, 'low');
 
-  var url = void 0;
-  if (cover.type === 'Video') url = options.data.root.content_origin + source.poster;else url = options.data.root.content_origin + source.url;
+    var cpID = options.data.root.attrs.id;
 
-  return '<img class=cover src="' + url + '">';
-});
+    var url = void 0;
+    if (options.data.root.javascript) url = 'data:image/jpeg;base64,' + cover.media.base64_thumb;else if (cover.type === 'Video') url = options.data.root.content_origin + source.poster;else url = options.data.root.content_origin + source.url;
 
-_handlebars2.default.registerHelper('facebook', function (options) {
+    var aspectRatio = source.height / source.width;
+    var padding = Math.round(aspectRatio * 1000) / 10;
 
-  var urlToShare = options.data.root.canonical_url + '?utm_campaign=social&utm_source=facebook';
+    var position = '';
+    if (cover.crop) {
+      var x = cover.crop.left + cover.crop.width / 2;
+      var y = cover.crop.top + cover.crop.height / 2;
+      var round = function round(n) {
+        return Math.round(n * 100000) / 1000;
+      };
+      position = ' background-position: ' + round(x) + '% ' + round(y) + '%';
+    }
 
-  var url = 'https://www.facebook.com/dialog/share?' + 'app_id=' + encodeURIComponent(options.data.root.facebook_app_id) + '&display=popup' + '&href=' + encodeURIComponent(urlToShare);
+    if (options.fn) {
+      return '<div x-cp-background-image x-cp-id=' + cpID + '\n        class=cover\n        style="background-image: url(' + url + ');' + position + '">\n          ' + options.fn(this) + '\n          <div class=shim style="padding-top: ' + padding + '%;"></div>\n        </div>';
+    } else {
+      return '<img x-cp-image x-cp-id=' + cpID + ' draggable=false\n        class=cover\n        {{#if javascript }}\n          src="{{  thumbURL  }}"\n        {{ else }}\n          src="{{  sourceURL  }}"\n        {{/if }}\n        style="max-width: {{  maxWidth  }}px">';
+    }
+  });
 
-  if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</a>';else return '<a href="' + url + '" target=_blank><span class=icon-facebook></span></a>';
-});
+  handlebars.registerHelper('facebook', function (options) {
 
-_handlebars2.default.registerHelper('twitter', function () {
+    var urlToShare = options.data.root.canonical_url + '?utm_campaign=social&utm_source=facebook';
 
-  var options = arguments[arguments.length - 1];
+    var url = 'https://www.facebook.com/dialog/share?' + 'app_id=' + encodeURIComponent(options.data.root.facebook_app_id) + '&display=popup' + '&href=' + encodeURIComponent(urlToShare);
 
-  // if not passed in, it will go to article metadata one, then title.
-  var message = arguments.length > 1 ? arguments[0] : options.data.root.share_message;
+    if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</a>';else return '<a href="' + url + '" target=_blank><span class=icon-facebook></span></a>';
+  });
 
-  var urlToShare = options.data.root.canonical_url + '?utm_campaign=social&utm_source=twitter';
+  handlebars.registerHelper('twitter', function () {
 
-  // can replace with default Codex twitter (when one is created)
-  var via = (options.data.root.twitter_handle || '').replace(/^@/, '');
+    var options = arguments[arguments.length - 1];
 
-  var url = 'https://twitter.com/intent/tweet' + '?text=' + encodeURIComponent(message) + '&via=' + encodeURIComponent(via) + '&url=' + encodeURIComponent(urlToShare);
+    // if not passed in, it will go to article metadata one, then title.
+    var message = arguments.length > 1 ? arguments[0] : options.data.root.share_message;
 
-  if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</a>';else return '<a href="' + url + '" target=_blank><span class=icon-twitter></span></a>';
-});
+    var urlToShare = options.data.root.canonical_url + '?utm_campaign=social&utm_source=twitter';
 
-_handlebars2.default.registerHelper('reddit', function (options) {
+    // can replace with default Codex twitter (when one is created)
+    var via = (options.data.root.twitter_handle || '').replace(/^@/, '');
 
-  var urlToShare = encodeURIComponent(options.data.root.canonical_url + '?utm_campaign=social&utm_source=reddit');
+    var url = 'https://twitter.com/intent/tweet' + '?text=' + encodeURIComponent(message) + '&via=' + encodeURIComponent(via) + '&url=' + encodeURIComponent(urlToShare);
 
-  var url = 'http://reddit.com/submit' + '?url=' + urlToShare + '&title=' + encodeURIComponent(options.data.root.title);
+    if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</a>';else return '<a href="' + url + '" target=_blank><span class=icon-twitter></span></a>';
+  });
 
-  if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</span></a>';else return '<a href="' + url + '" target=_blank><span class=icon-reddit></span></a>';
-});
+  handlebars.registerHelper('reddit', function (options) {
 
-_handlebars2.default.registerHelper('email', function () {
+    var urlToShare = encodeURIComponent(options.data.root.canonical_url + '?utm_campaign=social&utm_source=reddit');
 
-  var options = arguments[arguments.length - 1];
+    var url = 'http://reddit.com/submit' + '?url=' + urlToShare + '&title=' + encodeURIComponent(options.data.root.title);
 
-  // if not passed in, it will go to article metadata one, then title.
-  // (these set in ContentCollection)
-  var message = arguments.length > 1 ? arguments[0] : options.data.root.share_message;
+    if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</span></a>';else return '<a href="' + url + '" target=_blank><span class=icon-reddit></span></a>';
+  });
 
-  var urlToShare = encodeURIComponent(options.data.root.canonical_url + '?utm_campaign=social&utm_source=email');
+  handlebars.registerHelper('email', function () {
 
-  var url = 'mailto:' + '?subject=' + encodeURIComponent(options.data.root.title) + '&body=' + encodeURIComponent(message + '\n\n') + urlToShare;
+    var options = arguments[arguments.length - 1];
 
-  if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</span></a>';else return '<a href="' + url + '" target=_blank><span class=icon-email></span></a>';
-});
+    // if not passed in, it will go to article metadata one, then title.
+    // (these set in ContentCollection)
+    var message = arguments.length > 1 ? arguments[0] : options.data.root.share_message;
 
-},{"dateformat":3,"handlebars":33}],50:[function(require,module,exports){
+    var urlToShare = encodeURIComponent(options.data.root.canonical_url + '?utm_campaign=social&utm_source=email');
+
+    var url = 'mailto:' + '?subject=' + encodeURIComponent(options.data.root.title) + '&body=' + encodeURIComponent(message + '\n\n') + urlToShare;
+
+    if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</span></a>';else return '<a href="' + url + '" target=_blank><span class=icon-email></span></a>';
+  });
+
+  return handlebars;
+}
+
+},{"./utility":50,"dateformat":3,"handlebars":33}],50:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10024,10 +10059,6 @@ var unscopedPath = exports.unscopedPath = function unscopedPath(pathPrefix, path
 
 exports.__esModule = true;
 
-var _handlebars = require('handlebars');
-
-var _handlebars2 = _interopRequireDefault(_handlebars);
-
 var _highlight = require('highlight.js');
 
 var _highlight2 = _interopRequireDefault(_highlight);
@@ -10035,6 +10066,10 @@ var _highlight2 = _interopRequireDefault(_highlight);
 var _marked = require('marked');
 
 var _marked2 = _interopRequireDefault(_marked);
+
+var _templates = require('../templates');
+
+var _templates2 = _interopRequireDefault(_templates);
 
 var _view = require('./view');
 
@@ -10060,6 +10095,10 @@ var _video = require('./video');
 
 var _video2 = _interopRequireDefault(_video);
 
+var _index = require('./index');
+
+var _index2 = _interopRequireDefault(_index);
+
 var _html_block = require('./html_block');
 
 var _html_block2 = _interopRequireDefault(_html_block);
@@ -10067,10 +10106,6 @@ var _html_block2 = _interopRequireDefault(_html_block);
 var _article_embed = require('./article_embed');
 
 var _article_embed2 = _interopRequireDefault(_article_embed);
-
-var _index = require('./index');
-
-var _index2 = _interopRequireDefault(_index);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -10089,14 +10124,15 @@ var ArticleView = function (_View) {
     // fresh factory
     var _this = _possibleConstructorReturn(this, _View.call(this, attrs));
 
-    _this.handlebars = _handlebars2.default.create();
+    _this.handlebars = (0, _templates2.default)();
 
     // needed for templating
     _this.article = _this;
 
     _this.views = [];
 
-    // XXX could do UA testing here...
+    // XXX could do UA testing here... so that fallback also has responsive
+    // images
     _this.attrs.quality = 'high';
 
     // kinda terrible to do this here
@@ -10109,20 +10145,31 @@ var ArticleView = function (_View) {
 
     if (!_this.templateAttrs.share_message) _this.templateAttrs.share_message = _this.attrs.title;
 
-    _this.templates = _this.attrs.content.filter(function (c) {
+    var templates = _this.attrs.content.filter(function (c) {
       return c.type === 'HTMLBlock' && c.classes && c.classes[0] === 'template';
     });
 
+    _this.templates = templates.map(function (t) {
+      return {
+        descriptor: t.classes.join('.'),
+        compiled: _this.handlebars.compile(t.body)
+      };
+    });
+
     _this.partials = [];
+
     var htmlBlockPartials = _this.attrs.content.filter(function (c) {
       return c.type === 'HTMLBlock' && c.classes && c.classes[0] === 'partial';
     });
     htmlBlockPartials.map(_this.addPartialFromHTMLBlock, _this);
-    _this.attrs.inline_assets.map(_this.addPartial, _this);
+
+    _this.attrs.inline_assets.map(function (a) {
+      _this.addPartialFromAsset(a.asset_path, a.source);
+    });
 
     // filter out templates and partials
     var content = _this.attrs.content.filter(function (c) {
-      return !_this.templates.includes(c) && !htmlBlockPartials.includes(c);
+      return !templates.includes(c) && !htmlBlockPartials.includes(c);
     });
 
     content.map(_this.makeView, _this);
@@ -10155,12 +10202,10 @@ var ArticleView = function (_View) {
     this.handlebars.registerPartial(data.asset_path.slice(0, -4), source);
   };
 
-  ArticleView.prototype.addPartial = function addPartial(data) {
-    var source = void 0;
-    if (/\.es6$/.test(data.asset_path)) source = renderJavascriptSource(data.source);else source = p.source;
-
-    this.handlebars.registerPartial(data.asset_path, source);
-    this.handlebars.registerPartial(data.asset_path.slice(0, -4), source);
+  ArticleView.prototype.addPartialFromAsset = function addPartialFromAsset(path, source) {
+    if (/\.es6$/.test(path)) source = renderJavascriptSource(source);
+    if (/\.hbs/.test(path)) this.handlebars.registerPartial(path.slice(0, -4), source);
+    this.handlebars.registerPartial(path, source);
   };
 
   ArticleView.prototype.makeView = function makeView(data) {
@@ -10258,10 +10303,14 @@ function renderJavascriptSource(source) {
   }).join('');
 }
 
-},{"./article_embed":52,"./audio":53,"./block":54,"./graf":55,"./html_block":56,"./image":57,"./index":58,"./video":59,"./view":60,"handlebars":33,"highlight.js":61,"marked":45}],52:[function(require,module,exports){
+},{"../templates":49,"./article_embed":52,"./audio":53,"./block":54,"./graf":55,"./html_block":56,"./image":57,"./index":58,"./video":59,"./view":60,"highlight.js":61,"marked":45}],52:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
+
+var _handlebars = require('handlebars');
+
+var _handlebars2 = _interopRequireDefault(_handlebars);
 
 var _view = require('./view');
 
@@ -10270,10 +10319,6 @@ var _view2 = _interopRequireDefault(_view);
 var _index = require('./index');
 
 var _index2 = _interopRequireDefault(_index);
-
-var _templates = require('../templates');
-
-var _templates2 = _interopRequireDefault(_templates);
 
 var _utility = require('../utility');
 
@@ -10285,9 +10330,9 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var template = (0, _templates2.default)('\n  <{{  tagName  }} class="article {{  classes  }}">\n    {{{  content  }}}\n  </{{  tagName  }}>\n');
+var template = _handlebars2.default.compile('\n  <{{  tagName  }} class="{{  classes  }}"\n    {{#if cpID  }}id={{  cpID  }}{{/if }}>\n    {{{  content  }}}\n  </{{  tagName  }}>\n');
 
-var defaultTemplate = (0, _templates2.default)('\n  <h3><a href="{{  url  }}"> {{  title  }} </a></h3>\n  <p class=description>{{  description  }}</p>\n');
+var defaultTemplate = _handlebars2.default.compile('\n  <h3><a href="{{  url  }}"> {{  title  }} </a></h3>\n  <p class=description>{{  description  }}</p>\n');
 
 // This class is used for children of an Index and for articles that are
 // just dragged into the story explicitly to build a page of links to other
@@ -10299,6 +10344,7 @@ var ArticleEmbed = function (_View) {
   function ArticleEmbed(attrs) {
     _classCallCheck(this, ArticleEmbed);
 
+    // if it comes from Index children it doesn't have this
     var _this = _possibleConstructorReturn(this, _View.call(this, attrs));
 
     _this.attrs.type = 'ArticleEmbed';
@@ -10306,14 +10352,37 @@ var ArticleEmbed = function (_View) {
   }
 
   ArticleEmbed.prototype.makeAttrs = function makeAttrs() {
-    return Object.assign({}, this.attrs.article.classed_content, this.attrs.article.metadata, this.attrs.article, { attrs: this.attrs });
+    return Object.assign({}, this.attrs.article.classed_content, this.attrs.article.metadata, this.attrs.article, { attrs: this.attrs }, { javascript: this.article.attrs.javascript });
   };
 
   ArticleEmbed.prototype.html = function html() {
+    if (this.attrs.template === 'all_content') return this.contentHTML();else return this.templateHTML();
+  };
+
+  ArticleEmbed.prototype.contentHTML = function contentHTML() {
+    return template({
+      tagName: this.articleTagName(),
+      classes: this.articleClasses(),
+      cpID: this.article.attrs.client ? this.attrs.id : '',
+      content: this.childrenHTML()
+    });
+  };
+
+  ArticleEmbed.prototype.articleTagName = function articleTagName() {
+    var classes = this.attrs.article.classes || [];
+    var first = (classes[0] || '').toLowerCase();
+    return _view.tags.includes(first) ? classes[0] : 'aside';
+  };
+
+  ArticleEmbed.prototype.articleClasses = function articleClasses() {
+    if (this.articleTagName() === this.attrs.classes[0]) return this.attrs.article.classes.slice(1).join(' ');else return (this.attrs.article.classes || []).join(' ');
+  };
+
+  ArticleEmbed.prototype.templateHTML = function templateHTML() {
     var _this2 = this;
 
     if (this.parent instanceof _index2.default) {
-      var _html = this.parent.entryTemplate(this.makeAttrs());
+      var _html = this.parent.entryTemplate.compiled(this.makeAttrs());
       return (0, _utility.unscopeLinks)(_html, this.article.attrs.path_prefix);
     }
 
@@ -10321,11 +10390,11 @@ var ArticleEmbed = function (_View) {
       return t.descriptor === _this2.attrs.template;
     });
 
-    if (!contentTemplate) contentTemplate = defaultTemplate;
+    if (contentTemplate) contentTemplate = contentTemplate.compiled;else contentTemplate = defaultTemplate;
 
-    var html = this.template({
-      attrs: this.attrs,
-      classes: this.classes(),
+    var html = template({
+      cpID: this.article.attrs.client ? this.attrs.id : '',
+      classes: 'article ' + this.classes(),
       tagName: this.tagName(),
       content: contentTemplate(this.makeAttrs())
     });
@@ -10338,18 +10407,18 @@ var ArticleEmbed = function (_View) {
 
 exports.default = ArticleEmbed;
 
-},{"../templates":49,"../utility":50,"./index":58,"./view":60}],53:[function(require,module,exports){
+},{"../utility":50,"./index":58,"./view":60,"handlebars":33}],53:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
 
+var _handlebars = require('handlebars');
+
+var _handlebars2 = _interopRequireDefault(_handlebars);
+
 var _view = require('./view');
 
 var _view2 = _interopRequireDefault(_view);
-
-var _templates = require('../templates');
-
-var _templates2 = _interopRequireDefault(_templates);
 
 var _utility = require('../utility');
 
@@ -10361,9 +10430,9 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var simpleTemplate = (0, _templates2.default)('\n  <audio\n    class="{{classes}}">\n    {{#if javascript  }}preload=none{{/if  }}\n    src="{{  sourceUrl  }}"\n    type="audio/mp3">\n  </audio>\n');
+var simpleTemplate = _handlebars2.default.compile('\n  <audio\n    class="{{classes}}">\n    {{#if javascript  }}preload=none{{/if  }}\n    src="{{  sourceUrl  }}"\n    type="audio/mp3">\n  </audio>\n');
 
-var template = (0, _templates2.default)('\n<div x-cp-id={{  id  }} class="{{  classes  }}">\n  <audio\n    {{#if javascript }}preload=none{{/if }}\n    src="{{sourceUrl}}"\n    type="audio/mp3">\n  </audio>\n</div>\n');
+var template = _handlebars2.default.compile('\n<div x-cp-id={{  id  }} class="{{  classes  }}">\n  <audio\n    {{#if javascript }}preload=none{{/if }}\n    src="{{sourceUrl}}"\n    type="audio/mp3">\n  </audio>\n</div>\n');
 
 var Audio = function (_View) {
   _inherits(Audio, _View);
@@ -10393,7 +10462,7 @@ var Audio = function (_View) {
 
 exports.default = Audio;
 
-},{"../templates":49,"../utility":50,"./view":60}],54:[function(require,module,exports){
+},{"../utility":50,"./view":60,"handlebars":33}],54:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10478,8 +10547,7 @@ var Graf = function (_View) {
           var compiled = this.article.handlebars.compile(source);
           content = compiled(this.article.templateAttrs);
         } catch (e) {
-          console.log(e);
-          this.article.trigger('assetMissing', this, partials);
+          if (this.article.trigger) this.article.trigger('assetMissing', this, partials);else console.error(e);
           if (this.article.attrs.client) content = 'Loading... ' + partials.join(' ');else content = e.message;
         }
       }
@@ -10516,15 +10584,19 @@ exports.default = Graf;
 
 exports.__esModule = true;
 
+var _handlebars = require('handlebars');
+
+var _handlebars2 = _interopRequireDefault(_handlebars);
+
 var _view = require('./view');
 
 var _view2 = _interopRequireDefault(_view);
 
 var _utility = require('../utility');
 
-var _templates = require('../templates');
+var _highlight = require('highlight.js');
 
-var _templates2 = _interopRequireDefault(_templates);
+var _highlight2 = _interopRequireDefault(_highlight);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -10534,7 +10606,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var template = (0, _templates2.default)('\n<{{  tagName  ~}}\n  {{#if cpId }}x-cp-id={{  id  }}{{/if ~}}\n  {{#if classes}} class="{{  classes  }}"{{/if}}>\n    {{{  content  }}}\n</{{ tagName  }}>\n');
+var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if cpId }}x-cp-id={{  id  }}{{/if ~}}\n  {{#if classes}} class="{{  classes  }}"{{/if}}>\n    {{{  content  }}}\n</{{ tagName  }}>\n');
 
 var HTMLBlock = function (_View) {
   _inherits(HTMLBlock, _View);
@@ -10549,6 +10621,11 @@ var HTMLBlock = function (_View) {
 
     var content = (0, _utility.unscopeLinks)(this.attrs.body, this.article.attrs.path_prefix);
 
+    if (this.attrs.classes.includes('escaped')) {
+      var highlighted = _highlight2.default.highlight('javascript', content).value;
+      content = '<pre><code>' + highlighted + '</code></pre>';
+    }
+
     return template({
       content: content,
       cpID: this.article.attrs.client ? this.attrs.id : '',
@@ -10562,20 +10639,20 @@ var HTMLBlock = function (_View) {
 
 exports.default = HTMLBlock;
 
-},{"../templates":49,"../utility":50,"./view":60}],57:[function(require,module,exports){
+},{"../utility":50,"./view":60,"handlebars":33,"highlight.js":61}],57:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
+
+var _handlebars = require('handlebars');
+
+var _handlebars2 = _interopRequireDefault(_handlebars);
 
 var _view = require('./view');
 
 var _view2 = _interopRequireDefault(_view);
 
 var _utility = require('../utility');
-
-var _templates = require('../templates');
-
-var _templates2 = _interopRequireDefault(_templates);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -10585,17 +10662,17 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var simpleTemplate = (0, _templates2.default)('\n  <img x-cp-image x-cp-id={{  cpID  }} draggable=false\n    {{#if javascript }}\n      src="{{  thumbURL  }}"\n    {{ else }}\n      src="{{  sourceURL  }}"\n    {{/if }}\n    style="max-width: {{  maxWidth  }}px"\n    class="{{  classes  }}">\n');
+var simpleTemplate = _handlebars2.default.compile('\n  <img x-cp-image x-cp-id={{  cpID  }} draggable=false\n    {{#if javascript }}\n      src="{{  thumbURL  }}"\n    {{ else }}\n      src="{{  sourceURL  }}"\n    {{/if }}\n    style="max-width: {{  maxWidth  }}px"\n    class="{{  classes  }}">\n');
 
 // cropping but just by center point. overlays are absolutely positioned in CSS
-var backgroundImageTemplate = (0, _templates2.default)('\n  <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}\n    class="{{  classes  }}"\n    style="background-image: url(\n      {{~#if javascript }}\n        {{~  thumbURL  ~}}\n      {{ else }}\n        {{~  sourceURL  ~}}\n      {{/if ~}})\n      {{~#if position  }}; background-position: {{  position  }}{{/if }}">\n\n    {{{  children  }}}\n\n    <div class=shim style="padding-top: {{  padding  }}%;"></div>\n\n  </{{tagName}}>\n');
+var backgroundImageTemplate = _handlebars2.default.compile('\n  <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}\n    class="{{  classes  }}"\n    style="background-image: url(\n      {{~#if javascript }}\n        {{~  thumbURL  ~}}\n      {{ else }}\n        {{~  sourceURL  ~}}\n      {{/if ~}})\n      {{~#if position  }}; background-position: {{  position  }}{{/if }}">\n\n    {{{  children  }}}\n\n    <div class=shim style="padding-top: {{  padding  }}%;"></div>\n\n  </{{tagName}}>\n');
 
 // no cropping but with JS, it will constrain width if it's too big for the
 // container (like for the max-height 100vh). Positions overlays
-var figureTemplate = (0, _templates2.default)('\n  <figure x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    <div class=frame>\n\n      {{#if javascript}}\n\n        <!-- this comment will be replaced with size info -->\n\n        <img class=thumb src="{{thumbURL}}" draggable=false> \n        <img class=full draggable=false> \n\n      {{else}}\n\n        <img src="{{sourceURL}}" draggable=false> \n\n      {{/if}}\n\n    </div>\n\n    {{{children}}}\n\n  </figure>\n');
+var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript }}\n      <!-- this comment will be replaced with size info -->\n    {{/if }}\n\n    <div class=frame>\n      {{#if javascript}}\n        <img class=thumb src="{{thumbURL}}" draggable=false> \n        <img class=full draggable=false> \n      {{else}}\n        <img src="{{sourceURL}}" draggable=false> \n      {{/if}}\n    </div>\n\n    {{{children}}}\n\n  </figure>\n');
 
 // JS only: cropping and nice overlays on top
-var cropTemplate = (0, _templates2.default)('\n  <figure x-cp-figure x-cp-crop x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    <!-- this comment will be replaced with size info -->\n\n    <div class=frame>\n\n      <div class=crop>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n\n    </div>\n\n    {{{children}}}\n\n  </figure>\n');
+var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-crop x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    <!-- this comment will be replaced with size info -->\n\n    <div class=frame>\n      <div class=crop>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n    </div>\n\n    {{{children}}}\n\n  </figure>\n');
 
 var ImageView = function (_View) {
   _inherits(ImageView, _View);
@@ -10669,7 +10746,8 @@ var ImageView = function (_View) {
       sourceURL: this.sourceURL,
       thumbURL: this.thumbSource(),
       children: this.childrenHTML(),
-      javascript: false });
+      javascript: this.article.attrs.javascript
+    });
   };
 
   ImageView.prototype.cropHTML = function cropHTML() {
@@ -10712,10 +10790,14 @@ var ImageView = function (_View) {
 
 exports.default = ImageView;
 
-},{"../templates":49,"../utility":50,"./view":60}],58:[function(require,module,exports){
+},{"../utility":50,"./view":60,"handlebars":33}],58:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
+
+var _handlebars = require('handlebars');
+
+var _handlebars2 = _interopRequireDefault(_handlebars);
 
 var _view = require('./view');
 
@@ -10725,10 +10807,6 @@ var _article_embed = require('./article_embed');
 
 var _article_embed2 = _interopRequireDefault(_article_embed);
 
-var _templates = require('../templates');
-
-var _templates2 = _interopRequireDefault(_templates);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -10737,7 +10815,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var entryTemplate = (0, _templates2.default)('\n<p><a href="{{url}}">{{{title}}}</a></p>\n');
+var entryTemplate = _handlebars2.default.compile('\n  <p><a href="{{url}}">{{{title}}}</a></p>\n');
 
 var Index = function (_View) {
   _inherits(Index, _View);
@@ -10750,7 +10828,6 @@ var Index = function (_View) {
     _this.children = _this.attrs.articles.map(function (c) {
       return new _article_embed2.default({ article: c });
     });
-
     return _this;
   }
 
@@ -10759,14 +10836,15 @@ var Index = function (_View) {
 
     // not ideal.. this mirrors for creating all the content
     this.children.map(function (c) {
-      c.article = _this2.article;c.parent = _this2;
+      c.article = _this2.article;
+      c.parent = _this2;
     });
 
     this.entryTemplate = this.article.templates.find(function (t) {
       return t.descriptor === _this2.attrs.template;
     });
 
-    if (!this.entryTemplate) this.entryTemplate = entryTemplate;
+    if (!this.entryTemplate) this.entryTemplate = { descriptor: 'template.default', entryTemplate: entryTemplate };
 
     return _View.prototype.html.call(this);
   };
@@ -10776,20 +10854,20 @@ var Index = function (_View) {
 
 exports.default = Index;
 
-},{"../templates":49,"./article_embed":52,"./view":60}],59:[function(require,module,exports){
+},{"./article_embed":52,"./view":60,"handlebars":33}],59:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
+
+var _handlebars = require('handlebars');
+
+var _handlebars2 = _interopRequireDefault(_handlebars);
 
 var _view = require('./view');
 
 var _view2 = _interopRequireDefault(_view);
 
 var _utility = require('../utility');
-
-var _templates = require('../templates');
-
-var _templates2 = _interopRequireDefault(_templates);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -10802,13 +10880,13 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var attributes = '\n  src="{{sourceURL}}"\n  poster="{{  posterURL  }}"\n  {{#if javascript}} preload=none {{else}} preload=auto {{/if}}\n  {{#if loop }}  loop  {{/if}}\n  {{#if autoplay }}  autoplay  {{/if }}\n  {{#if controls }}  controls  {{/if }}\n';
 
 // when specified with tag <video>
-var simpleTemplate = (0, _templates2.default)('\n  <video x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}" ' + attributes + '>\n  </video>\n');
+var simpleTemplate = _handlebars2.default.compile('\n  <video x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}" ' + attributes + '>\n  </video>\n');
 
 // no crop
-var figureTemplate = (0, _templates2.default)('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n      <!-- this comment will be replaced with size info -->\n    {{/if}}\n\n    <div class=frame>\n      <video ' + attributes + '></video>\n      {{#if javascript}}\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=poster draggable=false> \n      {{/if}}\n    </div>\n\n    {{{children}}}\n\n  </figure>\n');
+var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n      <!-- this comment will be replaced with size info -->\n    {{/if}}\n\n    <div class=frame>\n      <video ' + attributes + '></video>\n      {{#if javascript}}\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=poster draggable=false> \n      {{/if}}\n    </div>\n\n    {{{children}}}\n\n  </figure>\n');
 
 // with cropping, JS only
-var cropTemplate = (0, _templates2.default)('\n  <figure x-cp-figure x-cp-video x-cp-crop x-cp-id={{  cpID  }}\n    class="{{classes}}">\n\n    <!-- this comment will be replaced with size info -->\n\n    <div class=frame>\n      <div class=crop>\n        <video ' + attributes + '></video>\n        <img class=thumb src="{{thumbURL}}" draggable=false> \n        <img class=poster draggable=false> \n      </div>\n    </div>\n\n    {{{children}}}\n\n  </figure>\n');
+var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-crop x-cp-id={{  cpID  }}\n    class="{{classes}}">\n\n    <!-- this comment will be replaced with size info -->\n\n    <div class=frame>\n      <div class=crop>\n        <video ' + attributes + '></video>\n        <img class=thumb src="{{thumbURL}}" draggable=false> \n        <img class=poster draggable=false> \n      </div>\n    </div>\n\n    {{{children}}}\n\n  </figure>\n');
 
 var FigureView = function (_View) {
   _inherits(FigureView, _View);
@@ -10876,14 +10954,15 @@ var FigureView = function (_View) {
 
 exports.default = FigureView;
 
-},{"../templates":49,"../utility":50,"./view":60}],60:[function(require,module,exports){
+},{"../utility":50,"./view":60,"handlebars":33}],60:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
+exports.tags = undefined;
 
-var _templates = require('../templates');
+var _handlebars = require('handlebars');
 
-var _templates2 = _interopRequireDefault(_templates);
+var _handlebars2 = _interopRequireDefault(_handlebars);
 
 var _events = require('events');
 
@@ -10897,9 +10976,9 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table th tr td pre figure figcaption'.split(' ');
+var tags = exports.tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table th tr td pre figure figcaption'.split(' ');
 
-var template = (0, _templates2.default)('\n<{{  tagName  ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes }} class="{{  classes  }}"{{/if }}>\n  {{{  children  }}}\n</{{  tagName  }}>\n');
+var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes }} class="{{  classes  }}"{{/if }}>\n  {{{  children  }}}\n</{{  tagName  }}>\n');
 
 // FIRST TIME WE NEEDED TO DO SERVER CHECK
 // creeep begins
@@ -10970,7 +11049,7 @@ exports.default = View;
 
 View.prototype.template = template;
 
-},{"../templates":49,"events":"events"}],61:[function(require,module,exports){
+},{"events":"events","handlebars":33}],61:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
@@ -12031,11 +12110,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   return hljs;
 });
 
-},{}],"render":[function(require,module,exports){
+},{}],"client_renderer":[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
-exports.Render = exports.ready = exports.default = undefined;
+exports.ClientRenderer = exports.ready = exports.default = undefined;
 
 var _events = require('events');
 
@@ -12048,6 +12127,14 @@ var _article2 = _interopRequireDefault(_article);
 var _log = require('log');
 
 var log = _interopRequireWildcard(_log);
+
+var _env = require('env');
+
+var env = _interopRequireWildcard(_env);
+
+var _dom = require('dom');
+
+var _dom2 = _interopRequireDefault(_dom);
 
 var _article3 = require('./views/article');
 
@@ -12079,29 +12166,28 @@ var callbacks = {
   setStyle: 'setStyle',
 
   // used for developmentServer
-  developmentRepos: 'developmentRepos',
+  devFileList: 'devFileList',
   updateAsset: 'updateAsset'
-
 };
 
 var articleViewEvents = {
   assetMissing: 'fetchAsset'
 };
 
-var _developmentRepos = [];
+var _devFileList = [];
 
-var resolve = void 0;
+var _resolve = void 0;
 var ready = exports.ready = new Promise(function (r) {
-  return resolve = r;
+  return _resolve = r;
 });
 
-var Render = exports.Render = function (_EventEmitter) {
-  _inherits(Render, _EventEmitter);
+var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
+  _inherits(ClientRenderer, _EventEmitter);
 
-  function Render() {
+  function ClientRenderer() {
     var _ret;
 
-    _classCallCheck(this, Render);
+    _classCallCheck(this, ClientRenderer);
 
     // singleton
     var _this = _possibleConstructorReturn(this, _EventEmitter.call(this));
@@ -12114,12 +12200,12 @@ var Render = exports.Render = function (_EventEmitter) {
     return _this;
   }
 
-  Render.prototype.message = function message(e) {
+  ClientRenderer.prototype.message = function message(e) {
     // log.info('P:', e.data.event, e.data.args ? e.data.args : '');
     this.trigger(e.data.event, e.data.args);
   };
 
-  Render.prototype.set = function set(data) {
+  ClientRenderer.prototype.set = function set(data) {
     var _this2 = this;
 
     data.javascript = true;
@@ -12131,14 +12217,14 @@ var Render = exports.Render = function (_EventEmitter) {
     this.articleView = new _article4.default(data);
     this.bind(articleViewEvents, this.articleView);
 
-    dom().prepend(this.articleView.html());
+    _dom2.default.body().prepend(this.articleView.html());
 
     return this.attachAssets().then(function () {
-      return resolve(_this2);
+      return _resolve(_this2);
     });
   };
 
-  Render.prototype.fetchAsset = function fetchAsset(view, assetPaths) {
+  ClientRenderer.prototype.fetchAsset = function fetchAsset(view, assetPaths) {
     var _this3 = this;
 
     Promise.all(assetPaths.map(function (path) {
@@ -12147,19 +12233,33 @@ var Render = exports.Render = function (_EventEmitter) {
       });
       if (found) return Promise.resolve();
 
-      return fetch('/' + path + '.json').then(function (response) {
-        if (response.ok) return response.json();else {
+      if (!/\.(svg|hbs|es6)/.test(path)) path += '.hbs';
+
+      var url = void 0;
+      var repo = path.match(RegExp('(.*?)([./]|$)'))[1];
+
+      console.log(repo, _devFileList[repo]);
+
+      if (_devFileList[repo] && _devFileList[repo].includes(path)) {
+        url = 'https://localhost:8000/' + path;
+        log.info('fetching from development: ' + path);
+      } else url = env.contentOrigin + '/' + path;
+
+      return fetch(url).then(function (response) {
+        if (response.ok) return response.text();else {
           console.error('Failed to load asset');
           var data = {
             type: 'Not Found',
-            filename: path,
-            message: 'Could not load asset'
+            message: 'Could not load asset',
+            assetPath: path,
+            viewId: view.id
           };
           _article2.default.send('assetError', data);
-          view.el.textContent = 'failed to load ' + path;
+          var message = 'failed to load ' + path;
+          view.el.textContent = message;
         }
-      }).then(function (data) {
-        return _this3.articleView.addPartial(data);
+      }).then(function (text) {
+        return _this3.articleView.addPartialFromAsset(path, text);
       });
     })).then(function () {
       return _this3.replaceViewHTML(view);
@@ -12168,38 +12268,39 @@ var Render = exports.Render = function (_EventEmitter) {
     });
   };
 
-  Render.prototype.attachAssets = function attachAssets() {
+  ClientRenderer.prototype.attachAssets = function attachAssets() {
 
-    var js = _article2.default.attrs.scripts.map(function (s) {
-      var el = document.createElement('script');
-      // not necessary obviously but just to help people understand
-      el.async = true;
-      // crossorigin attribute allows better error events
-      el.setAttribute('crossorigin', '');
-      var repo = s.match(/^(.*?)[-./]/)[1];
-      if (_developmentRepos.includes(repo)) {
-        var base = s.match(/(.*?)(-[a-f0-9]{32})?\.js$/)[1];
-        log.info('serving from development: ', base + '.js');
-        el.src = 'https://localhost:8000/' + base + '.js';
-      } else el.src = env.contentOrigin + '/' + s;
-      return el;
-    });
+    if (_article2.default.attrs.style) (0, _dom2.default)('head').append('<style>' + artcle.attrs.style + '</style>');
 
-    var css = _article2.default.attrs.stylesheets.map(function (s) {
-      var repo = s.match(/^(.*?)[-./]/)[1];
-      if (_developmentRepos.includes(repo)) {
-        var base = s.match(/(.*?)(-[a-f0-9]{32})?\.css$/)[1];
-        log.info('serving from development: ', base + '.css');
-        s = 'https://localhost:8000/' + base + '.css';
-      } else s = env.contentOrigin + '/' + s;
-      return dom.create('<link rel=stylesheet href="' + s + '">');
-    });
+    var tags = _article2.default.attrs.assets.reduce(function (tags, base_path) {
 
-    // Editor-side article preview sends style as well
-    if (_article2.default.attrs.style) dom('head').append('<style>' + _article2.default.attrs.style + '</style>');
+      // serve from development
+      var repo = base_path.match(/^(.*?)([-./]|$)/)[1];
+      if (_devFileList[repo]) {
+        var url = 'https://localhost:8000/';
+        if (_devFileList[repo].includes(base_path + '.js')) {
+          tags.push(makeScriptTag(url + base_path + '.js'));
+          log.info('fetching from development: ' + base_path + '.js');
+        }
+        if (_devFileList[repo].includes(base_path + '.css')) {
+          tags.push(_dom2.default.create('<link rel=stylesheet href="' + url + base_path + '.css">'));
+          log.info('fetching from development: ' + base_path + '.css');
+        }
+        return tags;
+      }
 
-    return Promise.all(js.concat(css).map(function (el) {
-      dom.append(document.head, el);
+      // serve normally
+      _article2.default.attrs.asset_data.map(function (data) {
+        var url = void 0;
+        if (env.development) url = env.contentOrigin + '/' + data.asset_path;else url = env.contentOrigin + '/' + data.digest_path;
+        if (data.asset_path == base_path + '.js') tags.push(makeScriptTag(url));else if (data.asset_path == base_path + '.css') tags.push(_dom2.default.create('<link rel=stylesheet href="' + url + '">'));
+      });
+
+      return tags;
+    }, []);
+
+    return Promise.all(tags.map(function (el) {
+      _dom2.default.append(document.head, el);
       return new Promise(function (resolve, reject) {
         el.onload = resolve;
         setTimeout(resolve, 3000);
@@ -12209,102 +12310,115 @@ var Render = exports.Render = function (_EventEmitter) {
 
   // LIVE PREVIEW
 
-  Render.prototype.change = function change(data) {
+  ClientRenderer.prototype.change = function change(data) {
     console.log('change', data);
     var view = this.articleView.set(data);
     this.replaceViewHTML(view);
   };
 
-  Render.prototype.replaceViewHTML = function replaceViewHTML(view) {
-    var target = dom.first('[x-cp-id=' + view.attrs.id + ']');
+  ClientRenderer.prototype.replaceViewHTML = function replaceViewHTML(view) {
+    var target = _dom2.default.first('[x-cp-id=' + view.attrs.id + ']');
     target.outerHTML = view.html();
   };
 
-  Render.prototype.add = function add(data) {
+  ClientRenderer.prototype.add = function add(data) {
     console.log('add', data);
-    var target = dom.first('[x-cp-id=' + data.parent_id + ']');
+    var target = _dom2.default.first('[x-cp-id=' + data.parent_id + ']');
     this.articleView.add(data);
     target.outerHTML = this.articleView.replace(data);
   };
 
-  Render.prototype.remove = function remove(data) {
+  ClientRenderer.prototype.remove = function remove(data) {
     console.log('remove', e);
   };
 
   // EDITOR SCROLL SYNC
 
-  Render.prototype.setScroll = function setScroll(pct) {
+  ClientRenderer.prototype.setScroll = function setScroll(pct) {
     _article2.default.scroll(_article2.default.scrollMax() * pct);
   };
 
-  Render.prototype.setStyle = function setStyle(style) {
-    dom.find(document, 'head style').innerHTML = style;
+  ClientRenderer.prototype.setStyle = function setStyle(style) {
+    _dom2.default.first(document, 'head style').innerHTML = style;
   };
 
   // DEVELOPMENT SERVER
 
-  Render.prototype.developmentRepos = function developmentRepos(repos) {
-    _developmentRepos = repos;
+  ClientRenderer.prototype.devFileList = function devFileList(list) {
+    _devFileList = list;
 
     // swap CSS
     var repoRegex = RegExp('^/(.*?)(\/|\.js|\.css|-[0-9a-f]{32})');
     var baseRegex = RegExp('^/(.*?)(-[0-9a-f]{32})?\.(js|css)');
-    dom('link').map(function (tag) {
+    (0, _dom2.default)('link').map(function (tag) {
       var url = new URL(tag.href);
       var repo = url.pathname.match(repoRegex)[1];
-      if (repo === 'app') return;
+      if (['app', 'render'].includes(repo)) return;
       var basePath = url.pathname.match(baseRegex)[1];
-      if (repos.includes(repo)) {
-        log.info('serving from development: ', basePath + '.css');
+      if (_devFileList[repo]) {
+        log.info('fetching from development: ' + basePath + '.css');
         tag.href = 'https://localhost:8000/' + basePath + '.css';
       }
     });
 
     // swap JS
-    dom('script').map(function (tag) {
+    (0, _dom2.default)('script').map(function (tag) {
       if (!tag.src) return;
       var url = new URL(tag.src);
       var repo = url.pathname.match(repoRegex)[1];
-      if (repo === 'app') return;
+      if (['app', 'render'].includes(repo)) return;
       var basePath = url.pathname.match(baseRegex)[1];
-      if (repos.includes(repo)) {
-        log.info('serving from development: ', basePath + '.js');
+      if (_devFileList[repo]) {
+        log.info('fetching from development: ' + basePath + '.js');
         tag.src = 'https://localhost:8000/' + basePath + '.js';
       }
     });
   };
 
-  Render.prototype.updateAsset = function updateAsset(path) {
+  ClientRenderer.prototype.updateAsset = function updateAsset(path) {
     var _this4 = this;
 
+    // inline asset
+    if (this.articleView.handlebars.partials[path]) location.reload();
     // JS update checks if it's in this frame then reloads
-    if (path.match(/js$/)) {
-      var selector = 'script[src^="https://localhost:8000/' + path + '"]';
-      if (dom.find(document, selector)) location.reload();
-    }
-    // CSS update does a hot reload
-    else if (path.match(/css$/)) {
-        var _selector = 'link[href^="https://localhost:8000/' + path + '"]';
-        var tag = dom.find(document, _selector);
-
-        if (tag) {
-          log.info('update: ', path);
-
-          // onload doesn't work the second time so must replace the tag
-          tag.remove();
-          var href = 'https://localhost:8000/' + path + '?' + Date.now();
-          var el = dom.create('<link rel=stylesheet href="' + href + '">');
-          el.onload = function () {
-            return _this4.resize();
-          };
-          dom.append(document.head, el);
-        }
+    else if (path.match(/js$/)) {
+        var selector = 'script[src^="https://localhost:8000/' + path + '"]';
+        // external asset
+        if (_dom2.default.first(document, selector)) location.reload();
       }
+      // CSS update does a hot reload
+      else if (path.match(/css$/)) {
+          var _selector = 'link[href^="https://localhost:8000/' + path + '"]';
+          var tag = _dom2.default.first(document, _selector);
+
+          if (tag) {
+            log.info('update: ', path);
+
+            // onload doesn't work the second time so must replace the tag
+            tag.remove();
+            var href = 'https://localhost:8000/' + path + '?' + Date.now();
+            var el = _dom2.default.create('<link rel=stylesheet href="' + href + '">');
+            el.onload = function () {
+              return _this4.resize();
+            };
+            _dom2.default.append(document.head, el);
+          }
+        }
   };
 
-  return Render;
+  return ClientRenderer;
 }((0, _events2.default)());
 
-new Render();
+new ClientRenderer();
 
-},{"./views/article":51,"article":"article","events":"events","log":"log"}]},{},[48]);
+function makeScriptTag(url) {
+  var el = document.createElement('script');
+  // not necessary obviously but just to help people understand
+  el.async = true;
+  // crossorigin attribute allows better error events
+  el.setAttribute('crossorigin', '');
+  el.src = url;
+  return el;
+}
+
+},{"./views/article":51,"article":"article","dom":"dom","env":"env","events":"events","log":"log"}]},{},[48]);

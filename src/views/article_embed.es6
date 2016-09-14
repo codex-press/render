@@ -1,15 +1,17 @@
-import View  from './view';
+import Handlebars from 'handlebars';
+
+import View, {tags} from './view';
 import Index from './index';
-import compile from '../templates';
 import {unscopeLinks} from '../utility';
 
-let template = compile(`
-  <{{  tagName  }} class="article {{  classes  }}">
+let template = Handlebars.compile(`
+  <{{  tagName  }} class="{{  classes  }}"
+    {{#if cpID  }}id={{  cpID  }}{{/if }}>
     {{{  content  }}}
   </{{  tagName  }}>
 `);
 
-let defaultTemplate = compile(`
+let defaultTemplate = Handlebars.compile(`
   <h3><a href="{{  url  }}"> {{  title  }} </a></h3>
   <p class=description>{{  description  }}</p>
 `);
@@ -22,6 +24,7 @@ export default class ArticleEmbed extends View {
 
   constructor(attrs) {
     super(attrs);
+    // if it comes from Index children it doesn't have this
     this.attrs.type = 'ArticleEmbed';
   }
 
@@ -32,28 +35,64 @@ export default class ArticleEmbed extends View {
       this.attrs.article.classed_content,
       this.attrs.article.metadata,
       this.attrs.article,
-      {attrs: this.attrs}
+      {attrs: this.attrs},
+      {javascript: this.article.attrs.javascript}
     );
   }
 
 
   html() {
+    if (this.attrs.template === 'all_content')
+      return this.contentHTML();
+    else
+      return this.templateHTML();
+  }
+
+
+  contentHTML() {
+    return template({
+      tagName: this.articleTagName(),
+      classes: this.articleClasses(),
+      cpID: this.article.attrs.client ? this.attrs.id : '',
+      content: this.childrenHTML(),
+    });
+  }
+
+
+  articleTagName() {
+    var classes = this.attrs.article.classes || [];
+    var first = (classes[0] || '').toLowerCase();
+    return tags.includes(first) ? classes[0] : 'aside';
+  }
+
+
+  articleClasses() {
+    if (this.articleTagName() === this.attrs.classes[0])
+      return this.attrs.article.classes.slice(1).join(' ');
+    else
+      return (this.attrs.article.classes || []).join(' ');
+  }
+
+
+  templateHTML() {
 
     if (this.parent instanceof Index) {
-      let html = this.parent.entryTemplate(this.makeAttrs());
+      let html = this.parent.entryTemplate.compiled(this.makeAttrs());
       return unscopeLinks(html, this.article.attrs.path_prefix);
     }
 
-    let contentTemplate = this.article.templates.find(t => 
-      t.descriptor === this.attrs.template
-    );
+    let contentTemplate = this.article.templates.find(t => {
+      return t.descriptor === this.attrs.template
+    });
 
-    if (!contentTemplate)
+    if (contentTemplate)
+      contentTemplate = contentTemplate.compiled
+    else
       contentTemplate = defaultTemplate;
 
-    let html = this.template({
-      attrs: this.attrs,
-      classes: this.classes(),
+    let html = template({
+      cpID: this.article.attrs.client ? this.attrs.id : '',
+      classes: 'article ' + this.classes(),
       tagName: this.tagName(),
       content: contentTemplate(this.makeAttrs()),
     });

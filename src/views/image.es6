@@ -1,9 +1,10 @@
+import Handlebars from 'handlebars';
+
 import View from './view';
 import {findSource} from '../utility';
-import compile from '../templates';
 
 
-let simpleTemplate = compile(`
+let simpleTemplate = Handlebars.compile(`
   <img x-cp-image x-cp-id={{  cpID  }} draggable=false
     {{#if javascript }}
       src="{{  thumbURL  }}"
@@ -16,7 +17,7 @@ let simpleTemplate = compile(`
 
 
 // cropping but just by center point. overlays are absolutely positioned in CSS
-let backgroundImageTemplate = compile(`
+let backgroundImageTemplate = Handlebars.compile(`
   <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}
     class="{{  classes  }}"
     style="background-image: url(
@@ -37,24 +38,20 @@ let backgroundImageTemplate = compile(`
 
 // no cropping but with JS, it will constrain width if it's too big for the
 // container (like for the max-height 100vh). Positions overlays
-let figureTemplate = compile(`
+let figureTemplate = Handlebars.compile(`
   <figure x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">
 
+    {{#if javascript }}
+      <!-- this comment will be replaced with size info -->
+    {{/if }}
+
     <div class=frame>
-
       {{#if javascript}}
-
-        <!-- this comment will be replaced with size info -->
-
         <img class=thumb src="{{thumbURL}}" draggable=false> 
         <img class=full draggable=false> 
-
       {{else}}
-
         <img src="{{sourceURL}}" draggable=false> 
-
       {{/if}}
-
     </div>
 
     {{{children}}}
@@ -64,18 +61,16 @@ let figureTemplate = compile(`
 
 
 // JS only: cropping and nice overlays on top
-let cropTemplate = compile(`
+let cropTemplate = Handlebars.compile(`
   <figure x-cp-figure x-cp-crop x-cp-id={{  cpID  }} class="{{  classes  }}">
 
     <!-- this comment will be replaced with size info -->
 
     <div class=frame>
-
       <div class=crop>
         <img class=thumb src="{{  thumbURL  }}" draggable=false> 
         <img class=full draggable=false> 
       </div>
-
     </div>
 
     {{{children}}}
@@ -166,7 +161,7 @@ export default class ImageView extends View {
       sourceURL: this.sourceURL,
       thumbURL: this.thumbSource(),
       children: this.childrenHTML(),
-      javascript: false, //this.article.attrs.javascript,
+      javascript: this.article.attrs.javascript,
     });
   }
 

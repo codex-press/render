@@ -1,0 +1,40 @@
+
+.error-container {
+  position: fixed;
+  top: 1em;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 600px;
+  z-index: 100000;
+
+  line-height: 1.2;
+  font-family: @player-font;
+}
+
+.error {
+  background: hsl(0, 100%, 50%);
+  opacity: 0.9;
+  cursor: pointer;
+  padding: 0 1em;
+  margin: 1rem;
+  border-radius: 0.5em;
+  animation: 300ms fade-in linear;
+  overflow: hidden;
+}
+
+.error h2, h3, h4 {
+  margin: 0.8em 0;
+}
+.error h3 {
+  font-size: 1em;
+}
+.error pre {
+  background: #eee;
+  padding: 1em;  
+}
+
+.error.hidden {
+  animation: 300ms fade-out linear;
+}
+

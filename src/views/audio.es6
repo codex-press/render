@@ -3,17 +3,8 @@ import Handlebars from 'handlebars';
 import View         from './view';
 import {findSource} from '../utility';
 
-let simpleTemplate = Handlebars.compile(`
-  <audio
-    class="{{classes}}">
-    {{#if javascript  }}preload=none{{/if  }}
-    src="{{  sourceUrl  }}"
-    type="audio/mp3">
-  </audio>
-`);
-
 let template = Handlebars.compile(`
-<div x-cp-id={{  id  }} class="{{  classes  }}">
+<div x-cp-audio x-cp-id={{  id  }} class="{{  classes  }}">
   <audio
     {{#if javascript }}preload=none{{/if }}
     src="{{sourceUrl}}"
@@ -22,8 +13,8 @@ let template = Handlebars.compile(`
 </div>
 `);
 
-export default class Audio extends View {
 
+export default class Audio extends View {
 
   constructor(attrs) {
     super(attrs);

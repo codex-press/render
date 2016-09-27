@@ -16,7 +16,8 @@ let simpleTemplate = Handlebars.compile(`
 `);
 
 
-// cropping but just by center point. overlays are absolutely positioned in CSS
+// cropping but just by center point. overlays are absolutely positioned in
+// CSS
 let backgroundImageTemplate = Handlebars.compile(`
   <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}
     class="{{  classes  }}"
@@ -36,25 +37,25 @@ let backgroundImageTemplate = Handlebars.compile(`
 `);
 
 
-// no cropping but with JS, it will constrain width if it's too big for the
-// container (like for the max-height 100vh). Positions overlays
+// no cropping here.  but with Javascript, it will constrain width if it's
+// too big for the container (like for the max-height 100vh). Positions
+// overlays
 let figureTemplate = Handlebars.compile(`
-  <figure x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">
+  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">
 
-    {{#if javascript }}
-      <!-- this comment will be replaced with size info -->
-    {{/if }}
-
-    <div class=frame>
-      {{#if javascript}}
-        <img class=thumb src="{{thumbURL}}" draggable=false> 
+    {{#if javascript}}
+      <div class=frame>
+        <div class=shim style="padding-top: {{  padding  }}%;"></div>
+        <img class=thumb src="{{  thumbURL  }}" draggable=false> 
         <img class=full draggable=false> 
-      {{else}}
-        <img src="{{sourceURL}}" draggable=false> 
-      {{/if}}
-    </div>
+      </div>
+    {{else}}
+      <img src="{{  sourceURL  }}" draggable=false> 
+    {{/if}}
 
-    {{{children}}}
+    <div class=children>
+      {{{  children  }}}
+    </div>
 
   </figure>
 `);
@@ -62,18 +63,19 @@ let figureTemplate = Handlebars.compile(`
 
 // JS only: cropping and nice overlays on top
 let cropTemplate = Handlebars.compile(`
-  <figure x-cp-figure x-cp-crop x-cp-id={{  cpID  }} class="{{  classes  }}">
-
-    <!-- this comment will be replaced with size info -->
+  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">
 
     <div class=frame>
+      <div class=shim style="padding-top: {{  padding  }}%;"></div>
       <div class=crop>
         <img class=thumb src="{{  thumbURL  }}" draggable=false> 
         <img class=full draggable=false> 
       </div>
     </div>
 
-    {{{children}}}
+    <div class=children>
+      {{{children}}}
+    </div>
 
   </figure>
 `);
@@ -99,7 +101,7 @@ export default class ImageView extends View {
     // setting <img> just gives you an image and you're on your own
     if (this.tagName() === 'img')
       return this.simpleHTML();
-    // any other tag name besides <figure> will prompt this behaviour
+    // any other tag name besides <figure> will use background image 
     else if (this.tagName() !== 'figure')
       return this.backgroundHTML();
     // crop requires JS
@@ -160,6 +162,7 @@ export default class ImageView extends View {
       classes: this.classes(),
       sourceURL: this.sourceURL,
       thumbURL: this.thumbSource(),
+      padding: (this.aspectRatio * 1000) / 10,
       children: this.childrenHTML(),
       javascript: this.article.attrs.javascript,
     });
@@ -172,6 +175,7 @@ export default class ImageView extends View {
       classes: this.classes(),
       sourceURL: this.sourceURL,
       thumbURL: this.thumbSource(),
+      padding: (this.aspectRatio * 1000) / 10,
       children: this.childrenHTML(),
       javascript: this.article.attrs.javascript,
     });

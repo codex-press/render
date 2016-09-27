@@ -4,8 +4,9 @@ import View from './view';
 import {findSource} from '../utility';
 
 let attributes = `
-  src="{{sourceURL}}"
-  poster="{{  posterURL  }}"
+  {{#unless javascript}}
+    poster="{{  posterURL  }}" src="{{sourceURL}}"
+  {{/unless}}
   {{#if javascript}} preload=none {{else}} preload=auto {{/if}}
   {{#if loop }}  loop  {{/if}}
   {{#if autoplay }}  autoplay  {{/if }}
@@ -15,7 +16,9 @@ let attributes = `
 
 // when specified with tag <video>
 let simpleTemplate = Handlebars.compile(`
-  <video x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}" ${attributes}>
+  <video x-cp-video x-cp-id={{  cpID  }}
+    class="{{  classes  }}"
+    ${attributes}>
   </video>
 `);
 
@@ -25,18 +28,19 @@ let figureTemplate = Handlebars.compile(`
   <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}">
 
     {{#if javascript}}
-      <!-- this comment will be replaced with size info -->
-    {{/if}}
-
-    <div class=frame>
-      <video ${attributes}></video>
-      {{#if javascript}}
+      <div class=frame>
+        <div class=shim style="padding-top: {{  padding  }}%;"></div>
+        <video ${attributes}></video>
         <img class=thumb src="{{  thumbURL  }}" draggable=false> 
         <img class=poster draggable=false> 
-      {{/if}}
-    </div>
+      </div>
+    {{else}}
+      <video ${attributes}></video>
+    {{/if}}
 
-    {{{children}}}
+    <div class=children>
+      {{{  children  }}}
+    </div>
 
   </figure>
 `);
@@ -44,12 +48,10 @@ let figureTemplate = Handlebars.compile(`
 
 // with cropping, JS only
 let cropTemplate = Handlebars.compile(`
-  <figure x-cp-figure x-cp-video x-cp-crop x-cp-id={{  cpID  }}
-    class="{{classes}}">
-
-    <!-- this comment will be replaced with size info -->
+  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{classes}}">
 
     <div class=frame>
+      <div class=shim style="padding-top: {{  padding  }}%;"></div>
       <div class=crop>
         <video ${attributes}></video>
         <img class=thumb src="{{thumbURL}}" draggable=false> 
@@ -57,14 +59,26 @@ let cropTemplate = Handlebars.compile(`
       </div>
     </div>
 
-    {{{children}}}
+    <div class=children>
+      {{{  children  }}}
+    </div>
 
   </figure>
 `);
 
 
 
-export default class FigureView extends View {
+export default class VideoView extends View {
+
+
+  constructor(attrs) {
+    super(attrs);
+
+    this.aspectRatio = (
+      this.attrs.media.original_height / this.attrs.media.original_width
+    );
+  }
+
 
   html() {
     this.source = findSource(this.attrs.media.srcset, this.quality());
@@ -73,15 +87,16 @@ export default class FigureView extends View {
     let posterURL = this.article.attrs.content_origin + this.source.poster;
 
     let autoplay = this.attrs.autoplay && !this.article.attrs.javascript;
-
-    let controls = this.attrs.controls ||
-      (!this.attrs.autoplay && !this.article.attrs.javascript);
+    let controls = this.attrs.controls && (
+      this.tagName() === 'video' || !this.article.attrs.javascript
+    );
 
     let attributes = {
       cpID: this.attrs.id,
       classes: this.classes(),
       sourceURL,
       posterURL,
+      padding: (this.aspectRatio * 1000) / 10,
       thumbURL: this.thumbSource(),
       loop: this.attrs.loop,
       autoplay,

@@ -4,6 +4,7 @@ import * as log from 'log';
 import * as env from 'env';
 import dom from 'dom';
 import ArticleView from './views/article';
+import devServer from './development_server';
 
 let instance;
 export {instance as default};
@@ -19,16 +20,12 @@ let callbacks = {
   setScroll     : 'setScroll',
   setStyle      : 'setStyle',
 
-  // used for developmentServer
-  devFileList   : 'devFileList',
-  updateAsset   : 'updateAsset',
 }
 
 let articleViewEvents = {
-  assetMissing : 'fetchAsset',
+  assetMissing : 'assetMissing',
 };
 
-let devFileList = [];
 
 let _resolve;
 export let ready = new Promise(r => _resolve = r);
@@ -36,25 +33,31 @@ export let ready = new Promise(r => _resolve = r);
 export class ClientRenderer extends EventEmitter() {
 
   constructor() {
-   super();
+    super();
 
     // singleton
     if (instance)
       return instance;
     instance = this;
 
+    this.fetchedAssets = [];
     this.bind(callbacks);
     this.bind({message: 'message'}, window);
+    this.bind({'state:dev-server' : 'changeDevServer'}, article);
   }
+
+  // changeDevServer(value) {
+  //   location.reload();
+  // }
 
 
   message(e) {
-    // log.info('P:', e.data.event, e.data.args ? e.data.args : '');
     this.trigger(e.data.event, e.data.args);
   }
 
 
   set(data) {
+    // console.log(data);
     data.javascript = true;
     data.client = true;
     data.content_origin = location.origin;
@@ -66,25 +69,48 @@ export class ClientRenderer extends EventEmitter() {
 
     dom.body().prepend(this.articleView.html());
 
-    return this.attachAssets().then(() => _resolve(this));
+    return (new Promise((resolve, reject) => {
+      if (article.hasState('dev-server'))
+        devServer.connect().then(resolve)
+      else
+        resolve();
+    }))
+    .then(() => this.attachAssets())
+    .then(() => _resolve(this));
   }
 
 
-  fetchAsset(view, assetPaths) {
-    Promise.all(assetPaths.map(path => {
-      let found = article.attrs.inline_assets.find(a => a.asset_path == path);
-      if (found)
-         return Promise.resolve();
+  // The problem is Handlebars doesn't say which partial was missing. We must
+  // check if they've all loaded. Load them if not. Or error if they've all been
+  // loaded since any number of things could go wrong.
+  assetMissing(view, error) {
+    let builtIn = 'br date play audio share fullscreen email reddit twitter facebook play_icon audio_icon fullscreen_icon share_icon email_icon reddit_icon twitter_icon facebook_icon'.split(/ /);
+
+    // There could be any number of errors for this. The partials cannot be
+    // nested so if we've downloaded all of the partials, log the error.
+    let toFetch = view.partials().filter(name =>
+      !builtIn.includes(name) &&
+      !this.fetchedAssets.includes(name) &&
+      !this.fetchedAssets.includes(name + '.hbs')
+    );
+
+    if (toFetch.length === 0) {
+      console.error(error.message);
+      setTimeout(() => this.replaceGrafText(view.attrs.id, error.message));
+      return;
+    }
+
+    Promise.all(toFetch.map(path => {
 
       if (!/\.(svg|hbs|es6)/.test(path))
         path += '.hbs';
 
+      this.fetchedAssets.push(path);
+
       let url;
       let repo = path.match(RegExp('(.*?)([./]|$)'))[1];
 
-      console.log(repo, devFileList[repo]);
-
-      if (devFileList[repo] && devFileList[repo].includes(path)) {
+      if (devServer.fileList[repo]) {
         url = 'https://localhost:8000/' + path;
         log.info(`fetching from development: ${path}`);
       }
@@ -96,16 +122,17 @@ export class ClientRenderer extends EventEmitter() {
         if (response.ok)
           return response.text();
         else {
-          console.error('Failed to load asset');
           let data = {
             type: 'Not Found',
             message: 'Could not load asset',
             assetPath: path,
-            viewId: view.id,
+            viewId: view.attrs.id,
           };
           article.send('assetError', data);
-          let message = 'failed to load ' + path;
-          view.el.textContent = message;
+          let message = 'Failed to load ' + path;
+          console.error(message);
+          setTimeout(() => this.replaceGrafText(view.attrs.id, message));
+          return message;
         }
       })
       .then(text => this.articleView.addPartialFromAsset(path, text));
@@ -125,13 +152,14 @@ export class ClientRenderer extends EventEmitter() {
 
       // serve from development
       let repo = base_path.match(/^(.*?)([-./]|$)/)[1];
-      if (devFileList[repo]) {
+      if (devServer.fileList[repo]) {
         let url = 'https://localhost:8000/';
-        if (devFileList[repo].includes(base_path + '.js')) {
+        // add JS and/or CSS depending on if they exist in offerings
+        if (devServer.fileList[repo].includes(base_path + '.js')) {
           tags.push(makeScriptTag(url+ base_path + '.js'));
           log.info(`fetching from development: ${base_path}.js`);
         }
-        if (devFileList[repo].includes(base_path + '.css')) {
+        if (devServer.fileList[repo].includes(base_path + '.css')) {
           tags.push(dom.create(
             `<link rel=stylesheet href="${url}${base_path}.css">`
           ));
@@ -172,19 +200,18 @@ export class ClientRenderer extends EventEmitter() {
   // LIVE PREVIEW
 
   change(data) {
-    console.log('change', data);
+    // console.log('change', data);
     let view = this.articleView.set(data);
     this.replaceViewHTML(view);
   }
 
   replaceViewHTML(view) {
-    let target = dom.first(`[x-cp-id=${view.attrs.id}]`)
+    let target = dom.first(`[x-cp-id="${view.attrs.id}"]`)
     target.outerHTML = view.html();
   }
 
 
   add(data) {
-    console.log('add', data);
     let target = dom.first(`[x-cp-id=${data.parent_id}]`)
     this.articleView.add(data);
     target.outerHTML = this.articleView.replace(data);
@@ -193,6 +220,13 @@ export class ClientRenderer extends EventEmitter() {
 
   remove(data) {
     console.log('remove', e);
+  }
+
+
+  // used for errors, etc.
+  replaceGrafText(id, text) {
+    if (dom.first(`[x-cp-id="${id}"]`))
+      dom.first(`[x-cp-id="${id}"]`).textContent = text;
   }
 
 
@@ -207,73 +241,6 @@ export class ClientRenderer extends EventEmitter() {
   setStyle(style) {
     dom.first(document, 'head style').innerHTML = style;
   }
-
-
-  // DEVELOPMENT SERVER
-
-  devFileList(list) {
-    devFileList = list;
-
-    // swap CSS
-    let repoRegex = RegExp('^/(.*?)(\/|\.js|\.css|-[0-9a-f]{32})')
-    let baseRegex = RegExp('^/(.*?)(-[0-9a-f]{32})?\.(js|css)')
-    dom('link').map(tag => {
-      let url = new URL(tag.href);
-      let repo = url.pathname.match(repoRegex)[1];
-      if (['app','render'].includes(repo)) return;
-      let basePath = url.pathname.match(baseRegex)[1];
-      if (devFileList[repo]) {
-        log.info(`fetching from development: ${basePath}.css`);
-        tag.href = `https://localhost:8000/${basePath}.css`;
-      }
-    });
-
-    // swap JS
-    dom('script').map(tag => {
-      if (!tag.src) return;
-      let url = new URL(tag.src);
-      let repo = url.pathname.match(repoRegex)[1];
-      if (['app','render'].includes(repo)) return;
-      let basePath = url.pathname.match(baseRegex)[1];
-      if (devFileList[repo]) {
-        log.info(`fetching from development: ${basePath}.js`);
-        tag.src = `https://localhost:8000/${basePath}.js`;
-      }
-    });
-  }
-
-
-  updateAsset(path) {
-
-    // inline asset
-    if (this.articleView.handlebars.partials[path])
-      location.reload();
-    // JS update checks if it's in this frame then reloads
-    else if (path.match(/js$/)) { 
-      let selector = `script[src^="https://localhost:8000/${path}"]`;
-      // external asset
-      if (dom.first(document, selector))
-        location.reload();
-    }
-    // CSS update does a hot reload
-    else if (path.match(/css$/)) {
-      let selector = `link[href^="https://localhost:8000/${path}"]`;
-      let tag = dom.first(document, selector)
-
-      if (tag) {
-        log.info('update: ', path);
-
-        // onload doesn't work the second time so must replace the tag
-        tag.remove();
-        let href = `https://localhost:8000/${path}?` + Date.now();
-        let el = dom.create(`<link rel=stylesheet href="${href}">`)
-        el.onload = () => this.resize();
-        dom.append(document.head, el);
-      }
-    }
-
-  }
-
 
 }
 

@@ -5,6 +5,7 @@ export let tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div 
 
 let template = Handlebars.compile(`
 <{{  tagName  ~}}
+  {{#if isOverlay}} x-cp-overlay{{/if ~}}
   {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}
   {{#if classes }} class="{{  classes  }}"{{/if }}>
   {{{  children  }}}
@@ -33,6 +34,7 @@ export default class View extends Super {
   html() {
     return this.template({
       attrs: this.attrs,
+      isOverlay: this.isOverlay(),
       cpID: this.article.attrs.client ? this.attrs.id : '',
       children: this.childrenHTML(),
       javascript: (this.article || this).attrs.javascript,
@@ -78,6 +80,15 @@ export default class View extends Super {
       return this.parent.path().concat(this);
     else
       return [this]
+  }
+
+
+  isOverlay() {
+    return (
+      this.parent &&
+      ['Image','Video'].includes(this.parent.attrs.type) &&
+      this.parent.tagName() === 'figure'
+    );
   }
 
 }

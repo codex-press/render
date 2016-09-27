@@ -2,17 +2,23 @@ import View           from './view';
 import {unscopeLinks} from '../utility';
 
 let template = (`
-  <{{  tagName  ~}}
-    {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}
-    {{#if classes}} class="{{  classes  }}"{{/if}}>
-    {{{  content  }}}
-  </{{  tagName  }}>
+<{{  tagName  ~}}
+  {{#if isOverlay}} x-cp-overlay{{/if ~}}
+  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}
+  {{#if classes}} class="{{  classes  }}"{{/if}}>
+  {{{  content  }}}
+</{{  tagName  }}>
 `);
+
+// Single mustache { turns to {{> so that it renders a partial, however 
+// it can be escaped like \{
+let partialRe = /([^\\]*?)\{{1}(.*?[^\\])\}{1}/g;
 
 export default class Graf extends View {
 
   constructor(attrs) {
     super(attrs);
+    this.errors = [];
     this.is_empty = (this.attrs.body.trim().length === 0)
   }
 
@@ -20,50 +26,62 @@ export default class Graf extends View {
   html() {
 
     let content = '';
-    // normal paragraph
+
+    // normal paragraph, no templating
     if (this.attrs.body.indexOf('{') < 0)
-      content = this.attrs.body;
-    // make the body into a template so things like {>date} work
-    else {
+      return this.htmlFromContent(this.attrs.body);
 
-      // single mustache for {{> so it renders partial works and is not
-      // escaped. single curly bracket itself escaped with \
+    // make the body into a template so things like { date } work
+    let source = this.attrs.body.replace(partialRe, '$1{{>$2}}');
 
-      let partials = this.attrs.body.match(/\{(.+?)\}/g).map(s => {
-        return s.replace(/[{}]/g,'').trim();
-      });
-
-      let bracketRe = /([^\\]*?)\{{1}(.*?[^\\])\}{1}/g;
-      let source = this.attrs.body.replace(bracketRe, '$1{{>$2}}');
-      try {
-        let compiled = this.article.handlebars.compile(source);
-        content = compiled(this.article.templateAttrs)
+    try {
+      let compiled = this.article.handlebars.compile(source);
+      content = compiled(this.article.templateAttrs)
+      // escaped curly brackets turned to normal curly brackets
+      content = content.replace(/\\{/g, '{').replace(/\\}/g, '}');
+      return this.htmlFromContent(content);
+    }
+    catch (error) {
+      let message;
+      if (this.article.trigger) {
+        this.article.trigger('assetMissing', this, error);
+        message = 'Loading... ' + this.partials().join(' ');
       }
-      catch (e) {
-        if (this.article.trigger)
-          this.article.trigger('assetMissing', this, partials);
-        else
-          console.error(e);
-        if (this.article.attrs.client)
-          content = 'Loading... ' + partials.join(' ');
-        else
-          content = e.message;
+      else {
+        if (this.article.attrs.client) {
+          console.warn(source);
+          console.error(error);
+        }
+        message = error.message;
       }
+      return this.htmlFromContent(message);
     }
 
-    // escaped curly brackets turned to normal curly brackets
-    content = content.replace(/\\{/g, '{').replace(/\\}/g, '}');
+  }
 
+
+  htmlFromContent(content) {
     // change links for virtual hosts
     content = unscopeLinks(content, this.article.attrs.path_prefix);
 
     return this.article.handlebars.compile(template)({
       content,
+      isOverlay: this.isOverlay(),
       cpID: this.article.attrs.client ? this.attrs.id : '',
       classes: this.classes(),
       tagName: this.tagName(),
     });
 
+  }
+
+
+  partials() {
+    let partials = [];
+    let match;
+    partialRe.lastIndex = 0;
+    while (match = partialRe.exec(this.attrs.body))
+      partials.push(match[2].trim());
+    return partials;
   }
 
 

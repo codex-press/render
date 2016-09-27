@@ -9842,6 +9842,254 @@ process.umask = function() { return 0; };
 },{}],48:[function(require,module,exports){
 'use strict';
 
+exports.__esModule = true;
+exports.default = undefined;
+
+var _dom = require('dom');
+
+var _dom2 = _interopRequireDefault(_dom);
+
+var _events = require('events');
+
+var _events2 = _interopRequireDefault(_events);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+//import * as u from 'utility';
+
+var version = '0.0.1';
+
+// singleton. it's instatiated by Renderer if needed
+var instance = false;
+exports.default = instance;
+
+
+var errorEls = {};
+var reconnectInterval = void 0;
+
+var DevelopmentServer = function (_EventEmitter) {
+  _inherits(DevelopmentServer, _EventEmitter);
+
+  function DevelopmentServer() {
+    var _ret;
+
+    _classCallCheck(this, DevelopmentServer);
+
+    // singleton
+    var _this = _possibleConstructorReturn(this, _EventEmitter.call(this));
+
+    if (instance) return _ret = instance, _possibleConstructorReturn(_this, _ret);
+    exports.default = instance = _this;
+
+    _this.fileList = {};
+
+    _dom2.default.ready.then(function () {
+      return _dom2.default.body().append('<div class=error-container></div>');
+    });
+    return _this;
+  }
+
+  // returns Promise to a loaded fileList
+
+
+  DevelopmentServer.prototype.connect = function connect() {
+    var _this2 = this;
+
+    console.log('here');
+
+    return new Promise(function (resolve, reject) {
+
+      var ws = new WebSocket('wss://localhost:8000');
+      var firstMessage = true;
+
+      ws.onerror = function (err) {
+        log.error(err);
+        var message = '<h2>Can\'t connect to https://localhost:8000</h2>';
+        _this2.showAlert(message, 'connect');
+        localStorage.removeItem('developmentServer');
+        devServerEnabled = false;
+        _dom2.default.first('.editor-nag input').checked = false;
+        console.log.error(response);
+      };
+
+      ws.onclose = function (e) {
+        console.log('onclose');
+        if (!reconnectInterval) {
+          var message = '<h2>Lost Connection To Development Server<h2>';
+          _this2.showAlert(message, 'connect');
+          reconnectInterval = setInterval(_this2.connect.bind(_this2), 2000);
+        }
+      };
+
+      ws.onmessage = function (e) {
+        var data = JSON.parse(e.data);
+
+        if (firstMessage) {
+          firstMessage = false;
+
+          if (data.version !== version) {
+            var message = '\n              <h2>Your Development Server Is Out Of Date</h2>\n              <div>\n                The current version is v' + version + ' and you are running\n                v' + (data.version || '0.0.0') + '. You must update it like this:\n              </div>\n              <pre>git pull\n              npm install</pre>\n            ';
+            _this2.showAlert(message, 'connect');
+            reject();
+            return;
+          }
+
+          _this2.fileList = data.fileList;
+          _this2.showAlert('<h2>Connected To Development Server</h2>', 'connect');
+          setTimeout(function () {
+            return _this2.removeAlert('connect');
+          }, 2000);
+          if (reconnectInterval) {
+            clearInterval(reconnectInterval);
+            reconnectInterval = undefined;
+          }
+          resolve();
+        }
+
+        if (data.error) {
+          var _message = void 0;
+          if (data.filename) _message = '<h2>' + data.error.type + ' Error: ' + data.filename + '</h2>';else _message = '<h2>' + data.error.type + ' Error</h2>';
+          _message += '<h3>' + data.error.message + '</h3>';
+          if (data.error.line) _message += '<div>line: ' + data.error.line + '</div>';
+          if (data.error.column) _message += '<div>column: ' + data.error.column + '</div>';
+          if (data.error.extract) _message += '<pre>' + data.error.extract + '</pre>';
+          _this2.showAlert(_message, data.assetPath);
+        } else if (data.assetPath) {
+          _this2.showAlert('<h4>Update: ' + data.assetPath + '</h3>', data.assetPath);
+          setTimeout(function () {
+            return _this2.removeAlert(data.assetPath);
+          }, 2000);
+        }
+      };
+    });
+  };
+
+  DevelopmentServer.prototype.devFileList = function devFileList(list) {
+    var devFileList = list;
+
+    // swap CSS
+    var repoRegex = RegExp('^/(.*?)(\/|\.js|\.css|-[0-9a-f]{32})');
+    var baseRegex = RegExp('^/(.*?)(-[0-9a-f]{32})?\.(js|css)');
+    (0, _dom2.default)('link').map(function (tag) {
+      var url = new URL(tag.href);
+      var repo = url.pathname.match(repoRegex)[1];
+      if (['app', 'render'].includes(repo)) return;
+      var basePath = url.pathname.match(baseRegex)[1];
+      if (devFileList[repo]) {
+        log.info('fetching from development: ' + basePath + '.css');
+        tag.href = 'https://localhost:8000/' + basePath + '.css';
+      }
+    });
+
+    // swap JS
+    (0, _dom2.default)('script').map(function (tag) {
+      if (!tag.src) return;
+      var url = new URL(tag.src);
+      var repo = url.pathname.match(repoRegex)[1];
+      if (['app', 'render'].includes(repo)) return;
+      var basePath = url.pathname.match(baseRegex)[1];
+      if (devFileList[repo]) {
+        log.info('fetching from development: ' + basePath + '.js');
+        tag.src = 'https://localhost:8000/' + basePath + '.js';
+      }
+    });
+  };
+
+  DevelopmentServer.prototype.updateAsset = function updateAsset(path) {
+    var _this3 = this;
+
+    // inline asset
+    if (this.articleView.handlebars.partials[path] || this.articleView.handlebars.partials[path + '.hbs']) {
+      // Remove from fetchedAssets so it will fetch again even if it errored 
+      // last time.
+      this.fetchedAssets = this.fetchedAssets.filter(function (a) {
+        return a !== path;
+      });
+      // re-render the views that depend on this asset for a patrial.
+      this.articleView.views.forEach(function (view) {
+        if (view.attrs.type === 'Graf' && view.partials().some(function (p) {
+          return p === path || p + '.hbs' === path;
+        })) _this3.replaceViewHTML(view);
+      });
+    }
+    // JS update checks if it's in this frame then reloads
+    else if (path.match(/js$/)) {
+        var selector = 'script[src^="https://localhost:8000/' + path + '"]';
+        // external asset
+        if (_dom2.default.first(document, selector)) location.reload();
+      }
+      // CSS update does a hot reload
+      else if (path.match(/css$/)) {
+          var _selector = 'link[href^="https://localhost:8000/' + path + '"]';
+          var tag = _dom2.default.first(document, _selector);
+
+          if (tag) {
+            log.info('update: ', path);
+
+            // onload doesn't work the second time so must replace the tag
+            tag.remove();
+            var href = 'https://localhost:8000/' + path + '?' + Date.now();
+            var el = _dom2.default.create('<link rel=stylesheet href="' + href + '">');
+            el.onload = function () {
+              return _this3.resize();
+            };
+            _dom2.default.append(document.head, el);
+          }
+        }
+  };
+
+  DevelopmentServer.prototype.showAlert = function showAlert(html, assetPath) {
+    var _this4 = this;
+
+    var el = _dom2.default.create('<div class=error>' + html + '</div>');
+    // replace existing
+    if (errorEls[assetPath]) errorEls[assetPath].remove();
+    if (assetPath) errorEls[assetPath] = el;
+    (0, _dom2.default)('.error-container').append(el);
+    (0, _dom2.default)(el).on('click', function () {
+      return _this4.removeAlert(assetPath || el);
+    });
+    return el;
+  };
+
+  DevelopmentServer.prototype.removeAlert = function removeAlert(assetPath) {
+    var el = errorEls[assetPath];
+    if (!el) return;
+    (0, _dom2.default)(el).addClass('hidden').on('animationend', function () {
+      el.remove();
+      errorEls[assetPath] = null;
+    });
+  };
+
+  return DevelopmentServer;
+}((0, _events2.default)());
+
+new DevelopmentServer();
+
+},{"dom":"dom","events":"events"}],49:[function(require,module,exports){
+"use strict";
+
+exports.__esModule = true;
+exports.default = {
+  "audio": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"icon audio\"><path d=\"M19.6 7.1c4.8 2.9 5.4 14.1 0 16.7-.9.4-.1 1.7.8 1.3 6.5-3.2 5.8-15.8 0-19.3-.9-.4-1.6.9-.8 1.3z\" class=\"on\"/><path d=\"M22.6 2.6c7.9 4.4 7.9 21.3 0 25.7-.8.5-.1 1.8.8 1.3 8.9-5 8.9-23.3 0-28.3-.9-.4-1.6.9-.8 1.3z\" class=\"on\"/><path d=\"M17.5 11.5c2 1.6 2.7 6.3.2 7.8-.8.5-.1 1.8.8 1.3 3.3-2 3-8 .2-10.2-.9-.5-2 .5-1.2 1.1z\" class=\"on\"/><path d=\"M26.7 18.6c.1.1.1.2 0 .3L25 20.6c-.1.1-.2.1-.3 0L22.1 18l-2.6 2.6c-.1.1-.2.1-.3 0l-1.7-1.7c-.1-.1-.1-.2 0-.3L20 16l-2.6-2.6c-.1-.1-.1-.2 0-.3l1.7-1.7c.1-.1.2-.1.3 0L22 14l2.6-2.6c.1-.1.2-.1.3 0l1.7 1.7c.1.1.1.2 0 .3L24.1 16l2.6 2.6z\" class=\"off\"/><path d=\"M14.3 6c-.3 0-.4.1-.7.3L8 12H3.2c-.3 0-.6 0-.9.3-.2.1-.3.4-.3.7v7c0 .3.1.6.3.7s.4.3.7.3h4.8l5.7 5.7c.3.1.4.3.7.3.3 0 .6-.1.7-.3.1-.1.3-.4.3-.7V7c0-.3-.1-.6-.3-.7 0-.2-.3-.3-.6-.3z\"/></svg>",
+  "email": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"icon email\"><path d=\"M28.1 24.1V12.7c-.3.4-.7.7-1 1-2.8 2-8.7 6.5-9.3 6.8-.6.3-1 .4-1.6.4-.4 0-1-.1-1.6-.4-.6-.3-6.5-4.7-9.3-6.8-.4-.3-.7-.7-1-1v11.4c0 .1 0 .3.1.3 0 .1.1.1.3.1h23c.1 0 .3 0 .3-.1-.1 0 .1-.2.1-.3zm0-15.6v-.6l-.1-.3-.1-.1H4.5c-.1 0-.3 0-.3.1-.1.2-.1.2-.1.3 0 1.7.7 3.1 2.2 4.2 2.1 1.6 8.3 6.8 9.6 6.8.3 0 .4 0 .7-.1.3-.1.4-.3.7-.4.3-.1 6.2-4.7 8.1-6.2.7-.4 1.2-1 1.8-1.7.7-.8.9-1.5.9-2zm1.9-.6v16.2c0 .7-.3 1.3-.7 1.7-.4.4-1 .7-1.8.7h-23c-.7 0-1.3-.3-1.8-.7-.4-.4-.7-1-.7-1.7V7.9c0-.7.3-1.3.7-1.7s1-.7 1.8-.7h23c.7 0 1.3.3 1.8.7.4.4.7 1.1.7 1.7z\"/></svg>",
+  "facebook": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"icon facebook\"><path d=\"M23.5 2.2v4.4h-2.7c-1 0-1.7.2-2 .6-.3.4-.5 1-.5 1.8v3.2h5.1l-.7 5h-4.4V30H13V17.2H8.5v-5h4.4V8.6c0-2.1.6-3.7 1.8-4.9S17.5 2 19.5 2c1.7 0 3.1.1 4 .2z\"/></svg>",
+  "fullscreen": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"icon fullscreen\"><path d=\"M2 20.5l3.2 3.2 7-7c.2-.2.4-.2.6 0l2.5 2.5c.2.2.2.4 0 .6l-7 7 3.2 3.2c.2.2.1.7-.3.7l-9.8.3c-.2 0-.4-.2-.4-.4l.3-9.8c0-.4.4-.5.7-.3z\" class=\"on\"/><path d=\"M20.8 1.3l9.8-.3c.2 0 .4.2.4.4l-.3 9.8c0 .4-.4.5-.7.3l-3.2-3.2-7 7c-.2.2-.4.2-.6 0l-2.5-2.5c-.2-.2-.2-.4 0-.6l7-7L20.5 2c-.2-.3-.1-.7.3-.7z\" class=\"on\"/><path d=\"M17.5 5l3.2 3.2 7-7c.2-.2.4-.2.6 0l2.5 2.5c.2.3.2.5 0 .7l-7 7 3.2 3.2c.2.2.1.7-.3.7l-9.7.2c-.2 0-.4-.2-.4-.4l.3-9.8c0-.4.4-.5.6-.3z\" class=\"off\"/><path d=\"M5.2 16.7l9.8-.3c.2 0 .4.2.4.4l-.3 9.8c0 .4-.4.5-.7.3l-3.2-3.2-7 7c-.2.2-.4.2-.6 0l-2.5-2.5c-.1-.2-.1-.5 0-.6l7-7-3.2-3.2c-.2-.2-.1-.7.3-.7z\" class=\"off\"/></svg>",
+  "play": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"icon play\"><path d=\"M11.8 31H7.4c-.4 0-.8-.4-.8-.8V1.8c0-.4.3-.8.8-.8h4.4c.4 0 .8.4.8.8v28.4c0 .4-.4.8-.8.8z\" class=\"pause\"/><path d=\"M24.6 31h-4.4c-.4 0-.8-.4-.8-.8V1.8c0-.4.4-.8.8-.8h4.4c.4 0 .8.4.8.8v28.4c0 .4-.3.8-.8.8z\" class=\"pause\"/><path d=\"M5 16.1V2.5c0-.6.7-1 1.2-.7L18 8.6l11.8 6.8c.5.3.5 1.1 0 1.4L18 23.6 6.2 30.4c-.5.3-1.2 0-1.2-.7V16.1z\" class=\"play\"/></svg>",
+  "reddit": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"icon reddit\"><path d=\"M29.9 16c0 .6-.2 1.1-.5 1.6s-.7.9-1.2 1.1c.1.5.2 1 .2 1.5 0 1.6-.6 3.1-1.7 4.4s-2.6 2.4-4.5 3.2-4 1.2-6.2 1.2-4.3-.4-6.2-1.2-3.5-1.8-4.6-3.2-1.7-2.8-1.7-4.4c0-.5.1-1 .2-1.4-.5-.3-1-.6-1.3-1.1-.3-.5-.5-1-.5-1.6 0-.8.3-1.6.9-2.2S4.1 13 5 13c.9 0 1.6.3 2.3 1 2.3-1.6 5-2.4 8-2.5l1.8-8c0-.1.1-.2.2-.3s.4-.2.5-.2l5.8 1.2c.2-.4.5-.7.8-.9s.8-.3 1.3-.3c.6 0 1.2.2 1.7.7s.7 1 .7 1.6-.2 1.2-.7 1.6c-.5.5-1 .7-1.7.7s-1.2-.2-1.7-.7c-.5-.4-.7-1-.7-1.6l-5.2-1.1-1.6 7.3c3.1.1 5.8.9 8.1 2.5.6-.6 1.3-.9 2.2-.9.9 0 1.6.3 2.2.9s.9 1.2.9 2zM8.5 19.1c0 .6.2 1.2.7 1.6.5.5 1 .7 1.6.7s1.2-.2 1.7-.7c.5-.5.7-1 .7-1.6 0-.6-.2-1.2-.7-1.6-.5-.4-1-.7-1.7-.7-.6 0-1.2.2-1.6.7-.5.4-.7.9-.7 1.6zm12.6 5.4c.1-.1.2-.2.2-.4s-.1-.3-.2-.4c-.1-.1-.2-.2-.4-.2s-.3.1-.4.2c-.4.4-1.1.7-1.9 1-.8.2-1.7.3-2.5.3s-1.7-.1-2.5-.3c-.8-.2-1.5-.5-1.9-1-.1-.1-.3-.2-.4-.2s-.3.1-.4.2c-.1.1-.2.2-.2.4s.1.3.2.4c.4.4 1.1.8 1.9 1 .8.3 1.4.4 1.9.5.5 0 1 .1 1.4.1s.9 0 1.4-.1c.5 0 1.1-.2 1.9-.5.9-.2 1.5-.5 1.9-1zm0-3.1c.6 0 1.2-.2 1.6-.7.5-.5.7-1 .7-1.6 0-.6-.2-1.2-.7-1.6s-1-.7-1.6-.7c-.6 0-1.2.2-1.7.7-.5.4-.7 1-.7 1.6 0 .6.2 1.2.7 1.6.5.4 1 .7 1.7.7z\"/></svg>",
+  "share": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"icon share\"><circle cx=\"5\" cy=\"11\" r=\"3.5\"/><circle cx=\"25.5\" cy=\"6.5\" r=\"5\"/><circle cx=\"16.1\" cy=\"16.1\" r=\"2.6\"/><circle cx=\"25.3\" cy=\"25.3\" r=\"5.2\"/><path fill=\"none\" stroke=\"#000\" stroke-width=\"1.5\" stroke-miterlimit=\"10\" d=\"M4 11l12 5.1\"/><path fill=\"none\" stroke=\"#000\" stroke-width=\"1.5\" stroke-miterlimit=\"10\" d=\"M25.5 25.5l-9-9.9 9-9.1\"/></svg>",
+  "twitter": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"icon twitter\"><path d=\"M30 7.7c-.8 1.2-1.8 2.2-2.9 3v.8c0 1.6-.2 3.1-.7 4.7s-1.1 3-2.1 4.5-2 2.7-3.3 3.8c-1.3 1.1-2.8 2-4.6 2.6-1.8.7-3.7 1-5.7 1-3.2 0-6.1-.9-8.8-2.6.4 0 .9.1 1.4.1 2.7 0 5-.8 7.1-2.5-1.2 0-2.4-.4-3.3-1.2s-1.7-1.7-2-2.9c.4.1.8.1 1.1.1.5 0 1-.1 1.5-.2-1.3-.3-2.4-.9-3.3-2s-1.3-2.3-1.3-3.7v-.1c.8.5 1.7.7 2.6.7-.8-.5-1.4-1.2-1.9-2.1-.4-.8-.6-1.7-.6-2.7 0-1.1.3-2 .8-2.9 1.4 1.8 3.2 3.2 5.2 4.3s4.3 1.7 6.6 1.8c-.1-.5-.1-.9-.1-1.3 0-1.6.6-3 1.7-4.1s2.4-1.8 4-1.8c1.7 0 3.1.6 4.2 1.8 1.3-.3 2.5-.7 3.6-1.4-.4 1.4-1.3 2.4-2.5 3.2 1.1-.1 2.2-.4 3.3-.9z\"/></svg>"
+};
+
+},{}],50:[function(require,module,exports){
+'use strict';
+
 var _client_renderer = require('./client_renderer');
 
 var _client_renderer2 = _interopRequireDefault(_client_renderer);
@@ -9850,7 +10098,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 window.render = _client_renderer2.default;
 
-},{"./client_renderer":"client_renderer"}],49:[function(require,module,exports){
+},{"./client_renderer":"client_renderer"}],51:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -9868,6 +10116,10 @@ var _utility = require('./utility');
 
 var u = _interopRequireWildcard(_utility);
 
+var _icons = require('./icons');
+
+var _icons2 = _interopRequireDefault(_icons);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -9882,26 +10134,31 @@ function factory() {
 
     date: '{{ formatDate publication_date "longDate" }}',
 
-    play: '<span class="play-button icon-play"></span>',
-    audio: '<span class="audio-button icon-audio"></span>',
-    share: '<span class="share-button icon-share"></span>',
-    fullscreen: '<span class="fullscreen-button icon-fullscreen"></span>',
+    play: '<span class="cp-play-button">' + _icons2.default.play + '</span>',
+    audio: '<span class="cp-audio-button">' + _icons2.default.audio + '</span>',
+    share: '<span class="cp-share-button">' + _icons2.default.share + '</span>',
+    fullscreen: '<span class="cp-fullscreen-button">' + _icons2.default.fullscreen + '</span>',
 
-    play_icon: '<span class="icon-play"></span>',
-    audio_icon: '<span class="icon-audio"></span>',
-    share_icon: '<span class="icon-share"></span>',
-    fullscreen_icon: '<span class="icon-fullscreen"></span>',
+    email: '{{{ email }}}',
+    reddit: '{{{ reddit }}}',
+    twitter: '{{{ twitter message }}}',
+    facebook: '{{{ facebook }}}',
 
-    email_icon: '<span class="icon-email"></span>',
-    reddit_icon: '<span class="icon-reddit"></span>',
-    twitter_icon: '<span class="icon-twitter"></span>',
-    facebook_icon: '<span class="icon-facebook"></span>'
+    play_icon: _icons2.default.play,
+    audio_icon: _icons2.default.audio,
+    fullscreen_icon: _icons2.default.fullscreen,
+    share_icon: _icons2.default.share,
+    email_icon: _icons2.default.email,
+    reddit_icon: _icons2.default.reddit,
+    twitter_icon: _icons2.default.twitter,
+    facebook_icon: _icons2.default.facebook
 
   });
 
   // uses dateFormat library: https://github.com/felixge/node-dateformat
   handlebars.registerHelper('formatDate', function (date, format, options) {
     try {
+      // format is optional
       options = arguments[arguments.length - 1];
       format = arguments.length > 2 ? arguments[1] : 'longDate';
       return (0, _dateformat2.default)(date, format);
@@ -9957,15 +10214,17 @@ function factory() {
 
     var url = 'https://www.facebook.com/dialog/share?' + 'app_id=' + encodeURIComponent(options.data.root.facebook_app_id) + '&display=popup' + '&href=' + encodeURIComponent(urlToShare);
 
-    if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</a>';else return '<a href="' + url + '" target=_blank><span class=icon-facebook></span></a>';
+    if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</a>';else return '<a href="' + url + '" target=_blank>' + _icons2.default.facebook + '</a>';
   });
 
   handlebars.registerHelper('twitter', function () {
 
     var options = arguments[arguments.length - 1];
 
-    // if not passed in, it will go to article metadata one, then title.
-    var message = arguments.length > 1 ? arguments[0] : options.data.root.share_message;
+    // if not passed in, it will go to Article metadata share_message, then
+    // title.
+    var message = options.data.root.share_message;
+    if (arguments.length > 1 && arguments[0]) message = arguments[0];
 
     var urlToShare = options.data.root.canonical_url + '?utm_campaign=social&utm_source=twitter';
 
@@ -9974,7 +10233,7 @@ function factory() {
 
     var url = 'https://twitter.com/intent/tweet' + '?text=' + encodeURIComponent(message) + '&via=' + encodeURIComponent(via) + '&url=' + encodeURIComponent(urlToShare);
 
-    if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</a>';else return '<a href="' + url + '" target=_blank><span class=icon-twitter></span></a>';
+    if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</a>';else return '<a href="' + url + '" target=_blank>' + _icons2.default.twitter + '</a>';
   });
 
   handlebars.registerHelper('reddit', function (options) {
@@ -9983,7 +10242,7 @@ function factory() {
 
     var url = 'http://reddit.com/submit' + '?url=' + urlToShare + '&title=' + encodeURIComponent(options.data.root.title);
 
-    if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</span></a>';else return '<a href="' + url + '" target=_blank><span class=icon-reddit></span></a>';
+    if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</span></a>';else return '<a href="' + url + '" target=_blank>' + _icons2.default.reddit + '</a>';
   });
 
   handlebars.registerHelper('email', function () {
@@ -9998,13 +10257,13 @@ function factory() {
 
     var url = 'mailto:' + '?subject=' + encodeURIComponent(options.data.root.title) + '&body=' + encodeURIComponent(message + '\n\n') + urlToShare;
 
-    if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</span></a>';else return '<a href="' + url + '" target=_blank><span class=icon-email></span></a>';
+    if (options.fn) return '<a href="' + url + '" target=_blank>' + options.fn(this) + '</span></a>';else return '<a href="' + url + '" target=_blank>' + _icons2.default.email + '</a>';
   });
 
   return handlebars;
 }
 
-},{"./utility":50,"dateformat":3,"handlebars":33}],50:[function(require,module,exports){
+},{"./icons":49,"./utility":52,"dateformat":3,"handlebars":33}],52:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10054,7 +10313,7 @@ var unscopedPath = exports.unscopedPath = function unscopedPath(pathPrefix, path
   } else return 'https://codex.press' + path;
 };
 
-},{}],51:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10242,7 +10501,7 @@ var ArticleView = function (_View) {
   };
 
   ArticleView.prototype.set = function set(data) {
-    v = this.views.find(function (v) {
+    var v = this.views.find(function (v) {
       return v.attrs.id == data.id;
     });
     v.attrs = data;
@@ -10303,7 +10562,7 @@ function renderJavascriptSource(source) {
   }).join('');
 }
 
-},{"../templates":49,"./article_embed":52,"./audio":53,"./block":54,"./graf":55,"./html_block":56,"./image":57,"./index":58,"./video":59,"./view":60,"highlight.js":61,"marked":45}],52:[function(require,module,exports){
+},{"../templates":51,"./article_embed":54,"./audio":55,"./block":56,"./graf":57,"./html_block":58,"./image":59,"./index":60,"./video":61,"./view":62,"highlight.js":63,"marked":45}],54:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10407,7 +10666,7 @@ var ArticleEmbed = function (_View) {
 
 exports.default = ArticleEmbed;
 
-},{"../utility":50,"./index":58,"./view":60,"handlebars":33}],53:[function(require,module,exports){
+},{"../utility":52,"./index":60,"./view":62,"handlebars":33}],55:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10430,9 +10689,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var simpleTemplate = _handlebars2.default.compile('\n  <audio\n    class="{{classes}}">\n    {{#if javascript  }}preload=none{{/if  }}\n    src="{{  sourceUrl  }}"\n    type="audio/mp3">\n  </audio>\n');
-
-var template = _handlebars2.default.compile('\n<div x-cp-id={{  id  }} class="{{  classes  }}">\n  <audio\n    {{#if javascript }}preload=none{{/if }}\n    src="{{sourceUrl}}"\n    type="audio/mp3">\n  </audio>\n</div>\n');
+var template = _handlebars2.default.compile('\n<div x-cp-audio x-cp-id={{  id  }} class="{{  classes  }}">\n  <audio\n    {{#if javascript }}preload=none{{/if }}\n    src="{{sourceUrl}}"\n    type="audio/mp3">\n  </audio>\n</div>\n');
 
 var Audio = function (_View) {
   _inherits(Audio, _View);
@@ -10462,7 +10719,7 @@ var Audio = function (_View) {
 
 exports.default = Audio;
 
-},{"../utility":50,"./view":60,"handlebars":33}],54:[function(require,module,exports){
+},{"../utility":52,"./view":62,"handlebars":33}],56:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10493,7 +10750,7 @@ var Block = function (_View) {
 
 exports.default = Block;
 
-},{"./view":60}],55:[function(require,module,exports){
+},{"./view":62}],57:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10512,7 +10769,11 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var template = '\n  <{{  tagName  ~}}\n    {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n    {{#if classes}} class="{{  classes  }}"{{/if}}>\n    {{{  content  }}}\n  </{{  tagName  }}>\n';
+var template = '\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes}} class="{{  classes  }}"{{/if}}>\n  {{{  content  }}}\n</{{  tagName  }}>\n';
+
+// Single mustache { turns to {{> so that it renders a partial, however 
+// it can be escaped like \{
+var partialRe = /([^\\]*?)\{{1}(.*?[^\\])\}{1}/g;
 
 var Graf = function (_View) {
   _inherits(Graf, _View);
@@ -10522,6 +10783,7 @@ var Graf = function (_View) {
 
     var _this = _possibleConstructorReturn(this, _View.call(this, attrs));
 
+    _this.errors = [];
     _this.is_empty = _this.attrs.body.trim().length === 0;
     return _this;
   }
@@ -10529,41 +10791,55 @@ var Graf = function (_View) {
   Graf.prototype.html = function html() {
 
     var content = '';
-    // normal paragraph
-    if (this.attrs.body.indexOf('{') < 0) content = this.attrs.body;
-    // make the body into a template so things like {>date} work
-    else {
 
-        // single mustache for {{> so it renders partial works and is not
-        // escaped. single curly bracket itself escaped with \
+    // normal paragraph, no templating
+    if (this.attrs.body.indexOf('{') < 0) return this.htmlFromContent(this.attrs.body);
 
-        var partials = this.attrs.body.match(/\{(.+?)\}/g).map(function (s) {
-          return s.replace(/[{}]/g, '').trim();
-        });
+    // make the body into a template so things like { date } work
+    var source = this.attrs.body.replace(partialRe, '$1{{>$2}}');
 
-        var bracketRe = /([^\\]*?)\{{1}(.*?[^\\])\}{1}/g;
-        var source = this.attrs.body.replace(bracketRe, '$1{{>$2}}');
-        try {
-          var compiled = this.article.handlebars.compile(source);
-          content = compiled(this.article.templateAttrs);
-        } catch (e) {
-          if (this.article.trigger) this.article.trigger('assetMissing', this, partials);else console.error(e);
-          if (this.article.attrs.client) content = 'Loading... ' + partials.join(' ');else content = e.message;
+    try {
+      var compiled = this.article.handlebars.compile(source);
+      content = compiled(this.article.templateAttrs);
+      // escaped curly brackets turned to normal curly brackets
+      content = content.replace(/\\{/g, '{').replace(/\\}/g, '}');
+      return this.htmlFromContent(content);
+    } catch (error) {
+      var message = void 0;
+      if (this.article.trigger) {
+        this.article.trigger('assetMissing', this, error);
+        message = 'Loading... ' + this.partials().join(' ');
+      } else {
+        if (this.article.attrs.client) {
+          console.warn(source);
+          console.error(error);
         }
+        message = error.message;
       }
+      return this.htmlFromContent(message);
+    }
+  };
 
-    // escaped curly brackets turned to normal curly brackets
-    content = content.replace(/\\{/g, '{').replace(/\\}/g, '}');
-
+  Graf.prototype.htmlFromContent = function htmlFromContent(content) {
     // change links for virtual hosts
     content = (0, _utility.unscopeLinks)(content, this.article.attrs.path_prefix);
 
     return this.article.handlebars.compile(template)({
       content: content,
+      isOverlay: this.isOverlay(),
       cpID: this.article.attrs.client ? this.attrs.id : '',
       classes: this.classes(),
       tagName: this.tagName()
     });
+  };
+
+  Graf.prototype.partials = function partials() {
+    var partials = [];
+    var match = void 0;
+    partialRe.lastIndex = 0;
+    while (match = partialRe.exec(this.attrs.body)) {
+      partials.push(match[2].trim());
+    }return partials;
   };
 
   Graf.prototype.defaultTagName = function defaultTagName() {
@@ -10579,7 +10855,7 @@ var Graf = function (_View) {
 
 exports.default = Graf;
 
-},{"../utility":50,"./view":60}],56:[function(require,module,exports){
+},{"../utility":52,"./view":62}],58:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10606,7 +10882,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if cpId }}x-cp-id={{  id  }}{{/if ~}}\n  {{#if classes}} class="{{  classes  }}"{{/if}}>\n    {{{  content  }}}\n</{{ tagName  }}>\n');
+var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n  {{#if cpId }}x-cp-id={{  id  }}{{/if ~}}\n  {{#if classes}} class="{{  classes  }}"{{/if}}>\n    {{{  content  }}}\n</{{ tagName  }}>\n');
 
 var HTMLBlock = function (_View) {
   _inherits(HTMLBlock, _View);
@@ -10628,6 +10904,7 @@ var HTMLBlock = function (_View) {
 
     return template({
       content: content,
+      isOverlay: this.isOverlay(),
       cpID: this.article.attrs.client ? this.attrs.id : '',
       classes: this.classes(),
       tagName: this.tagName() || 'div'
@@ -10639,7 +10916,7 @@ var HTMLBlock = function (_View) {
 
 exports.default = HTMLBlock;
 
-},{"../utility":50,"./view":60,"handlebars":33,"highlight.js":61}],57:[function(require,module,exports){
+},{"../utility":52,"./view":62,"handlebars":33,"highlight.js":63}],59:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10664,15 +10941,17 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var simpleTemplate = _handlebars2.default.compile('\n  <img x-cp-image x-cp-id={{  cpID  }} draggable=false\n    {{#if javascript }}\n      src="{{  thumbURL  }}"\n    {{ else }}\n      src="{{  sourceURL  }}"\n    {{/if }}\n    style="max-width: {{  maxWidth  }}px"\n    class="{{  classes  }}">\n');
 
-// cropping but just by center point. overlays are absolutely positioned in CSS
+// cropping but just by center point. overlays are absolutely positioned in
+// CSS
 var backgroundImageTemplate = _handlebars2.default.compile('\n  <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}\n    class="{{  classes  }}"\n    style="background-image: url(\n      {{~#if javascript }}\n        {{~  thumbURL  ~}}\n      {{ else }}\n        {{~  sourceURL  ~}}\n      {{/if ~}})\n      {{~#if position  }}; background-position: {{  position  }}{{/if }}">\n\n    {{{  children  }}}\n\n    <div class=shim style="padding-top: {{  padding  }}%;"></div>\n\n  </{{tagName}}>\n');
 
-// no cropping but with JS, it will constrain width if it's too big for the
-// container (like for the max-height 100vh). Positions overlays
-var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript }}\n      <!-- this comment will be replaced with size info -->\n    {{/if }}\n\n    <div class=frame>\n      {{#if javascript}}\n        <img class=thumb src="{{thumbURL}}" draggable=false> \n        <img class=full draggable=false> \n      {{else}}\n        <img src="{{sourceURL}}" draggable=false> \n      {{/if}}\n    </div>\n\n    {{{children}}}\n\n  </figure>\n');
+// no cropping here.  but with Javascript, it will constrain width if it's
+// too big for the container (like for the max-height 100vh). Positions
+// overlays
+var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n    {{else}}\n      <img src="{{  sourceURL  }}" draggable=false> \n    {{/if}}\n\n    <div class=children>\n      {{{  children  }}}\n    </div>\n\n  </figure>\n');
 
 // JS only: cropping and nice overlays on top
-var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-crop x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    <!-- this comment will be replaced with size info -->\n\n    <div class=frame>\n      <div class=crop>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n    </div>\n\n    {{{children}}}\n\n  </figure>\n');
+var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n    </div>\n\n    <div class=children>\n      {{{children}}}\n    </div>\n\n  </figure>\n');
 
 var ImageView = function (_View) {
   _inherits(ImageView, _View);
@@ -10692,7 +10971,7 @@ var ImageView = function (_View) {
 
     // setting <img> just gives you an image and you're on your own
     if (this.tagName() === 'img') return this.simpleHTML();
-    // any other tag name besides <figure> will prompt this behaviour
+    // any other tag name besides <figure> will use background image 
     else if (this.tagName() !== 'figure') return this.backgroundHTML();
       // crop requires JS
       else if (this.attrs.crop && this.article.attrs.javascript) return this.cropHTML();else return this.figureHTML();
@@ -10745,6 +11024,7 @@ var ImageView = function (_View) {
       classes: this.classes(),
       sourceURL: this.sourceURL,
       thumbURL: this.thumbSource(),
+      padding: this.aspectRatio * 1000 / 10,
       children: this.childrenHTML(),
       javascript: this.article.attrs.javascript
     });
@@ -10756,6 +11036,7 @@ var ImageView = function (_View) {
       classes: this.classes(),
       sourceURL: this.sourceURL,
       thumbURL: this.thumbSource(),
+      padding: this.aspectRatio * 1000 / 10,
       children: this.childrenHTML(),
       javascript: this.article.attrs.javascript
     });
@@ -10790,7 +11071,7 @@ var ImageView = function (_View) {
 
 exports.default = ImageView;
 
-},{"../utility":50,"./view":60,"handlebars":33}],58:[function(require,module,exports){
+},{"../utility":52,"./view":62,"handlebars":33}],60:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10854,7 +11135,7 @@ var Index = function (_View) {
 
 exports.default = Index;
 
-},{"./article_embed":52,"./view":60,"handlebars":33}],59:[function(require,module,exports){
+},{"./article_embed":54,"./view":62,"handlebars":33}],61:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10877,41 +11158,44 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var attributes = '\n  src="{{sourceURL}}"\n  poster="{{  posterURL  }}"\n  {{#if javascript}} preload=none {{else}} preload=auto {{/if}}\n  {{#if loop }}  loop  {{/if}}\n  {{#if autoplay }}  autoplay  {{/if }}\n  {{#if controls }}  controls  {{/if }}\n';
+var attributes = '\n  {{#unless javascript}}\n    poster="{{  posterURL  }}" src="{{sourceURL}}"\n  {{/unless}}\n  {{#if javascript}} preload=none {{else}} preload=auto {{/if}}\n  {{#if loop }}  loop  {{/if}}\n  {{#if autoplay }}  autoplay  {{/if }}\n  {{#if controls }}  controls  {{/if }}\n';
 
 // when specified with tag <video>
-var simpleTemplate = _handlebars2.default.compile('\n  <video x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}" ' + attributes + '>\n  </video>\n');
+var simpleTemplate = _handlebars2.default.compile('\n  <video x-cp-video x-cp-id={{  cpID  }}\n    class="{{  classes  }}"\n    ' + attributes + '>\n  </video>\n');
 
 // no crop
-var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n      <!-- this comment will be replaced with size info -->\n    {{/if}}\n\n    <div class=frame>\n      <video ' + attributes + '></video>\n      {{#if javascript}}\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=poster draggable=false> \n      {{/if}}\n    </div>\n\n    {{{children}}}\n\n  </figure>\n');
+var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <video ' + attributes + '></video>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=poster draggable=false> \n      </div>\n    {{else}}\n      <video ' + attributes + '></video>\n    {{/if}}\n\n    <div class=children>\n      {{{  children  }}}\n    </div>\n\n  </figure>\n');
 
 // with cropping, JS only
-var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-crop x-cp-id={{  cpID  }}\n    class="{{classes}}">\n\n    <!-- this comment will be replaced with size info -->\n\n    <div class=frame>\n      <div class=crop>\n        <video ' + attributes + '></video>\n        <img class=thumb src="{{thumbURL}}" draggable=false> \n        <img class=poster draggable=false> \n      </div>\n    </div>\n\n    {{{children}}}\n\n  </figure>\n');
+var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{classes}}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop>\n        <video ' + attributes + '></video>\n        <img class=thumb src="{{thumbURL}}" draggable=false> \n        <img class=poster draggable=false> \n      </div>\n    </div>\n\n    <div class=children>\n      {{{  children  }}}\n    </div>\n\n  </figure>\n');
 
-var FigureView = function (_View) {
-  _inherits(FigureView, _View);
+var VideoView = function (_View) {
+  _inherits(VideoView, _View);
 
-  function FigureView() {
-    _classCallCheck(this, FigureView);
+  function VideoView(attrs) {
+    _classCallCheck(this, VideoView);
 
-    return _possibleConstructorReturn(this, _View.apply(this, arguments));
+    var _this = _possibleConstructorReturn(this, _View.call(this, attrs));
+
+    _this.aspectRatio = _this.attrs.media.original_height / _this.attrs.media.original_width;
+    return _this;
   }
 
-  FigureView.prototype.html = function html() {
+  VideoView.prototype.html = function html() {
     this.source = (0, _utility.findSource)(this.attrs.media.srcset, this.quality());
 
     var sourceURL = this.article.attrs.content_origin + this.source.url;
     var posterURL = this.article.attrs.content_origin + this.source.poster;
 
     var autoplay = this.attrs.autoplay && !this.article.attrs.javascript;
-
-    var controls = this.attrs.controls || !this.attrs.autoplay && !this.article.attrs.javascript;
+    var controls = this.attrs.controls && (this.tagName() === 'video' || !this.article.attrs.javascript);
 
     var attributes = {
       cpID: this.attrs.id,
       classes: this.classes(),
       sourceURL: sourceURL,
       posterURL: posterURL,
+      padding: this.aspectRatio * 1000 / 10,
       thumbURL: this.thumbSource(),
       loop: this.attrs.loop,
       autoplay: autoplay,
@@ -10925,7 +11209,7 @@ var FigureView = function (_View) {
     else if (this.attrs.crop && this.article.attrs.javascript) return cropTemplate(attributes);else return figureTemplate(attributes);
   };
 
-  FigureView.prototype.quality = function quality() {
+  VideoView.prototype.quality = function quality() {
     var classes = this.attrs.classes || [];
     if (classes.includes('low-quality')) return 'low';
     if (classes.includes('medium-quality')) return 'medium';
@@ -10933,28 +11217,28 @@ var FigureView = function (_View) {
     return this.article.attrs.quality;
   };
 
-  FigureView.prototype.classes = function classes() {
+  VideoView.prototype.classes = function classes() {
     if (this.article.attrs.javascript) return _View.prototype.classes.call(this) + ' loading';else return _View.prototype.classes.call(this);
   };
 
-  FigureView.prototype.tagName = function tagName() {
+  VideoView.prototype.tagName = function tagName() {
     if (this.classes && this.classes[0] === 'video') return 'video';else return _View.prototype.tagName.call(this);
   };
 
-  FigureView.prototype.thumbSource = function thumbSource() {
+  VideoView.prototype.thumbSource = function thumbSource() {
     return 'data:image/jpeg;base64,' + this.attrs.media.base64_thumb;
   };
 
-  FigureView.prototype.defaultTagName = function defaultTagName() {
+  VideoView.prototype.defaultTagName = function defaultTagName() {
     return 'figure';
   };
 
-  return FigureView;
+  return VideoView;
 }(_view2.default);
 
-exports.default = FigureView;
+exports.default = VideoView;
 
-},{"../utility":50,"./view":60,"handlebars":33}],60:[function(require,module,exports){
+},{"../utility":52,"./view":62,"handlebars":33}],62:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10978,7 +11262,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var tags = exports.tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table th tr td pre figure figcaption'.split(' ');
 
-var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes }} class="{{  classes  }}"{{/if }}>\n  {{{  children  }}}\n</{{  tagName  }}>\n');
+var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes }} class="{{  classes  }}"{{/if }}>\n  {{{  children  }}}\n</{{  tagName  }}>\n');
 
 // FIRST TIME WE NEEDED TO DO SERVER CHECK
 // creeep begins
@@ -11007,6 +11291,7 @@ var View = function (_Super) {
   View.prototype.html = function html() {
     return this.template({
       attrs: this.attrs,
+      isOverlay: this.isOverlay(),
       cpID: this.article.attrs.client ? this.attrs.id : '',
       children: this.childrenHTML(),
       javascript: (this.article || this).attrs.javascript,
@@ -11041,6 +11326,10 @@ var View = function (_Super) {
     if (this.parent) return this.parent.path().concat(this);else return [this];
   };
 
+  View.prototype.isOverlay = function isOverlay() {
+    return this.parent && ['Image', 'Video'].includes(this.parent.attrs.type) && this.parent.tagName() === 'figure';
+  };
+
   return View;
 }(Super);
 
@@ -11049,7 +11338,7 @@ exports.default = View;
 
 View.prototype.template = template;
 
-},{"events":"events","handlebars":33}],61:[function(require,module,exports){
+},{"events":"events","handlebars":33}],63:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
@@ -12116,6 +12405,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 exports.__esModule = true;
 exports.ClientRenderer = exports.ready = exports.default = undefined;
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 var _events = require('events');
 
 var _events2 = _interopRequireDefault(_events);
@@ -12140,6 +12431,10 @@ var _article3 = require('./views/article');
 
 var _article4 = _interopRequireDefault(_article3);
 
+var _development_server = require('./development_server');
+
+var _development_server2 = _interopRequireDefault(_development_server);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -12163,18 +12458,13 @@ var callbacks = {
 
   // used in Editor's preview functionality
   setScroll: 'setScroll',
-  setStyle: 'setStyle',
+  setStyle: 'setStyle'
 
-  // used for developmentServer
-  devFileList: 'devFileList',
-  updateAsset: 'updateAsset'
 };
 
 var articleViewEvents = {
-  assetMissing: 'fetchAsset'
+  assetMissing: 'assetMissing'
 };
-
-var _devFileList = [];
 
 var _resolve = void 0;
 var ready = exports.ready = new Promise(function (r) {
@@ -12195,19 +12485,26 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
     if (instance) return _ret = instance, _possibleConstructorReturn(_this, _ret);
     exports.default = instance = _this;
 
+    _this.fetchedAssets = [];
     _this.bind(callbacks);
     _this.bind({ message: 'message' }, window);
+    _this.bind({ 'state:dev-server': 'changeDevServer' }, _article2.default);
     return _this;
   }
 
+  // changeDevServer(value) {
+  //   location.reload();
+  // }
+
+
   ClientRenderer.prototype.message = function message(e) {
-    // log.info('P:', e.data.event, e.data.args ? e.data.args : '');
     this.trigger(e.data.event, e.data.args);
   };
 
   ClientRenderer.prototype.set = function set(data) {
     var _this2 = this;
 
+    // console.log(data);
     data.javascript = true;
     data.client = true;
     data.content_origin = location.origin;
@@ -12219,44 +12516,74 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
 
     _dom2.default.body().prepend(this.articleView.html());
 
-    return this.attachAssets().then(function () {
+    return new Promise(function (resolve, reject) {
+      if (_article2.default.hasState('dev-server')) _development_server2.default.connect().then(resolve);else resolve();
+    }).then(function () {
+      return _this2.attachAssets();
+    }).then(function () {
       return _resolve(_this2);
     });
   };
 
-  ClientRenderer.prototype.fetchAsset = function fetchAsset(view, assetPaths) {
+  // The problem is Handlebars doesn't say which partial was missing. We must
+  // check if they've all loaded. Load them if not. Or error if they've all been
+  // loaded since any number of things could go wrong.
+
+
+  ClientRenderer.prototype.assetMissing = function assetMissing(view, error) {
     var _this3 = this;
 
-    Promise.all(assetPaths.map(function (path) {
-      var found = _article2.default.attrs.inline_assets.find(function (a) {
-        return a.asset_path == path;
+    var builtIn = 'br date play audio share fullscreen email reddit twitter facebook play_icon audio_icon fullscreen_icon share_icon email_icon reddit_icon twitter_icon facebook_icon'.split(/ /);
+
+    // There could be any number of errors for this. The partials cannot be
+    // nested so if we've downloaded all of the partials, log the error.
+    var toFetch = view.partials().filter(function (name) {
+      return !builtIn.includes(name) && !_this3.fetchedAssets.includes(name) && !_this3.fetchedAssets.includes(name + '.hbs');
+    });
+
+    if (toFetch.length === 0) {
+      console.error(error.message);
+      setTimeout(function () {
+        return _this3.replaceGrafText(view.attrs.id, error.message);
       });
-      if (found) return Promise.resolve();
+      return;
+    }
+
+    Promise.all(toFetch.map(function (path) {
 
       if (!/\.(svg|hbs|es6)/.test(path)) path += '.hbs';
+
+      _this3.fetchedAssets.push(path);
 
       var url = void 0;
       var repo = path.match(RegExp('(.*?)([./]|$)'))[1];
 
-      console.log(repo, _devFileList[repo]);
-
-      if (_devFileList[repo] && _devFileList[repo].includes(path)) {
+      if (_development_server2.default.fileList[repo]) {
         url = 'https://localhost:8000/' + path;
         log.info('fetching from development: ' + path);
       } else url = env.contentOrigin + '/' + path;
 
       return fetch(url).then(function (response) {
         if (response.ok) return response.text();else {
-          console.error('Failed to load asset');
-          var data = {
-            type: 'Not Found',
-            message: 'Could not load asset',
-            assetPath: path,
-            viewId: view.id
-          };
-          _article2.default.send('assetError', data);
-          var message = 'failed to load ' + path;
-          view.el.textContent = message;
+          var _ret2 = function () {
+            var data = {
+              type: 'Not Found',
+              message: 'Could not load asset',
+              assetPath: path,
+              viewId: view.attrs.id
+            };
+            _article2.default.send('assetError', data);
+            var message = 'Failed to load ' + path;
+            console.error(message);
+            setTimeout(function () {
+              return _this3.replaceGrafText(view.attrs.id, message);
+            });
+            return {
+              v: message
+            };
+          }();
+
+          if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
         }
       }).then(function (text) {
         return _this3.articleView.addPartialFromAsset(path, text);
@@ -12276,13 +12603,14 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
 
       // serve from development
       var repo = base_path.match(/^(.*?)([-./]|$)/)[1];
-      if (_devFileList[repo]) {
+      if (_development_server2.default.fileList[repo]) {
         var url = 'https://localhost:8000/';
-        if (_devFileList[repo].includes(base_path + '.js')) {
+        // add JS and/or CSS depending on if they exist in offerings
+        if (_development_server2.default.fileList[repo].includes(base_path + '.js')) {
           tags.push(makeScriptTag(url + base_path + '.js'));
           log.info('fetching from development: ' + base_path + '.js');
         }
-        if (_devFileList[repo].includes(base_path + '.css')) {
+        if (_development_server2.default.fileList[repo].includes(base_path + '.css')) {
           tags.push(_dom2.default.create('<link rel=stylesheet href="' + url + base_path + '.css">'));
           log.info('fetching from development: ' + base_path + '.css');
         }
@@ -12311,18 +12639,17 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
   // LIVE PREVIEW
 
   ClientRenderer.prototype.change = function change(data) {
-    console.log('change', data);
+    // console.log('change', data);
     var view = this.articleView.set(data);
     this.replaceViewHTML(view);
   };
 
   ClientRenderer.prototype.replaceViewHTML = function replaceViewHTML(view) {
-    var target = _dom2.default.first('[x-cp-id=' + view.attrs.id + ']');
+    var target = _dom2.default.first('[x-cp-id="' + view.attrs.id + '"]');
     target.outerHTML = view.html();
   };
 
   ClientRenderer.prototype.add = function add(data) {
-    console.log('add', data);
     var target = _dom2.default.first('[x-cp-id=' + data.parent_id + ']');
     this.articleView.add(data);
     target.outerHTML = this.articleView.replace(data);
@@ -12330,6 +12657,13 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
 
   ClientRenderer.prototype.remove = function remove(data) {
     console.log('remove', e);
+  };
+
+  // used for errors, etc.
+
+
+  ClientRenderer.prototype.replaceGrafText = function replaceGrafText(id, text) {
+    if (_dom2.default.first('[x-cp-id="' + id + '"]')) _dom2.default.first('[x-cp-id="' + id + '"]').textContent = text;
   };
 
   // EDITOR SCROLL SYNC
@@ -12340,70 +12674,6 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
 
   ClientRenderer.prototype.setStyle = function setStyle(style) {
     _dom2.default.first(document, 'head style').innerHTML = style;
-  };
-
-  // DEVELOPMENT SERVER
-
-  ClientRenderer.prototype.devFileList = function devFileList(list) {
-    _devFileList = list;
-
-    // swap CSS
-    var repoRegex = RegExp('^/(.*?)(\/|\.js|\.css|-[0-9a-f]{32})');
-    var baseRegex = RegExp('^/(.*?)(-[0-9a-f]{32})?\.(js|css)');
-    (0, _dom2.default)('link').map(function (tag) {
-      var url = new URL(tag.href);
-      var repo = url.pathname.match(repoRegex)[1];
-      if (['app', 'render'].includes(repo)) return;
-      var basePath = url.pathname.match(baseRegex)[1];
-      if (_devFileList[repo]) {
-        log.info('fetching from development: ' + basePath + '.css');
-        tag.href = 'https://localhost:8000/' + basePath + '.css';
-      }
-    });
-
-    // swap JS
-    (0, _dom2.default)('script').map(function (tag) {
-      if (!tag.src) return;
-      var url = new URL(tag.src);
-      var repo = url.pathname.match(repoRegex)[1];
-      if (['app', 'render'].includes(repo)) return;
-      var basePath = url.pathname.match(baseRegex)[1];
-      if (_devFileList[repo]) {
-        log.info('fetching from development: ' + basePath + '.js');
-        tag.src = 'https://localhost:8000/' + basePath + '.js';
-      }
-    });
-  };
-
-  ClientRenderer.prototype.updateAsset = function updateAsset(path) {
-    var _this4 = this;
-
-    // inline asset
-    if (this.articleView.handlebars.partials[path]) location.reload();
-    // JS update checks if it's in this frame then reloads
-    else if (path.match(/js$/)) {
-        var selector = 'script[src^="https://localhost:8000/' + path + '"]';
-        // external asset
-        if (_dom2.default.first(document, selector)) location.reload();
-      }
-      // CSS update does a hot reload
-      else if (path.match(/css$/)) {
-          var _selector = 'link[href^="https://localhost:8000/' + path + '"]';
-          var tag = _dom2.default.first(document, _selector);
-
-          if (tag) {
-            log.info('update: ', path);
-
-            // onload doesn't work the second time so must replace the tag
-            tag.remove();
-            var href = 'https://localhost:8000/' + path + '?' + Date.now();
-            var el = _dom2.default.create('<link rel=stylesheet href="' + href + '">');
-            el.onload = function () {
-              return _this4.resize();
-            };
-            _dom2.default.append(document.head, el);
-          }
-        }
   };
 
   return ClientRenderer;
@@ -12421,4 +12691,4 @@ function makeScriptTag(url) {
   return el;
 }
 
-},{"./views/article":51,"article":"article","dom":"dom","env":"env","events":"events","log":"log"}]},{},[48]);
+},{"./development_server":48,"./views/article":53,"article":"article","dom":"dom","env":"env","events":"events","log":"log"}]},{},[50]);

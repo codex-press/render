@@ -7,6 +7,7 @@ import hljs from 'highlight.js';
 
 let template = Handlebars.compile(`
 <{{  tagName  ~}}
+  {{#if isOverlay}} x-cp-overlay{{/if ~}}
   {{#if cpId }}x-cp-id={{  id  }}{{/if ~}}
   {{#if classes}} class="{{  classes  }}"{{/if}}>
     {{{  content  }}}
@@ -29,6 +30,7 @@ export default class HTMLBlock extends View {
 
     return template({
       content,
+      isOverlay: this.isOverlay(),
       cpID: this.article.attrs.client ? this.attrs.id : '',
       classes: this.classes(),
       tagName: this.tagName() || 'div',

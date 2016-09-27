@@ -1,6 +1,7 @@
 import Handlebars from 'handlebars';
 import dateFormat from 'dateformat';
 import * as u from './utility';
+import icons from './icons';
 
 
 export default function factory() {
@@ -9,24 +10,28 @@ export default function factory() {
 
   handlebars.registerPartial({
 
-    br:          '<br>',
-    
-    date:        '{{ formatDate publication_date "longDate" }}',
+    br:         '<br>',
 
-    play:        '<span class="play-button icon-play"></span>',
-    audio:       '<span class="audio-button icon-audio"></span>',
-    share:       '<span class="share-button icon-share"></span>',
-    fullscreen:  '<span class="fullscreen-button icon-fullscreen"></span>',
+    date:       '{{ formatDate publication_date "longDate" }}',
 
-    play_icon:        '<span class="icon-play"></span>',
-    audio_icon:       '<span class="icon-audio"></span>',
-    share_icon:       '<span class="icon-share"></span>',
-    fullscreen_icon:  '<span class="icon-fullscreen"></span>',
+    play:       `<span class="cp-play-button">${icons.play}</span>`,
+    audio:      `<span class="cp-audio-button">${icons.audio}</span>`,
+    share:      `<span class="cp-share-button">${icons.share}</span>`,
+    fullscreen: `<span class="cp-fullscreen-button">${icons.fullscreen}</span>`,
 
-    email_icon:       '<span class="icon-email"></span>',
-    reddit_icon:      '<span class="icon-reddit"></span>',
-    twitter_icon:     '<span class="icon-twitter"></span>',
-    facebook_icon:    '<span class="icon-facebook"></span>',
+    email:       '{{{ email }}}',
+    reddit:      '{{{ reddit }}}',
+    twitter:     '{{{ twitter message }}}',
+    facebook:    '{{{ facebook }}}',
+
+    play_icon:        icons.play,
+    audio_icon:       icons.audio,
+    fullscreen_icon:  icons.fullscreen,
+    share_icon:       icons.share,
+    email_icon:       icons.email,
+    reddit_icon:      icons.reddit,
+    twitter_icon:     icons.twitter,
+    facebook_icon:    icons.facebook,
 
   });
 
@@ -34,6 +39,7 @@ export default function factory() {
   // uses dateFormat library: https://github.com/felixge/node-dateformat
   handlebars.registerHelper('formatDate', function(date, format, options) {
     try {
+      // format is optional
       options = arguments[arguments.length - 1];
       format = arguments.length > 2 ? arguments[1] : 'longDate';
       return dateFormat(date, format);
@@ -123,7 +129,7 @@ export default function factory() {
     if (options.fn)
       return `<a href="${url}" target=_blank>${options.fn(this)}</a>`;
     else
-      return `<a href="${url}" target=_blank><span class=icon-facebook></span></a>`;
+      return `<a href="${url}" target=_blank>${icons.facebook}</a>`;
   });
 
 
@@ -131,11 +137,12 @@ export default function factory() {
   handlebars.registerHelper('twitter', function() {
 
     let options = arguments[arguments.length - 1];
-
-    // if not passed in, it will go to article metadata one, then title.
-    let message = (
-      (arguments.length > 1 ? arguments[0] : options.data.root.share_message)
-    );
+    
+    // if not passed in, it will go to Article metadata share_message, then
+    // title.
+    let message = options.data.root.share_message;
+    if (arguments.length > 1 && arguments[0])
+      message = arguments[0];
 
     let urlToShare = (
       options.data.root.canonical_url +
@@ -155,7 +162,7 @@ export default function factory() {
     if (options.fn)
       return `<a href="${url}" target=_blank>${options.fn(this)}</a>`;
     else
-      return `<a href="${url}" target=_blank><span class=icon-twitter></span></a>`;
+      return `<a href="${url}" target=_blank>${icons.twitter}</a>`;
   });
 
 
@@ -175,7 +182,7 @@ export default function factory() {
     if (options.fn)
       return `<a href="${url}" target=_blank>${options.fn(this)}</span></a>`;
     else
-      return `<a href="${url}" target=_blank><span class=icon-reddit></span></a>`;
+      return `<a href="${url}" target=_blank>${icons.reddit}</a>`;
   });
 
 
@@ -203,7 +210,7 @@ export default function factory() {
     if (options.fn)
       return `<a href="${url}" target=_blank>${options.fn(this)}</span></a>`;
     else
-      return `<a href="${url}" target=_blank><span class=icon-email></span></a>`;
+      return `<a href="${url}" target=_blank>${icons.email}</a>`;
 
   });
 

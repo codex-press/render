@@ -19,22 +19,37 @@
   padding: 0 1em;
   margin: 1rem;
   border-radius: 0.5em;
-  animation: 300ms fade-in linear;
+  animation: 300ms cp-fade-in linear;
   overflow: hidden;
 }
 
 .error h2, h3, h4 {
   margin: 0.8em 0;
 }
+.error h2 {
+  font-size: 1.4em;
+}
 .error h3 {
   font-size: 1em;
+  font-weight: 400;
 }
+
 .error pre {
   background: #eee;
   padding: 1em;  
 }
 
 .error.hidden {
-  animation: 300ms fade-out linear;
+  animation: 300ms cp-fade-out linear;
+}
+
+@keyframes cp-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes cp-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 

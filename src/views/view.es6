@@ -35,7 +35,7 @@ export default class View extends Super {
     return this.template({
       attrs: this.attrs,
       isOverlay: this.isOverlay(),
-      cpID: this.article.attrs.client ? this.attrs.id : '',
+      cpID: this.article.attrs.client || this.isOverlay() ? this.attrs.id : '',
       children: this.childrenHTML(),
       javascript: (this.article || this).attrs.javascript,
       classes: this.classes(),

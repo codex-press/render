@@ -67,7 +67,7 @@ export default class Graf extends View {
     return this.article.handlebars.compile(template)({
       content,
       isOverlay: this.isOverlay(),
-      cpID: this.article.attrs.client ? this.attrs.id : '',
+      cpID: this.article.attrs.client || this.isOverlay() ? this.attrs.id : '',
       classes: this.classes(),
       tagName: this.tagName(),
     });

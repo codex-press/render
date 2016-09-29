@@ -70,7 +70,7 @@ export default function factory() {
 
     let source = u.findSource(cover.media.srcset, 'low');
 
-    let cpID = options.data.root.attrs.id;
+    let cpID = cover.id;
 
     let url;
     if (options.data.root.javascript)
@@ -85,29 +85,33 @@ export default function factory() {
 
     let position = '';
     if (cover.crop) {
-      let x = cover.crop.left + cover.crop.width / 2;
-      let y = cover.crop.top + cover.crop.height / 2;
-      let round = n => Math.round(n * 100000) / 1000;
-      position = ` background-position: ${round(x)}% ${round(y)}%`;
+      let x = Math.round(cover.crop.left * 1000) / 10;
+      let y = Math.round(cover.crop.top * 1000) / 10;
+      position = ` background-position: ${x}% ${y}%`;
     }
 
+    let highestSource = u.findSource(cover.media.srcset, 'high');
+    let maxWidth = Math.round(1.2 * Math.min(
+      highestSource.width,
+      cover.media.original_width
+    ));
+    maxWidth = `max-width: ${ maxWidth }px`;
+
     if (options.fn) {
-      return (`<div x-cp-background-image x-cp-id=${ cpID }
-        class=cover
-        style="background-image: url(${ url });${ position }">
+      return (
+        `<div x-cp-background-image x-cp-id=${ cpID }
+          class=cover
+        style="background-image: url(${ url }); ${ position }; ${ maxWidth }">
           ${options.fn(this)}
-          <div class=shim style="padding-top: ${ padding }%;"></div>
-        </div>`);
+            <div class=shim style="padding-top: ${ padding }%;"></div>
+          </div>`
+             );
     }
     else {
-      return (`<img x-cp-image x-cp-id=${ cpID } draggable=false
-        class=cover
-        {{#if javascript }}
-          src="{{  thumbURL  }}"
-        {{ else }}
-          src="{{  sourceURL  }}"
-        {{/if }}
-        style="max-width: {{  maxWidth  }}px">`);
+      return (
+        `<img x-cp-image x-cp-id=${ cpID } draggable=false
+          class=cover src="${ url }" style="${ maxWidth }">`
+      );
     }
   });
 

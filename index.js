@@ -9853,6 +9853,10 @@ var _events = require('events');
 
 var _events2 = _interopRequireDefault(_events);
 
+var _client_renderer = require('./client_renderer');
+
+var _client_renderer2 = _interopRequireDefault(_client_renderer);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -9860,8 +9864,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-//import * as u from 'utility';
 
 var version = '0.0.1';
 
@@ -9901,8 +9903,6 @@ var DevelopmentServer = function (_EventEmitter) {
   DevelopmentServer.prototype.connect = function connect() {
     var _this2 = this;
 
-    console.log('here');
-
     return new Promise(function (resolve, reject) {
 
       var ws = new WebSocket('wss://localhost:8000');
@@ -9912,10 +9912,8 @@ var DevelopmentServer = function (_EventEmitter) {
         log.error(err);
         var message = '<h2>Can\'t connect to https://localhost:8000</h2>';
         _this2.showAlert(message, 'connect');
-        localStorage.removeItem('developmentServer');
-        devServerEnabled = false;
-        _dom2.default.first('.editor-nag input').checked = false;
         console.log.error(response);
+        article.removeState('dev-server');
       };
 
       ws.onclose = function (e) {
@@ -9961,7 +9959,8 @@ var DevelopmentServer = function (_EventEmitter) {
           if (data.error.extract) _message += '<pre>' + data.error.extract + '</pre>';
           _this2.showAlert(_message, data.assetPath);
         } else if (data.assetPath) {
-          _this2.showAlert('<h4>Update: ' + data.assetPath + '</h3>', data.assetPath);
+          _this2.showAlert('<h3>Update: ' + data.assetPath + '</h3>', data.assetPath);
+          _client_renderer2.default.updateAsset(data.assetPath);
           setTimeout(function () {
             return _this2.removeAlert(data.assetPath);
           }, 2000);
@@ -9970,82 +9969,8 @@ var DevelopmentServer = function (_EventEmitter) {
     });
   };
 
-  DevelopmentServer.prototype.devFileList = function devFileList(list) {
-    var devFileList = list;
-
-    // swap CSS
-    var repoRegex = RegExp('^/(.*?)(\/|\.js|\.css|-[0-9a-f]{32})');
-    var baseRegex = RegExp('^/(.*?)(-[0-9a-f]{32})?\.(js|css)');
-    (0, _dom2.default)('link').map(function (tag) {
-      var url = new URL(tag.href);
-      var repo = url.pathname.match(repoRegex)[1];
-      if (['app', 'render'].includes(repo)) return;
-      var basePath = url.pathname.match(baseRegex)[1];
-      if (devFileList[repo]) {
-        log.info('fetching from development: ' + basePath + '.css');
-        tag.href = 'https://localhost:8000/' + basePath + '.css';
-      }
-    });
-
-    // swap JS
-    (0, _dom2.default)('script').map(function (tag) {
-      if (!tag.src) return;
-      var url = new URL(tag.src);
-      var repo = url.pathname.match(repoRegex)[1];
-      if (['app', 'render'].includes(repo)) return;
-      var basePath = url.pathname.match(baseRegex)[1];
-      if (devFileList[repo]) {
-        log.info('fetching from development: ' + basePath + '.js');
-        tag.src = 'https://localhost:8000/' + basePath + '.js';
-      }
-    });
-  };
-
-  DevelopmentServer.prototype.updateAsset = function updateAsset(path) {
-    var _this3 = this;
-
-    // inline asset
-    if (this.articleView.handlebars.partials[path] || this.articleView.handlebars.partials[path + '.hbs']) {
-      // Remove from fetchedAssets so it will fetch again even if it errored 
-      // last time.
-      this.fetchedAssets = this.fetchedAssets.filter(function (a) {
-        return a !== path;
-      });
-      // re-render the views that depend on this asset for a patrial.
-      this.articleView.views.forEach(function (view) {
-        if (view.attrs.type === 'Graf' && view.partials().some(function (p) {
-          return p === path || p + '.hbs' === path;
-        })) _this3.replaceViewHTML(view);
-      });
-    }
-    // JS update checks if it's in this frame then reloads
-    else if (path.match(/js$/)) {
-        var selector = 'script[src^="https://localhost:8000/' + path + '"]';
-        // external asset
-        if (_dom2.default.first(document, selector)) location.reload();
-      }
-      // CSS update does a hot reload
-      else if (path.match(/css$/)) {
-          var _selector = 'link[href^="https://localhost:8000/' + path + '"]';
-          var tag = _dom2.default.first(document, _selector);
-
-          if (tag) {
-            log.info('update: ', path);
-
-            // onload doesn't work the second time so must replace the tag
-            tag.remove();
-            var href = 'https://localhost:8000/' + path + '?' + Date.now();
-            var el = _dom2.default.create('<link rel=stylesheet href="' + href + '">');
-            el.onload = function () {
-              return _this3.resize();
-            };
-            _dom2.default.append(document.head, el);
-          }
-        }
-  };
-
   DevelopmentServer.prototype.showAlert = function showAlert(html, assetPath) {
-    var _this4 = this;
+    var _this3 = this;
 
     var el = _dom2.default.create('<div class=error>' + html + '</div>');
     // replace existing
@@ -10053,7 +9978,7 @@ var DevelopmentServer = function (_EventEmitter) {
     if (assetPath) errorEls[assetPath] = el;
     (0, _dom2.default)('.error-container').append(el);
     (0, _dom2.default)(el).on('click', function () {
-      return _this4.removeAlert(assetPath || el);
+      return _this3.removeAlert(assetPath || el);
     });
     return el;
   };
@@ -10072,7 +9997,7 @@ var DevelopmentServer = function (_EventEmitter) {
 
 new DevelopmentServer();
 
-},{"dom":"dom","events":"events"}],49:[function(require,module,exports){
+},{"./client_renderer":"client_renderer","dom":"dom","events":"events"}],49:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
@@ -10183,7 +10108,7 @@ function factory() {
 
     var source = u.findSource(cover.media.srcset, 'low');
 
-    var cpID = options.data.root.attrs.id;
+    var cpID = cover.id;
 
     var url = void 0;
     if (options.data.root.javascript) url = 'data:image/jpeg;base64,' + cover.media.base64_thumb;else if (cover.type === 'Video') url = options.data.root.content_origin + source.poster;else url = options.data.root.content_origin + source.url;
@@ -10193,18 +10118,19 @@ function factory() {
 
     var position = '';
     if (cover.crop) {
-      var x = cover.crop.left + cover.crop.width / 2;
-      var y = cover.crop.top + cover.crop.height / 2;
-      var round = function round(n) {
-        return Math.round(n * 100000) / 1000;
-      };
-      position = ' background-position: ' + round(x) + '% ' + round(y) + '%';
+      var x = Math.round(cover.crop.left * 1000) / 10;
+      var y = Math.round(cover.crop.top * 1000) / 10;
+      position = ' background-position: ' + x + '% ' + y + '%';
     }
 
+    var highestSource = u.findSource(cover.media.srcset, 'high');
+    var maxWidth = Math.round(1.2 * Math.min(highestSource.width, cover.media.original_width));
+    maxWidth = 'max-width: ' + maxWidth + 'px';
+
     if (options.fn) {
-      return '<div x-cp-background-image x-cp-id=' + cpID + '\n        class=cover\n        style="background-image: url(' + url + ');' + position + '">\n          ' + options.fn(this) + '\n          <div class=shim style="padding-top: ' + padding + '%;"></div>\n        </div>';
+      return '<div x-cp-background-image x-cp-id=' + cpID + '\n          class=cover\n        style="background-image: url(' + url + '); ' + position + '; ' + maxWidth + '">\n          ' + options.fn(this) + '\n            <div class=shim style="padding-top: ' + padding + '%;"></div>\n          </div>';
     } else {
-      return '<img x-cp-image x-cp-id=' + cpID + ' draggable=false\n        class=cover\n        {{#if javascript }}\n          src="{{  thumbURL  }}"\n        {{ else }}\n          src="{{  sourceURL  }}"\n        {{/if }}\n        style="max-width: {{  maxWidth  }}px">';
+      return '<img x-cp-image x-cp-id=' + cpID + ' draggable=false\n          class=cover src="' + url + '" style="' + maxWidth + '">';
     }
   });
 
@@ -10827,7 +10753,7 @@ var Graf = function (_View) {
     return this.article.handlebars.compile(template)({
       content: content,
       isOverlay: this.isOverlay(),
-      cpID: this.article.attrs.client ? this.attrs.id : '',
+      cpID: this.article.attrs.client || this.isOverlay() ? this.attrs.id : '',
       classes: this.classes(),
       tagName: this.tagName()
     });
@@ -10943,15 +10869,15 @@ var simpleTemplate = _handlebars2.default.compile('\n  <img x-cp-image x-cp-id={
 
 // cropping but just by center point. overlays are absolutely positioned in
 // CSS
-var backgroundImageTemplate = _handlebars2.default.compile('\n  <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}\n    class="{{  classes  }}"\n    style="background-image: url(\n      {{~#if javascript }}\n        {{~  thumbURL  ~}}\n      {{ else }}\n        {{~  sourceURL  ~}}\n      {{/if ~}})\n      {{~#if position  }}; background-position: {{  position  }}{{/if }}">\n\n    {{{  children  }}}\n\n    <div class=shim style="padding-top: {{  padding  }}%;"></div>\n\n  </{{tagName}}>\n');
+var backgroundImageTemplate = _handlebars2.default.compile('\n  <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}\n    class="{{  classes  }}"\n    style="background-image: url({{ url }});{{  position  }}">\n\n    {{{  children  }}}\n\n    <div class=shim style="padding-top: {{  padding  }}%;"></div>\n\n  </{{tagName}}>\n');
 
 // no cropping here.  but with Javascript, it will constrain width if it's
 // too big for the container (like for the max-height 100vh). Positions
 // overlays
-var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n    {{else}}\n      <img src="{{  sourceURL  }}" draggable=false> \n    {{/if}}\n\n    <div class=children>\n      {{{  children  }}}\n    </div>\n\n  </figure>\n');
+var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n    {{else}}\n      <img src="{{  sourceURL  }}" draggable=false> \n    {{/if}}\n\n    {{{  children  }}}\n\n  </figure>\n');
 
 // JS only: cropping and nice overlays on top
-var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n    </div>\n\n    <div class=children>\n      {{{children}}}\n    </div>\n\n  </figure>\n');
+var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n    </div>\n\n    {{{  children  }}}\n\n  </figure>\n');
 
 var ImageView = function (_View) {
   _inherits(ImageView, _View);
@@ -10994,25 +10920,24 @@ var ImageView = function (_View) {
 
   ImageView.prototype.backgroundHTML = function backgroundHTML() {
 
+    // CSS doesn't let us set this satisfactorily but this is close
     var position = void 0;
     if (this.attrs.crop) {
-      // XXX want this to be proportional to where the crop box is on the image
-      var x = this.attrs.crop.left + this.attrs.crop.width / 2;
-      var y = this.attrs.crop.top + this.attrs.crop.height / 2;
-      var round = function round(n) {
-        return Math.round(n * 100000) / 1000;
-      };
-      position = round(x) + '% ' + round(y) + '%';
+      var x = Math.round(this.attrs.crop.left * 1000) / 10;
+      var y = Math.round(this.attrs.crop.top * 1000) / 10;
+      position = ' background-position: ' + x + '% ' + y + '%';
     }
+
+    var url = void 0;
+    if (this.article.attrs.javascript) url = this.thumbSource();else url = this.sourceURL;
 
     return backgroundImageTemplate({
       tagName: this.tagName(),
       cpID: this.attrs.id,
       classes: this.classes(),
-      sourceURL: this.sourceURL,
-      thumbURL: this.thumbSource(),
-      padding: this.aspectRatio * 1000 / 10,
+      url: url,
       position: position,
+      padding: this.aspectRatio * 1000 / 10,
       children: this.childrenHTML(),
       javascript: this.article.attrs.javascript
     });
@@ -11164,10 +11089,10 @@ var attributes = '\n  {{#unless javascript}}\n    poster="{{  posterURL  }}" src
 var simpleTemplate = _handlebars2.default.compile('\n  <video x-cp-video x-cp-id={{  cpID  }}\n    class="{{  classes  }}"\n    ' + attributes + '>\n  </video>\n');
 
 // no crop
-var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <video ' + attributes + '></video>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=poster draggable=false> \n      </div>\n    {{else}}\n      <video ' + attributes + '></video>\n    {{/if}}\n\n    <div class=children>\n      {{{  children  }}}\n    </div>\n\n  </figure>\n');
+var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <video ' + attributes + '></video>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=poster draggable=false> \n      </div>\n    {{else}}\n      <video ' + attributes + '></video>\n    {{/if}}\n\n    {{{  children  }}}\n\n  </figure>\n');
 
 // with cropping, JS only
-var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{classes}}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop>\n        <video ' + attributes + '></video>\n        <img class=thumb src="{{thumbURL}}" draggable=false> \n        <img class=poster draggable=false> \n      </div>\n    </div>\n\n    <div class=children>\n      {{{  children  }}}\n    </div>\n\n  </figure>\n');
+var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{classes}}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop>\n        <video ' + attributes + '></video>\n        <img class=thumb src="{{thumbURL}}" draggable=false> \n        <img class=poster draggable=false> \n      </div>\n    </div>\n\n    {{{  children  }}}\n\n  </figure>\n');
 
 var VideoView = function (_View) {
   _inherits(VideoView, _View);
@@ -11292,7 +11217,7 @@ var View = function (_Super) {
     return this.template({
       attrs: this.attrs,
       isOverlay: this.isOverlay(),
-      cpID: this.article.attrs.client ? this.attrs.id : '',
+      cpID: this.article.attrs.client || this.isOverlay() ? this.attrs.id : '',
       children: this.childrenHTML(),
       javascript: (this.article || this).attrs.javascript,
       classes: this.classes(),
@@ -12597,7 +12522,7 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
 
   ClientRenderer.prototype.attachAssets = function attachAssets() {
 
-    if (_article2.default.attrs.style) (0, _dom2.default)('head').append('<style>' + artcle.attrs.style + '</style>');
+    if (_article2.default.attrs.style) (0, _dom2.default)('head').append('<style>' + _article2.default.attrs.style + '</style>');
 
     var tags = _article2.default.attrs.assets.reduce(function (tags, base_path) {
 
@@ -12634,6 +12559,52 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
         setTimeout(resolve, 3000);
       });
     }));
+  };
+
+  // from development server
+
+
+  ClientRenderer.prototype.updateAsset = function updateAsset(path) {
+    var _this4 = this;
+
+    // inline asset
+    if (this.articleView.handlebars.partials[path] || this.articleView.handlebars.partials[path + '.hbs']) {
+      // Remove from fetchedAssets so it will fetch again even if it errored 
+      // last time.
+      this.fetchedAssets = this.fetchedAssets.filter(function (a) {
+        return a !== path;
+      });
+      // re-render the views that depend on this asset for a patrial.
+      this.articleView.views.forEach(function (view) {
+        if (view.attrs.type === 'Graf' && view.partials().some(function (p) {
+          return p === path || p + '.hbs' === path;
+        })) _this4.replaceViewHTML(view);
+      });
+    }
+    // JS update checks if it's in this frame then reloads
+    if (path.match(/js$/)) {
+      var selector = 'script[src^="https://localhost:8000/' + path + '"]';
+      // external asset
+      if (_dom2.default.first(document, selector)) location.reload();
+    }
+    // CSS update does a hot reload
+    else if (path.match(/css$/)) {
+        var _selector = 'link[href^="https://localhost:8000/' + path + '"]';
+        var tag = _dom2.default.first(document, _selector);
+
+        if (tag) {
+          log.info('update: ', path);
+
+          // onload doesn't work the second time so must replace the tag
+          tag.remove();
+          var href = 'https://localhost:8000/' + path + '?' + Date.now();
+          var el = _dom2.default.create('<link rel=stylesheet href="' + href + '">');
+          el.onload = function () {
+            return _article2.default.resize();
+          };
+          _dom2.default.append(document.head, el);
+        }
+      }
   };
 
   // LIVE PREVIEW

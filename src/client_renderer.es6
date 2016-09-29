@@ -146,7 +146,7 @@ export class ClientRenderer extends EventEmitter() {
   attachAssets() {
 
     if (article.attrs.style)
-      dom('head').append(`<style>${artcle.attrs.style}</style>`);
+      dom('head').append(`<style>${article.attrs.style}</style>`);
 
     let tags = article.attrs.assets.reduce((tags, base_path) => {
 
@@ -193,6 +193,50 @@ export class ClientRenderer extends EventEmitter() {
     }));
 
   }
+
+
+  // from development server
+  updateAsset(path) {
+
+    // inline asset
+    if (this.articleView.handlebars.partials[path] ||
+       this.articleView.handlebars.partials[path + '.hbs']) {
+      // Remove from fetchedAssets so it will fetch again even if it errored 
+      // last time.
+      this.fetchedAssets = this.fetchedAssets.filter(a => a !== path);
+      // re-render the views that depend on this asset for a patrial.
+      this.articleView.views.forEach(view => {
+        if (view.attrs.type === 'Graf' &&
+            view.partials().some(p => p === path || `${p}.hbs` === path))
+          this.replaceViewHTML(view)
+      });
+    }
+    // JS update checks if it's in this frame then reloads
+    if (path.match(/js$/)) { 
+      let selector = `script[src^="https://localhost:8000/${path}"]`;
+      // external asset
+      if (dom.first(document, selector))
+        location.reload();
+    }
+    // CSS update does a hot reload
+    else if (path.match(/css$/)) {
+      let selector = `link[href^="https://localhost:8000/${path}"]`;
+      let tag = dom.first(document, selector)
+
+      if (tag) {
+        log.info('update: ', path);
+
+        // onload doesn't work the second time so must replace the tag
+        tag.remove();
+        let href = `https://localhost:8000/${path}?` + Date.now();
+        let el = dom.create(`<link rel=stylesheet href="${href}">`)
+        el.onload = () => article.resize();
+        dom.append(document.head, el);
+      }
+    }
+
+  }
+
 
 
 

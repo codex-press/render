@@ -21,13 +21,7 @@ let simpleTemplate = Handlebars.compile(`
 let backgroundImageTemplate = Handlebars.compile(`
   <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}
     class="{{  classes  }}"
-    style="background-image: url(
-      {{~#if javascript }}
-        {{~  thumbURL  ~}}
-      {{ else }}
-        {{~  sourceURL  ~}}
-      {{/if ~}})
-      {{~#if position  }}; background-position: {{  position  }}{{/if }}">
+    style="background-image: url({{ url }});{{  position  }}">
 
     {{{  children  }}}
 
@@ -53,9 +47,7 @@ let figureTemplate = Handlebars.compile(`
       <img src="{{  sourceURL  }}" draggable=false> 
     {{/if}}
 
-    <div class=children>
-      {{{  children  }}}
-    </div>
+    {{{  children  }}}
 
   </figure>
 `);
@@ -73,9 +65,7 @@ let cropTemplate = Handlebars.compile(`
       </div>
     </div>
 
-    <div class=children>
-      {{{children}}}
-    </div>
+    {{{  children  }}}
 
   </figure>
 `);
@@ -133,23 +123,27 @@ export default class ImageView extends View {
 
   backgroundHTML() {
 
+    // CSS doesn't let us set this satisfactorily but this is close
     let position;
     if (this.attrs.crop) {
-      // XXX want this to be proportional to where the crop box is on the image
-      let x = this.attrs.crop.left + this.attrs.crop.width / 2;
-      let y = this.attrs.crop.top + this.attrs.crop.height / 2;
-      let round = n => Math.round(n * 100000) / 1000;
-      position = `${round(x)}% ${round(y)}%`;
+      let x = Math.round(this.attrs.crop.left * 1000) / 10;
+      let y = Math.round(this.attrs.crop.top * 1000) / 10;
+      position = ` background-position: ${x}% ${y}%`;
     }
+
+    let url;
+    if (this.article.attrs.javascript)
+      url = this.thumbSource();
+    else
+      url = this.sourceURL;
 
     return backgroundImageTemplate({
       tagName: this.tagName(),
       cpID: this.attrs.id,
       classes: this.classes(),
-      sourceURL: this.sourceURL,
-      thumbURL: this.thumbSource(),
-      padding: (this.aspectRatio * 1000) / 10,
+      url,
       position,
+      padding: (this.aspectRatio * 1000) / 10,
       children: this.childrenHTML(),
       javascript: this.article.attrs.javascript,
     });

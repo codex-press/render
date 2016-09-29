@@ -38,9 +38,7 @@ let figureTemplate = Handlebars.compile(`
       <video ${attributes}></video>
     {{/if}}
 
-    <div class=children>
-      {{{  children  }}}
-    </div>
+    {{{  children  }}}
 
   </figure>
 `);
@@ -59,9 +57,7 @@ let cropTemplate = Handlebars.compile(`
       </div>
     </div>
 
-    <div class=children>
-      {{{  children  }}}
-    </div>
+    {{{  children  }}}
 
   </figure>
 `);

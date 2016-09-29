@@ -9893,7 +9893,7 @@ var DevelopmentServer = function (_EventEmitter) {
     _this.fileList = {};
 
     _dom2.default.ready.then(function () {
-      return _dom2.default.body().append('<div class=error-container></div>');
+      return _dom2.default.body().append('<div class=cp-error-container></div>');
     });
     return _this;
   }

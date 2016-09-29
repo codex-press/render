@@ -25,7 +25,7 @@ class DevelopmentServer extends EventEmitter() {
     this.fileList = {};
 
     dom.ready.then(() => 
-      dom.body().append('<div class=error-container></div>')
+      dom.body().append('<div class=cp-error-container></div>')
     );
   }
 

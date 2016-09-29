@@ -9904,8 +9904,6 @@ var DevelopmentServer = function (_EventEmitter) {
   DevelopmentServer.prototype.connect = function connect() {
     var _this2 = this;
 
-    console.trace('connect');
-
     return new Promise(function (resolve, reject) {
 
       var ws = new WebSocket('wss://localhost:8000');
@@ -9914,12 +9912,11 @@ var DevelopmentServer = function (_EventEmitter) {
         log.error(err);
         var message = '<h2>Can\'t connect to https://localhost:8000</h2>';
         _this2.showAlert(message, 'connect');
-        console.log.error(response);
+        console.error(response);
         article.removeState('dev-server');
       };
 
       ws.onclose = function (e) {
-        console.log('onclose');
         if (!reconnectInterval) {
           var message = '<h2>Lost Connection To Development Server<h2>';
           _this2.showAlert(message, 'connect', false);
@@ -9930,7 +9927,6 @@ var DevelopmentServer = function (_EventEmitter) {
       var firstMessage = true;
       ws.onmessage = function (e) {
         var data = JSON.parse(e.data);
-        console.log('message', data);
 
         if (firstMessage) {
           firstMessage = false;
@@ -9948,7 +9944,6 @@ var DevelopmentServer = function (_EventEmitter) {
             clearInterval(reconnectInterval);
             reconnectInterval = undefined;
           }
-          console.log('resolving');
           resolve();
         }
 
@@ -9960,6 +9955,7 @@ var DevelopmentServer = function (_EventEmitter) {
           if (data.error.column) _message += '<div>column: ' + data.error.column + '</div>';
           if (data.error.extract) _message += '<pre>' + data.error.extract + '</pre>';
           _this2.showAlert(_message, data.assetPath, false);
+          console.error(data.error.message, data.error);
         } else if (data.assetPath) {
           _this2.showAlert('<h3>Update: ' + data.assetPath + '</h3>', data.assetPath);
           _this2.fileList = data.fileList;

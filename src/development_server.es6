@@ -32,7 +32,6 @@ class DevelopmentServer extends EventEmitter() {
 
   // returns Promise to a loaded fileList
   connect() {
-    console.trace('connect');
 
     return new Promise((resolve, reject) => {
 
@@ -42,13 +41,12 @@ class DevelopmentServer extends EventEmitter() {
         log.error(err);
         let message = `<h2>Can't connect to https://localhost:8000</h2>`;
         this.showAlert(message, 'connect');
-        console.log.error(response);
+        console.error(response);
         article.removeState('dev-server');
       };
 
 
       ws.onclose = e => {
-        console.log('onclose');
         if (!reconnectInterval) {
           let message = `<h2>Lost Connection To Development Server<h2>`;
           this.showAlert(message, 'connect', false);
@@ -59,7 +57,6 @@ class DevelopmentServer extends EventEmitter() {
       let firstMessage = true;
       ws.onmessage = e => {
         let data = JSON.parse(e.data);
-        console.log('message', data);
 
         if (firstMessage) {
           firstMessage = false;
@@ -85,7 +82,6 @@ class DevelopmentServer extends EventEmitter() {
             clearInterval(reconnectInterval);
             reconnectInterval = undefined;
           }
-          console.log('resolving');
           resolve();
         }
 
@@ -103,6 +99,7 @@ class DevelopmentServer extends EventEmitter() {
           if (data.error.extract)
             message += `<pre>${data.error.extract}</pre>`;
           this.showAlert(message, data.assetPath, false);
+          console.error(data.error.message, data.error);
         }
         else if (data.assetPath) {
           this.showAlert(

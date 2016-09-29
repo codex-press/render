@@ -1,5 +1,4 @@
-
-.error-container {
+.cp-alert-container {
   position: fixed;
   top: 1em;
   left: 50%;
@@ -7,49 +6,56 @@
   width: 90%;
   max-width: 600px;
   z-index: 100000;
-
   line-height: 1.2;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-.error {
-  background: hsl(0, 100%, 50%);
-  opacity: 0.9;
+.cp-alert {
   cursor: pointer;
-  padding: 0 1em;
+  padding: 1em;
   margin: 1rem;
-  border-radius: 0.5em;
+  border: 1px solid;
+  border-radius: 0.2em;
   animation: 300ms cp-fade-in linear;
   overflow: hidden;
 }
 
-.error h2, h3, h4 {
-  margin: 0.8em 0;
+.cp-alert.info {
+  background: #b3e5ff;
+  border-color: #00aaff;
 }
-.error h2 {
+
+.cp-alert.error {
+  background: #ffb3b3;
+  border-color: #ff0000;
+}
+
+.cp-alert .cp-heading {
+  margin-bottom: 0.8em;
   font-size: 1.4em;
 }
-.error h3 {
+
+.alert .cp-message {
   font-size: 1em;
   font-weight: 400;
 }
 
-.error pre {
+.cp-alert pre {
+  border-radius: 0.2em;
   background: #eee;
-  padding: 1em;  
+  padding: 1em;
 }
 
-.error.hidden {
+.cp-alert.hidden {
   animation: 300ms cp-fade-out linear;
 }
 
 @keyframes cp-fade-in {
   from { opacity: 0; }
-  to   { opacity: 1; }
+  to { opacity: 1; }
 }
 
 @keyframes cp-fade-out {
   from { opacity: 1; }
-  to   { opacity: 0; }
-}
-
+  to { opacity: 0; }
+} 

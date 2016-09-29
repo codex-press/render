@@ -9947,6 +9947,7 @@ var DevelopmentServer = function (_EventEmitter) {
             clearInterval(reconnectInterval);
             reconnectInterval = undefined;
           }
+          console.log('resolving');
           resolve();
         }
 
@@ -12439,12 +12440,10 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
     this.articleView = new _article4.default(data);
     this.bind(articleViewEvents, this.articleView);
 
-    _dom2.default.body().prepend(this.articleView.html());
-
-    return new Promise(function (resolve, reject) {
-      if (_article2.default.hasState('dev-server')) _development_server2.default.connect().then(resolve);else resolve();
-    }).then(function () {
+    return (_article2.default.hasState('dev-server') ? _development_server2.default.connect() : Promise.resolve()).then(function () {
       return _this2.attachAssets();
+    }).then(function () {
+      return _dom2.default.body().prepend(_this2.articleView.html());
     }).then(function () {
       return _resolve(_this2);
     });

@@ -67,16 +67,12 @@ export class ClientRenderer extends EventEmitter() {
     this.articleView = new ArticleView(data);
     this.bind(articleViewEvents, this.articleView);
 
-    dom.body().prepend(this.articleView.html());
-
-    return (new Promise((resolve, reject) => {
-      if (article.hasState('dev-server'))
-        devServer.connect().then(resolve)
-      else
-        resolve();
-    }))
-    .then(() => this.attachAssets())
-    .then(() => _resolve(this));
+    return (
+      (article.hasState('dev-server') ? devServer.connect() : Promise.resolve())
+      .then(() => this.attachAssets())
+      .then(() => dom.body().prepend(this.articleView.html()))
+      .then(() => _resolve(this))
+    );
   }
 
 

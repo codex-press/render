@@ -84,6 +84,7 @@ class DevelopmentServer extends EventEmitter() {
             clearInterval(reconnectInterval);
             reconnectInterval = undefined;
           }
+          console.log('resolving');
           resolve();
         }
 

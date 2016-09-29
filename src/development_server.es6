@@ -103,7 +103,7 @@ class DevelopmentServer extends EventEmitter() {
             html += `<div>column: ${data.error.column}</div>`;
           if (data.error.extract)
             html += `<pre>${data.error.extract}</pre>`;
-          this.showAlert({html, id: data.assetPath, timeout: false});
+          this.showAlert({html, type: 'error', id: data.assetPath, timeout: false});
           console.error(data.error.message, data.error);
         }
         else if (data.assetPath) {

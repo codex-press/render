@@ -9957,7 +9957,7 @@ var DevelopmentServer = function (_EventEmitter) {
           if (data.error.line) _html += '<div>line: ' + data.error.line + '</div>';
           if (data.error.column) _html += '<div>column: ' + data.error.column + '</div>';
           if (data.error.extract) _html += '<pre>' + data.error.extract + '</pre>';
-          _this2.showAlert({ html: _html, id: data.assetPath, timeout: false });
+          _this2.showAlert({ html: _html, type: 'error', id: data.assetPath, timeout: false });
           console.error(data.error.message, data.error);
         } else if (data.assetPath) {
           _this2.showAlert({

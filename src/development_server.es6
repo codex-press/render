@@ -39,7 +39,7 @@ class DevelopmentServer extends EventEmitter() {
 
       ws.onerror = err => {
         log.error(err);
-        let message = `<h2>Can't connect to https://localhost:8000</h2>`;
+        let message = `<div class=cp-heading>Can't connect to https://localhost:8000</div>`;
         this.showAlert(message, 'connect');
         console.error(response);
         article.removeState('dev-server');
@@ -48,7 +48,7 @@ class DevelopmentServer extends EventEmitter() {
 
       ws.onclose = e => {
         if (!reconnectInterval) {
-          let message = `<h2>Lost Connection To Development Server<h2>`;
+          let message = `<div class=cp-heading>Lost Connection To Development Server</div>`;
           this.showAlert(message, 'connect', false);
           reconnectInterval = setInterval(this.connect.bind(this), 2000);
         }
@@ -63,7 +63,7 @@ class DevelopmentServer extends EventEmitter() {
 
           if (data.version !== version) {
             let message = (`
-              <h2>Your Development Server Is Out Of Date</h2>
+              <div class=cp-heading>Your Development Server Is Out Of Date</div>
               <div>
                 The current version is v${version} and you are running
                 v${data.version || '0.0.0'}. You must update it like this:
@@ -77,7 +77,7 @@ class DevelopmentServer extends EventEmitter() {
           }
 
           this.fileList = data.fileList;
-          this.showAlert(`<h2>Connected To Development Server</h2>`, 'connect');
+          this.showAlert(`<div class=cp-heading>Connected To Development Server</div>`, 'connect');
           if (reconnectInterval) {
             clearInterval(reconnectInterval);
             reconnectInterval = undefined;
@@ -88,10 +88,12 @@ class DevelopmentServer extends EventEmitter() {
         if (data.error) {
           let message;
           if (data.filename)
-            message = `<h2>${data.error.type} Error: ${data.filename}</h2>`;
+            message = (
+              `<div class=cp-heading>${data.error.type} Error: ${data.filename}</div>`
+            );
           else
-            message = `<h2>${data.error.type} Error</h2>`;
-          message += `<h3>${data.error.message}</h3>`;
+            message = `<div class=cp-heading>${data.error.type} Error</div>`;
+          message += `<div class=cp-message>${data.error.message}</div>`;
           if (data.error.line)
             message += `<div>line: ${data.error.line}</div>`;
           if (data.error.column)
@@ -103,7 +105,7 @@ class DevelopmentServer extends EventEmitter() {
         }
         else if (data.assetPath) {
           this.showAlert(
-            `<h3>Update: ${data.assetPath}</h3>`,
+            `<div>Update: ${data.assetPath}</div>`,
             data.assetPath
           );
           this.fileList = data.fileList;
@@ -116,13 +118,13 @@ class DevelopmentServer extends EventEmitter() {
 
 
   showAlert(html, assetPath, timeout = 2000) {
-    let el = dom.create(`<div class=error>${html}</div>`);
+    let el = dom.create(`<div class=cp-error>${html}</div>`);
     // replace existing
     if (errorEls[assetPath])
       errorEls[assetPath].remove();
     if (assetPath)
       errorEls[assetPath] = el;
-    dom('.error-container').append(el);
+    dom('.cp-error-container').append(el);
     dom(el).on('click', () => this.removeAlert(assetPath || el))
     if (timeout)
       timers[assetPath] = setTimeout(() => this.removeAlert(assetPath), timeout)

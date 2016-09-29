@@ -9910,7 +9910,7 @@ var DevelopmentServer = function (_EventEmitter) {
 
       ws.onerror = function (err) {
         log.error(err);
-        var message = '<h2>Can\'t connect to https://localhost:8000</h2>';
+        var message = '<div class=cp-heading>Can\'t connect to https://localhost:8000</div>';
         _this2.showAlert(message, 'connect');
         console.error(response);
         article.removeState('dev-server');
@@ -9918,7 +9918,7 @@ var DevelopmentServer = function (_EventEmitter) {
 
       ws.onclose = function (e) {
         if (!reconnectInterval) {
-          var message = '<h2>Lost Connection To Development Server<h2>';
+          var message = '<div class=cp-heading>Lost Connection To Development Server</div>';
           _this2.showAlert(message, 'connect', false);
           reconnectInterval = setInterval(_this2.connect.bind(_this2), 2000);
         }
@@ -9932,14 +9932,14 @@ var DevelopmentServer = function (_EventEmitter) {
           firstMessage = false;
 
           if (data.version !== version) {
-            var message = '\n              <h2>Your Development Server Is Out Of Date</h2>\n              <div>\n                The current version is v' + version + ' and you are running\n                v' + (data.version || '0.0.0') + '. You must update it like this:\n              </div>\n              <pre>git pull\n              npm install</pre>\n            ';
+            var message = '\n              <div class=cp-heading>Your Development Server Is Out Of Date</div>\n              <div>\n                The current version is v' + version + ' and you are running\n                v' + (data.version || '0.0.0') + '. You must update it like this:\n              </div>\n              <pre>git pull\n              npm install</pre>\n            ';
             _this2.showAlert(message, 'connect', false);
             reject();
             return;
           }
 
           _this2.fileList = data.fileList;
-          _this2.showAlert('<h2>Connected To Development Server</h2>', 'connect');
+          _this2.showAlert('<div class=cp-heading>Connected To Development Server</div>', 'connect');
           if (reconnectInterval) {
             clearInterval(reconnectInterval);
             reconnectInterval = undefined;
@@ -9949,15 +9949,15 @@ var DevelopmentServer = function (_EventEmitter) {
 
         if (data.error) {
           var _message = void 0;
-          if (data.filename) _message = '<h2>' + data.error.type + ' Error: ' + data.filename + '</h2>';else _message = '<h2>' + data.error.type + ' Error</h2>';
-          _message += '<h3>' + data.error.message + '</h3>';
+          if (data.filename) _message = '<div class=cp-heading>' + data.error.type + ' Error: ' + data.filename + '</div>';else _message = '<div class=cp-heading>' + data.error.type + ' Error</div>';
+          _message += '<div class=cp-message>' + data.error.message + '</div>';
           if (data.error.line) _message += '<div>line: ' + data.error.line + '</div>';
           if (data.error.column) _message += '<div>column: ' + data.error.column + '</div>';
           if (data.error.extract) _message += '<pre>' + data.error.extract + '</pre>';
           _this2.showAlert(_message, data.assetPath, false);
           console.error(data.error.message, data.error);
         } else if (data.assetPath) {
-          _this2.showAlert('<h3>Update: ' + data.assetPath + '</h3>', data.assetPath);
+          _this2.showAlert('<div>Update: ' + data.assetPath + '</div>', data.assetPath);
           _this2.fileList = data.fileList;
           _client_renderer2.default.updateAsset(data.assetPath);
         }
@@ -9970,11 +9970,11 @@ var DevelopmentServer = function (_EventEmitter) {
 
     var timeout = arguments.length <= 2 || arguments[2] === undefined ? 2000 : arguments[2];
 
-    var el = _dom2.default.create('<div class=error>' + html + '</div>');
+    var el = _dom2.default.create('<div class=cp-error>' + html + '</div>');
     // replace existing
     if (errorEls[assetPath]) errorEls[assetPath].remove();
     if (assetPath) errorEls[assetPath] = el;
-    (0, _dom2.default)('.error-container').append(el);
+    (0, _dom2.default)('.cp-error-container').append(el);
     (0, _dom2.default)(el).on('click', function () {
       return _this3.removeAlert(assetPath || el);
     });

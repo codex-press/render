@@ -9893,7 +9893,7 @@ var DevelopmentServer = function (_EventEmitter) {
     _this.fileList = {};
 
     _dom2.default.ready.then(function () {
-      return _dom2.default.body().append('<div class=cp-error-container></div>');
+      return _dom2.default.body().append('<div class=cp-alert-container></div>');
     });
     return _this;
   }
@@ -9932,14 +9932,17 @@ var DevelopmentServer = function (_EventEmitter) {
           firstMessage = false;
 
           if (data.version !== version) {
-            var message = '\n              <div class=cp-heading>Your Development Server Is Out Of Date</div>\n              <div>\n                The current version is v' + version + ' and you are running\n                v' + (data.version || '0.0.0') + '. You must update it like this:\n              </div>\n              <pre>git pull\n              npm install</pre>\n            ';
-            _this2.showAlert(message, 'connect', false);
+            var html = '\n              <div class=cp-heading>Your Development Server Is Out Of Date</div>\n              <div>\n                The current version is v' + version + ' and you are running\n                v' + (data.version || '0.0.0') + '. You must update it like this:\n              </div>\n              <pre>git pull\n              npm install</pre>\n            ';
+            _this2.showAlert({ html: html, id: 'connect', timeout: false });
             reject();
             return;
           }
 
           _this2.fileList = data.fileList;
-          _this2.showAlert('<div class=cp-heading>Connected To Development Server</div>', 'connect');
+          _this2.showAlert({
+            html: '<div class=cp-heading>Connected To Development Server</div>',
+            id: 'connect'
+          });
           if (reconnectInterval) {
             clearInterval(reconnectInterval);
             reconnectInterval = undefined;
@@ -9948,16 +9951,19 @@ var DevelopmentServer = function (_EventEmitter) {
         }
 
         if (data.error) {
-          var _message = void 0;
-          if (data.filename) _message = '<div class=cp-heading>' + data.error.type + ' Error: ' + data.filename + '</div>';else _message = '<div class=cp-heading>' + data.error.type + ' Error</div>';
-          _message += '<div class=cp-message>' + data.error.message + '</div>';
-          if (data.error.line) _message += '<div>line: ' + data.error.line + '</div>';
-          if (data.error.column) _message += '<div>column: ' + data.error.column + '</div>';
-          if (data.error.extract) _message += '<pre>' + data.error.extract + '</pre>';
-          _this2.showAlert(_message, data.assetPath, false);
+          var _html = void 0;
+          if (data.filename) _html = '<div class=cp-heading>' + data.error.type + ' Error: ' + data.filename + '</div>';else _html = '<div class=cp-heading>' + data.error.type + ' Error</div>';
+          _html += '<div class=cp-message>' + data.error.message + '</div>';
+          if (data.error.line) _html += '<div>line: ' + data.error.line + '</div>';
+          if (data.error.column) _html += '<div>column: ' + data.error.column + '</div>';
+          if (data.error.extract) _html += '<pre>' + data.error.extract + '</pre>';
+          _this2.showAlert({ html: _html, id: data.assetPath, timeout: false });
           console.error(data.error.message, data.error);
         } else if (data.assetPath) {
-          _this2.showAlert('<div>Update: ' + data.assetPath + '</div>', data.assetPath);
+          _this2.showAlert({
+            html: '<div>Update: ' + data.assetPath + '</div>',
+            id: data.assetPath
+          });
           _this2.fileList = data.fileList;
           _client_renderer2.default.updateAsset(data.assetPath);
         }
@@ -9965,32 +9971,42 @@ var DevelopmentServer = function (_EventEmitter) {
     });
   };
 
-  DevelopmentServer.prototype.showAlert = function showAlert(html, assetPath) {
-    var _this3 = this;
+  // types: info, error (or whatever you add in CSS)
 
-    var timeout = arguments.length <= 2 || arguments[2] === undefined ? 2000 : arguments[2];
 
-    var el = _dom2.default.create('<div class=cp-error>' + html + '</div>');
+  DevelopmentServer.prototype.showAlert = function showAlert(_ref) {
+    var html = _ref.html;
+    var _ref$type = _ref.type;
+    var type = _ref$type === undefined ? 'info' : _ref$type;
+    var id = _ref.id;
+    var _ref$timeout = _ref.timeout;
+    var timeout = _ref$timeout === undefined ? 2000 : _ref$timeout;
+
+
+    var el = _dom2.default.create('<div class="cp-alert ' + type + '">' + html + '</div>');
+
+    var removeAlert = function removeAlert() {
+      (0, _dom2.default)(el).addClass('hidden').on('animationend', function () {
+        el.remove();
+        errorEls[id] = null;
+      });
+    };
+
     // replace existing
-    if (errorEls[assetPath]) errorEls[assetPath].remove();
-    if (assetPath) errorEls[assetPath] = el;
-    (0, _dom2.default)('.cp-error-container').append(el);
-    (0, _dom2.default)(el).on('click', function () {
-      return _this3.removeAlert(assetPath || el);
-    });
-    if (timeout) timers[assetPath] = setTimeout(function () {
-      return _this3.removeAlert(assetPath);
-    }, timeout);else clearTimeout(timers[assetPath]);
-    return el;
-  };
+    if (errorEls[id]) errorEls[id].remove();
 
-  DevelopmentServer.prototype.removeAlert = function removeAlert(assetPath) {
-    var el = errorEls[assetPath];
-    if (!el) return;
-    (0, _dom2.default)(el).addClass('hidden').on('animationend', function () {
-      el.remove();
-      errorEls[assetPath] = null;
+    errorEls[id] = el;
+
+    (0, _dom2.default)('.cp-alert-container').append(el);
+    (0, _dom2.default)(el).on('click', function () {
+      return removeAlert();
     });
+
+    if (timeout) timers[id] = setTimeout(function () {
+      return removeAlert();
+    }, timeout);else clearTimeout(timers[id]);
+
+    return el;
   };
 
   return DevelopmentServer;

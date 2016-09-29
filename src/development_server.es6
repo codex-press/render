@@ -25,7 +25,7 @@ class DevelopmentServer extends EventEmitter() {
     this.fileList = {};
 
     dom.ready.then(() => 
-      dom.body().append('<div class=cp-error-container></div>')
+      dom.body().append('<div class=cp-alert-container></div>')
     );
   }
 
@@ -62,7 +62,7 @@ class DevelopmentServer extends EventEmitter() {
           firstMessage = false;
 
           if (data.version !== version) {
-            let message = (`
+            let html = (`
               <div class=cp-heading>Your Development Server Is Out Of Date</div>
               <div>
                 The current version is v${version} and you are running
@@ -71,13 +71,16 @@ class DevelopmentServer extends EventEmitter() {
               <pre>git pull
               npm install</pre>
             `);
-            this.showAlert(message, 'connect', false);
+            this.showAlert({html, id: 'connect', timeout: false});
             reject();
             return;
           }
 
           this.fileList = data.fileList;
-          this.showAlert(`<div class=cp-heading>Connected To Development Server</div>`, 'connect');
+          this.showAlert({
+            html: `<div class=cp-heading>Connected To Development Server</div>`,
+            id: 'connect',
+          });
           if (reconnectInterval) {
             clearInterval(reconnectInterval);
             reconnectInterval = undefined;
@@ -86,28 +89,28 @@ class DevelopmentServer extends EventEmitter() {
         }
 
         if (data.error) {
-          let message;
+          let html;
           if (data.filename)
-            message = (
+            html = (
               `<div class=cp-heading>${data.error.type} Error: ${data.filename}</div>`
             );
           else
-            message = `<div class=cp-heading>${data.error.type} Error</div>`;
-          message += `<div class=cp-message>${data.error.message}</div>`;
+            html = `<div class=cp-heading>${data.error.type} Error</div>`;
+          html += `<div class=cp-message>${data.error.message}</div>`;
           if (data.error.line)
-            message += `<div>line: ${data.error.line}</div>`;
+            html += `<div>line: ${data.error.line}</div>`;
           if (data.error.column)
-            message += `<div>column: ${data.error.column}</div>`;
+            html += `<div>column: ${data.error.column}</div>`;
           if (data.error.extract)
-            message += `<pre>${data.error.extract}</pre>`;
-          this.showAlert(message, data.assetPath, false);
+            html += `<pre>${data.error.extract}</pre>`;
+          this.showAlert({html, id: data.assetPath, timeout: false});
           console.error(data.error.message, data.error);
         }
         else if (data.assetPath) {
-          this.showAlert(
-            `<div>Update: ${data.assetPath}</div>`,
-            data.assetPath
-          );
+          this.showAlert({
+            html: `<div>Update: ${data.assetPath}</div>`,
+            id: data.assetPath
+          });
           this.fileList = data.fileList;
           renderer.updateAsset(data.assetPath);
         }
@@ -117,32 +120,35 @@ class DevelopmentServer extends EventEmitter() {
   }
 
 
-  showAlert(html, assetPath, timeout = 2000) {
-    let el = dom.create(`<div class=cp-error>${html}</div>`);
+  // types: info, error (or whatever you add in CSS)
+  showAlert({html, type = 'info', id, timeout = 2000}) {
+
+    let el = dom.create(`<div class="cp-alert ${type}">${html}</div>`);
+
+    let removeAlert = () => {
+      dom(el).addClass('hidden').on('animationend', () => {
+        el.remove()
+        errorEls[id] = null;
+      });
+    }
+
     // replace existing
-    if (errorEls[assetPath])
-      errorEls[assetPath].remove();
-    if (assetPath)
-      errorEls[assetPath] = el;
-    dom('.cp-error-container').append(el);
-    dom(el).on('click', () => this.removeAlert(assetPath || el))
+    if (errorEls[id])
+      errorEls[id].remove();
+
+    errorEls[id] = el;
+
+    dom('.cp-alert-container').append(el);
+    dom(el).on('click', () => removeAlert())
+
     if (timeout)
-      timers[assetPath] = setTimeout(() => this.removeAlert(assetPath), timeout)
+      timers[id] = setTimeout(() => removeAlert(), timeout)
     else
-      clearTimeout(timers[assetPath])
+      clearTimeout(timers[id])
+
     return el;
   }
 
-
-  removeAlert(assetPath) {
-    let el = errorEls[assetPath];
-    if (!el)
-      return
-    dom(el).addClass('hidden').on('animationend', () => {
-      el.remove()
-      errorEls[assetPath] = null;
-    });
-  }
 
 }
 

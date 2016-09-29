@@ -9874,6 +9874,7 @@ exports.default = instance;
 
 var errorEls = {};
 var reconnectInterval = void 0;
+var timers = {};
 
 var DevelopmentServer = function (_EventEmitter) {
   _inherits(DevelopmentServer, _EventEmitter);
@@ -9903,10 +9904,11 @@ var DevelopmentServer = function (_EventEmitter) {
   DevelopmentServer.prototype.connect = function connect() {
     var _this2 = this;
 
+    console.trace('connect');
+
     return new Promise(function (resolve, reject) {
 
       var ws = new WebSocket('wss://localhost:8000');
-      var firstMessage = true;
 
       ws.onerror = function (err) {
         log.error(err);
@@ -9920,29 +9922,28 @@ var DevelopmentServer = function (_EventEmitter) {
         console.log('onclose');
         if (!reconnectInterval) {
           var message = '<h2>Lost Connection To Development Server<h2>';
-          _this2.showAlert(message, 'connect');
+          _this2.showAlert(message, 'connect', false);
           reconnectInterval = setInterval(_this2.connect.bind(_this2), 2000);
         }
       };
 
+      var firstMessage = true;
       ws.onmessage = function (e) {
         var data = JSON.parse(e.data);
+        console.log('message', data);
 
         if (firstMessage) {
           firstMessage = false;
 
           if (data.version !== version) {
             var message = '\n              <h2>Your Development Server Is Out Of Date</h2>\n              <div>\n                The current version is v' + version + ' and you are running\n                v' + (data.version || '0.0.0') + '. You must update it like this:\n              </div>\n              <pre>git pull\n              npm install</pre>\n            ';
-            _this2.showAlert(message, 'connect');
+            _this2.showAlert(message, 'connect', false);
             reject();
             return;
           }
 
           _this2.fileList = data.fileList;
           _this2.showAlert('<h2>Connected To Development Server</h2>', 'connect');
-          setTimeout(function () {
-            return _this2.removeAlert('connect');
-          }, 2000);
           if (reconnectInterval) {
             clearInterval(reconnectInterval);
             reconnectInterval = undefined;
@@ -9958,13 +9959,11 @@ var DevelopmentServer = function (_EventEmitter) {
           if (data.error.line) _message += '<div>line: ' + data.error.line + '</div>';
           if (data.error.column) _message += '<div>column: ' + data.error.column + '</div>';
           if (data.error.extract) _message += '<pre>' + data.error.extract + '</pre>';
-          _this2.showAlert(_message, data.assetPath);
+          _this2.showAlert(_message, data.assetPath, false);
         } else if (data.assetPath) {
           _this2.showAlert('<h3>Update: ' + data.assetPath + '</h3>', data.assetPath);
+          _this2.fileList = data.fileList;
           _client_renderer2.default.updateAsset(data.assetPath);
-          setTimeout(function () {
-            return _this2.removeAlert(data.assetPath);
-          }, 2000);
         }
       };
     });
@@ -9972,6 +9971,8 @@ var DevelopmentServer = function (_EventEmitter) {
 
   DevelopmentServer.prototype.showAlert = function showAlert(html, assetPath) {
     var _this3 = this;
+
+    var timeout = arguments.length <= 2 || arguments[2] === undefined ? 2000 : arguments[2];
 
     var el = _dom2.default.create('<div class=error>' + html + '</div>');
     // replace existing
@@ -9981,6 +9982,9 @@ var DevelopmentServer = function (_EventEmitter) {
     (0, _dom2.default)(el).on('click', function () {
       return _this3.removeAlert(assetPath || el);
     });
+    if (timeout) timers[assetPath] = setTimeout(function () {
+      return _this3.removeAlert(assetPath);
+    }, timeout);else clearTimeout(timers[assetPath]);
     return el;
   };
 
@@ -12550,6 +12554,10 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
 
       return tags;
     }, []);
+
+    if (_article2.default.attrs.compressed_style) {
+      tags.push(_dom2.default.create('<link rel=stylesheet href="' + _article2.default.attrs.compressed_style + '">'));
+    }
 
     return Promise.all(tags.map(function (el) {
       _dom2.default.append(document.head, el);

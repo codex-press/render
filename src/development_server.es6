@@ -10,6 +10,7 @@ export {instance as default};
 
 let errorEls = {};
 let reconnectInterval;
+let timers = {};
 
 class DevelopmentServer extends EventEmitter() {
 
@@ -31,11 +32,11 @@ class DevelopmentServer extends EventEmitter() {
 
   // returns Promise to a loaded fileList
   connect() {
+    console.trace('connect');
 
     return new Promise((resolve, reject) => {
 
       let ws = new WebSocket('wss://localhost:8000');
-      let firstMessage = true;
 
       ws.onerror = err => {
         log.error(err);
@@ -50,14 +51,15 @@ class DevelopmentServer extends EventEmitter() {
         console.log('onclose');
         if (!reconnectInterval) {
           let message = `<h2>Lost Connection To Development Server<h2>`;
-          this.showAlert(message, 'connect');
+          this.showAlert(message, 'connect', false);
           reconnectInterval = setInterval(this.connect.bind(this), 2000);
         }
       };
 
-
+      let firstMessage = true;
       ws.onmessage = e => {
         let data = JSON.parse(e.data);
+        console.log('message', data);
 
         if (firstMessage) {
           firstMessage = false;
@@ -72,14 +74,13 @@ class DevelopmentServer extends EventEmitter() {
               <pre>git pull
               npm install</pre>
             `);
-            this.showAlert(message, 'connect');
+            this.showAlert(message, 'connect', false);
             reject();
             return;
           }
 
           this.fileList = data.fileList;
           this.showAlert(`<h2>Connected To Development Server</h2>`, 'connect');
-          setTimeout(() => this.removeAlert('connect'), 2000)
           if (reconnectInterval) {
             clearInterval(reconnectInterval);
             reconnectInterval = undefined;
@@ -101,15 +102,15 @@ class DevelopmentServer extends EventEmitter() {
             message += `<div>column: ${data.error.column}</div>`;
           if (data.error.extract)
             message += `<pre>${data.error.extract}</pre>`;
-          this.showAlert(message, data.assetPath);
+          this.showAlert(message, data.assetPath, false);
         }
         else if (data.assetPath) {
           this.showAlert(
             `<h3>Update: ${data.assetPath}</h3>`,
             data.assetPath
           );
+          this.fileList = data.fileList;
           renderer.updateAsset(data.assetPath);
-          setTimeout(() => this.removeAlert(data.assetPath), 2000)
         }
       };
 
@@ -117,7 +118,7 @@ class DevelopmentServer extends EventEmitter() {
   }
 
 
-  showAlert(html, assetPath) {
+  showAlert(html, assetPath, timeout = 2000) {
     let el = dom.create(`<div class=error>${html}</div>`);
     // replace existing
     if (errorEls[assetPath])
@@ -126,6 +127,10 @@ class DevelopmentServer extends EventEmitter() {
       errorEls[assetPath] = el;
     dom('.error-container').append(el);
     dom(el).on('click', () => this.removeAlert(assetPath || el))
+    if (timeout)
+      timers[assetPath] = setTimeout(() => this.removeAlert(assetPath), timeout)
+    else
+      clearTimeout(timers[assetPath])
     return el;
   }
 

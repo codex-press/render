@@ -180,6 +180,13 @@ export class ClientRenderer extends EventEmitter() {
       return tags;
     },[]);
 
+    if (article.attrs.compressed_style) {
+      tags.push(dom.create(
+        `<link rel=stylesheet href="${article.attrs.compressed_style}">`
+      ));
+    }
+
+
     return Promise.all(tags.map(el => {
       dom.append(document.head, el);
       return new Promise((resolve, reject) => {

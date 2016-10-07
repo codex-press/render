@@ -21,7 +21,11 @@ let simpleTemplate = Handlebars.compile(`
 let backgroundImageTemplate = Handlebars.compile(`
   <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}
     class="{{  classes  }}"
-    style="background-image: url({{ url }});{{  position  }}">
+    style="
+      background-image: url({{ url }});
+      {{  position  }};
+      max-width: {{  maxWidth }}px;
+      max-height: {{ maxHeight }}px;">
 
     {{{  children  }}}
 
@@ -31,23 +35,32 @@ let backgroundImageTemplate = Handlebars.compile(`
 `);
 
 
-// no cropping here.  but with Javascript, it will constrain width if it's
-// too big for the container (like for the max-height 100vh). Positions
-// overlays
+// no cropping here. But with Javascript, it will constrain width if it's
+// too big for the container (like for the max-height 100vh). JS positions
+// overlays on top and perhaps will move the ones below to the side.
 let figureTemplate = Handlebars.compile(`
   <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">
 
     {{#if javascript}}
+
+      <div class=content>
+        <div class=frame>
+          <div class=shim style="padding-top: {{  padding  }}%;"></div>
+          <img class=thumb src="{{  thumbURL  }}" draggable=false> 
+          <img class=full draggable=false> 
+        </div>
+        {{{  children  }}}
+      </div>
+
+    {{else}}
+
       <div class=frame>
         <div class=shim style="padding-top: {{  padding  }}%;"></div>
-        <img class=thumb src="{{  thumbURL  }}" draggable=false> 
-        <img class=full draggable=false> 
+        <img src="{{  sourceURL  }}" draggable=false> 
       </div>
-    {{else}}
-      <img src="{{  sourceURL  }}" draggable=false> 
-    {{/if}}
+      {{{  children  }}}
 
-    {{{  children  }}}
+    {{/if}}
 
   </figure>
 `);
@@ -57,15 +70,17 @@ let figureTemplate = Handlebars.compile(`
 let cropTemplate = Handlebars.compile(`
   <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">
 
-    <div class=frame>
-      <div class=shim style="padding-top: {{  padding  }}%;"></div>
-      <div class=crop>
-        <img class=thumb src="{{  thumbURL  }}" draggable=false> 
-        <img class=full draggable=false> 
+    <div class=content>
+      <div class=frame>
+        <div class=shim style="padding-top: {{  padding  }}%;"></div>
+        <div class=crop-box></div>
+        <div class=crop>
+          <img class=thumb src="{{  thumbURL  }}" draggable=false> 
+          <img class=full draggable=false> 
+        </div>
       </div>
+      {{{  children  }}}
     </div>
-
-    {{{  children  }}}
 
   </figure>
 `);
@@ -126,10 +141,15 @@ export default class ImageView extends View {
     // CSS doesn't let us set this satisfactorily but this is close
     let position;
     if (this.attrs.crop) {
-      let x = Math.round(this.attrs.crop.left * 1000) / 10;
-      let y = Math.round(this.attrs.crop.top * 1000) / 10;
-      position = ` background-position: ${x}% ${y}%`;
+      let x = this.attrs.crop.left + this.attrs.crop.width / 2;
+      let y = this.attrs.crop.top + this.attrs.crop.height / 2;
+      let round = n => Math.round(n * 1000) / 10;
+      position = ` background-position: ${round(x)}% ${round(y)}%`;
     }
+
+    let highestSource = findSource(this.attrs.media.srcset, 'high');
+    let maxWidth = 1.2 * highestSource.width;
+    let maxHeight = 1.2 * highestSource.height;
 
     let url;
     if (this.article.attrs.javascript)
@@ -143,6 +163,8 @@ export default class ImageView extends View {
       classes: this.classes(),
       url,
       position,
+      maxWidth,
+      maxHeight,
       padding: (this.aspectRatio * 1000) / 10,
       children: this.childrenHTML(),
       javascript: this.article.attrs.javascript,

@@ -148,7 +148,8 @@ export default class ArticleView extends View {
 
   set(data) {
     let v = this.views.find(v => v.attrs.id == data.id);
-    v.attrs = data;
+    if (v)
+      v.attrs = data;
     return v;
   }
 

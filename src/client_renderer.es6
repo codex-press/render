@@ -10,7 +10,7 @@ let instance;
 export {instance as default};
 
 let callbacks = {
-  set              : 'set',
+  set           : 'set',
 
   change        : 'change',
   add           : 'add',
@@ -19,8 +19,7 @@ let callbacks = {
   // used in Editor's preview functionality
   setScroll     : 'setScroll',
   setStyle      : 'setStyle',
-
-}
+};
 
 let articleViewEvents = {
   assetMissing : 'assetMissing',
@@ -198,7 +197,7 @@ export class ClientRenderer extends EventEmitter() {
   }
 
 
-  // from development server
+  // events from devServer
   updateAsset(path) {
 
     // inline asset
@@ -249,7 +248,8 @@ export class ClientRenderer extends EventEmitter() {
   change(data) {
     // console.log('change', data);
     let view = this.articleView.set(data);
-    this.replaceViewHTML(view);
+    if (view)
+      this.replaceViewHTML(view);
   }
 
   replaceViewHTML(view) {

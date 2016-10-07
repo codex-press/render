@@ -38,18 +38,33 @@ class DevelopmentServer extends EventEmitter() {
       let ws = new WebSocket('wss://localhost:8000');
 
       ws.onerror = err => {
-        log.error(err);
-        let message = `<div class=cp-heading>Can't connect to https://localhost:8000</div>`;
-        this.showAlert(message, 'connect');
-        console.error(response);
+        // it's trying to reconnect so normal to be erroring
+        if (reconnectInterval)
+          return;
+        console.error(err);
+        this.showAlert({
+          html: `
+            <div class=cp-heading>
+              Can't connect to https://localhost:8000
+            </div>`,
+          type: 'error',
+          id: 'connect',
+        });
         article.removeState('dev-server');
       };
 
 
       ws.onclose = e => {
         if (!reconnectInterval) {
-          let message = `<div class=cp-heading>Lost Connection To Development Server</div>`;
-          this.showAlert(message, 'connect', false);
+          this.showAlert({
+            html: `
+              <div class=cp-heading>
+                Lost Connection To Development Server
+              </div>`,
+            id: 'connect',
+            type: 'error',
+            timeout: false
+          });
           reconnectInterval = setInterval(this.connect.bind(this), 2000);
         }
       };

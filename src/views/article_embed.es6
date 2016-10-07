@@ -77,7 +77,9 @@ export default class ArticleEmbed extends View {
   templateHTML() {
 
     if (this.parent instanceof Index) {
-      let html = this.parent.entryTemplate.compiled(this.makeAttrs());
+      let html;
+      try { html = this.parent.entryTemplate.compiled(this.makeAttrs()); }
+      catch (e) { html = `<div>${e.message}</div>`; }
       return unscopeLinks(html, this.article.attrs.path_prefix);
     }
 
@@ -90,12 +92,18 @@ export default class ArticleEmbed extends View {
     else
       contentTemplate = defaultTemplate;
 
-    let html = template({
-      cpID: this.article.attrs.client ? this.attrs.id : '',
-      classes: 'article ' + this.classes(),
-      tagName: this.tagName(),
-      content: contentTemplate(this.makeAttrs()),
-    });
+    let html;
+    try {
+      html = template({
+        cpID: this.article.attrs.client ? this.attrs.id : '',
+        classes: 'article ' + this.classes(),
+        tagName: this.tagName(),
+        content: contentTemplate(this.makeAttrs()),
+      });
+    }
+    catch (e) {
+      html = e.message;
+    }
 
     return unscopeLinks(html, this.article.attrs.path_prefix);
   }

@@ -1,4 +1,4 @@
-import hljs from 'highlight.js';
+import prism from 'prismjs';
 import marked from 'marked';
 
 import handlebarsFactory from '../templates';
@@ -17,7 +17,7 @@ import ArticleEmbed from './article_embed';
 
 export default class ArticleView extends View {
 
-  constructor(attrs) {
+  constructor(attrs = {}) {
     super(attrs);
 
     // fresh factory
@@ -58,7 +58,7 @@ export default class ArticleView extends View {
       compiled: this.handlebars.compile(t.body),
     }));
 
-    this.partials = []
+    this.partials = [];
 
     let htmlBlockPartials = this.attrs.content.filter(c => {
       return (
@@ -132,9 +132,6 @@ export default class ArticleView extends View {
       case 'ArticleEmbed': v = new ArticleEmbed(data); break;
     }
 
-    if (v.is_empty)
-      return;
-
     this.views.push(v);
     v.article = this;
     return v;
@@ -146,33 +143,51 @@ export default class ArticleView extends View {
   }
 
 
-  set(data) {
+  update(data) {
+    if (!this.views)
+      return;
     let v = this.views.find(v => v.attrs.id == data.id);
     if (v)
-      v.attrs = data;
+      v.set(data);
     return v;
   }
 
 
   remove(id) {
-    this.views.find(v => v.id).remove();
+    let view = this.views.find(v => v.attrs.id == id);
+    if (view) {
+      view.remove();
+      view.parent.children = view.parent.children.filter(v => v !== view)
+      this.views = this.views.filter(v => v !== view)
+    }
   }
 
-  add(data) {
 
+  add(data) {
+    let view = this.makeView(data);
+    this.views.push(view);
+    if (data.parent_id) {
+      if (data.parent_id === this.attrs.id)
+        view.parent = this;
+      else
+        view.parent = this.views.find(v => v.attrs.id === data.parent_id)
+      view.parent.children.splice(data.index, 0, view);
+      console.log(view.parent)
+    }
+    return view;
   }
 
 }
 
 
-// Thanks to Docco and Jeremy Ashkenas:
-// https://jashkenas.github.io/docco/
 
 function renderJavascriptSource(source) {
   let sections = [];
   let commentRe = RegExp('^\s*//');
   let code, docs;
+
   code = docs = '';
+
   let saveSection = () => {
     sections.push({code, docs});
     code = docs = '';
@@ -188,21 +203,30 @@ function renderJavascriptSource(source) {
       code += line + '\n';
     }
   });
+
   saveSection();
+
+  let renderer = new marked.Renderer();
+
+  // let's you add class to the <pre> block
+  renderer.code = (code, language) => {
+    code = prism.highlight(code, prism.languages.javascript);
+    return `<pre class=language-javascript><code>${code}</code></pre>`;
+  };
 
   return sections.map(({code, docs}) => {
 
-    let highlighted = hljs.highlight('javascript', code).value;
+    let highlighted = prism.highlight(code, prism.languages.javascript);
 
     let markdowned = marked(docs, {
+      renderer,
       smartypants: true,
-      highlight: code => hljs.highlight('javascript', code).value
     });
 
     return (`
       <section>
         <div class=comment>${markdowned}</div>
-        <pre class=hljs>${highlighted}</pre>
+        <pre class=language-javascript>${highlighted}</pre>
       </section>`
     );
   }).join('');

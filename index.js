@@ -303,7 +303,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,require('_process'),"/node_modules/amdefine/amdefine.js")
-},{"_process":47,"path":46}],2:[function(require,module,exports){
+},{"_process":48,"path":46}],2:[function(require,module,exports){
 
 },{}],3:[function(require,module,exports){
 /*
@@ -9657,7 +9657,792 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":47}],47:[function(require,module,exports){
+},{"_process":48}],47:[function(require,module,exports){
+(function (global){
+
+/* **********************************************
+     Begin prism-core.js
+********************************************** */
+
+var _self = (typeof window !== 'undefined')
+	? window   // if in browser
+	: (
+		(typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope)
+		? self // if in worker
+		: {}   // if in node js
+	);
+
+/**
+ * Prism: Lightweight, robust, elegant syntax highlighting
+ * MIT license http://www.opensource.org/licenses/mit-license.php/
+ * @author Lea Verou http://lea.verou.me
+ */
+
+var Prism = (function(){
+
+// Private helper vars
+var lang = /\blang(?:uage)?-(\w+)\b/i;
+var uniqueId = 0;
+
+var _ = _self.Prism = {
+	util: {
+		encode: function (tokens) {
+			if (tokens instanceof Token) {
+				return new Token(tokens.type, _.util.encode(tokens.content), tokens.alias);
+			} else if (_.util.type(tokens) === 'Array') {
+				return tokens.map(_.util.encode);
+			} else {
+				return tokens.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\u00a0/g, ' ');
+			}
+		},
+
+		type: function (o) {
+			return Object.prototype.toString.call(o).match(/\[object (\w+)\]/)[1];
+		},
+
+		objId: function (obj) {
+			if (!obj['__id']) {
+				Object.defineProperty(obj, '__id', { value: ++uniqueId });
+			}
+			return obj['__id'];
+		},
+
+		// Deep clone a language definition (e.g. to extend it)
+		clone: function (o) {
+			var type = _.util.type(o);
+
+			switch (type) {
+				case 'Object':
+					var clone = {};
+
+					for (var key in o) {
+						if (o.hasOwnProperty(key)) {
+							clone[key] = _.util.clone(o[key]);
+						}
+					}
+
+					return clone;
+
+				case 'Array':
+					// Check for existence for IE8
+					return o.map && o.map(function(v) { return _.util.clone(v); });
+			}
+
+			return o;
+		}
+	},
+
+	languages: {
+		extend: function (id, redef) {
+			var lang = _.util.clone(_.languages[id]);
+
+			for (var key in redef) {
+				lang[key] = redef[key];
+			}
+
+			return lang;
+		},
+
+		/**
+		 * Insert a token before another token in a language literal
+		 * As this needs to recreate the object (we cannot actually insert before keys in object literals),
+		 * we cannot just provide an object, we need anobject and a key.
+		 * @param inside The key (or language id) of the parent
+		 * @param before The key to insert before. If not provided, the function appends instead.
+		 * @param insert Object with the key/value pairs to insert
+		 * @param root The object that contains `inside`. If equal to Prism.languages, it can be omitted.
+		 */
+		insertBefore: function (inside, before, insert, root) {
+			root = root || _.languages;
+			var grammar = root[inside];
+
+			if (arguments.length == 2) {
+				insert = arguments[1];
+
+				for (var newToken in insert) {
+					if (insert.hasOwnProperty(newToken)) {
+						grammar[newToken] = insert[newToken];
+					}
+				}
+
+				return grammar;
+			}
+
+			var ret = {};
+
+			for (var token in grammar) {
+
+				if (grammar.hasOwnProperty(token)) {
+
+					if (token == before) {
+
+						for (var newToken in insert) {
+
+							if (insert.hasOwnProperty(newToken)) {
+								ret[newToken] = insert[newToken];
+							}
+						}
+					}
+
+					ret[token] = grammar[token];
+				}
+			}
+
+			// Update references in other language definitions
+			_.languages.DFS(_.languages, function(key, value) {
+				if (value === root[inside] && key != inside) {
+					this[key] = ret;
+				}
+			});
+
+			return root[inside] = ret;
+		},
+
+		// Traverse a language definition with Depth First Search
+		DFS: function(o, callback, type, visited) {
+			visited = visited || {};
+			for (var i in o) {
+				if (o.hasOwnProperty(i)) {
+					callback.call(o, i, o[i], type || i);
+
+					if (_.util.type(o[i]) === 'Object' && !visited[_.util.objId(o[i])]) {
+						visited[_.util.objId(o[i])] = true;
+						_.languages.DFS(o[i], callback, null, visited);
+					}
+					else if (_.util.type(o[i]) === 'Array' && !visited[_.util.objId(o[i])]) {
+						visited[_.util.objId(o[i])] = true;
+						_.languages.DFS(o[i], callback, i, visited);
+					}
+				}
+			}
+		}
+	},
+	plugins: {},
+
+	highlightAll: function(async, callback) {
+		var env = {
+			callback: callback,
+			selector: 'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'
+		};
+
+		_.hooks.run("before-highlightall", env);
+
+		var elements = env.elements || document.querySelectorAll(env.selector);
+
+		for (var i=0, element; element = elements[i++];) {
+			_.highlightElement(element, async === true, env.callback);
+		}
+	},
+
+	highlightElement: function(element, async, callback) {
+		// Find language
+		var language, grammar, parent = element;
+
+		while (parent && !lang.test(parent.className)) {
+			parent = parent.parentNode;
+		}
+
+		if (parent) {
+			language = (parent.className.match(lang) || [,''])[1].toLowerCase();
+			grammar = _.languages[language];
+		}
+
+		// Set language on the element, if not present
+		element.className = element.className.replace(lang, '').replace(/\s+/g, ' ') + ' language-' + language;
+
+		// Set language on the parent, for styling
+		parent = element.parentNode;
+
+		if (/pre/i.test(parent.nodeName)) {
+			parent.className = parent.className.replace(lang, '').replace(/\s+/g, ' ') + ' language-' + language;
+		}
+
+		var code = element.textContent;
+
+		var env = {
+			element: element,
+			language: language,
+			grammar: grammar,
+			code: code
+		};
+
+		_.hooks.run('before-sanity-check', env);
+
+		if (!env.code || !env.grammar) {
+			_.hooks.run('complete', env);
+			return;
+		}
+
+		_.hooks.run('before-highlight', env);
+
+		if (async && _self.Worker) {
+			var worker = new Worker(_.filename);
+
+			worker.onmessage = function(evt) {
+				env.highlightedCode = evt.data;
+
+				_.hooks.run('before-insert', env);
+
+				env.element.innerHTML = env.highlightedCode;
+
+				callback && callback.call(env.element);
+				_.hooks.run('after-highlight', env);
+				_.hooks.run('complete', env);
+			};
+
+			worker.postMessage(JSON.stringify({
+				language: env.language,
+				code: env.code,
+				immediateClose: true
+			}));
+		}
+		else {
+			env.highlightedCode = _.highlight(env.code, env.grammar, env.language);
+
+			_.hooks.run('before-insert', env);
+
+			env.element.innerHTML = env.highlightedCode;
+
+			callback && callback.call(element);
+
+			_.hooks.run('after-highlight', env);
+			_.hooks.run('complete', env);
+		}
+	},
+
+	highlight: function (text, grammar, language) {
+		var tokens = _.tokenize(text, grammar);
+		return Token.stringify(_.util.encode(tokens), language);
+	},
+
+	tokenize: function(text, grammar, language) {
+		var Token = _.Token;
+
+		var strarr = [text];
+
+		var rest = grammar.rest;
+
+		if (rest) {
+			for (var token in rest) {
+				grammar[token] = rest[token];
+			}
+
+			delete grammar.rest;
+		}
+
+		tokenloop: for (var token in grammar) {
+			if(!grammar.hasOwnProperty(token) || !grammar[token]) {
+				continue;
+			}
+
+			var patterns = grammar[token];
+			patterns = (_.util.type(patterns) === "Array") ? patterns : [patterns];
+
+			for (var j = 0; j < patterns.length; ++j) {
+				var pattern = patterns[j],
+					inside = pattern.inside,
+					lookbehind = !!pattern.lookbehind,
+					greedy = !!pattern.greedy,
+					lookbehindLength = 0,
+					alias = pattern.alias;
+
+				pattern = pattern.pattern || pattern;
+
+				for (var i=0; i<strarr.length; i++) { // Don’t cache length as it changes during the loop
+
+					var str = strarr[i];
+
+					if (strarr.length > text.length) {
+						// Something went terribly wrong, ABORT, ABORT!
+						break tokenloop;
+					}
+
+					if (str instanceof Token) {
+						continue;
+					}
+
+					pattern.lastIndex = 0;
+
+					var match = pattern.exec(str),
+					    delNum = 1;
+
+					// Greedy patterns can override/remove up to two previously matched tokens
+					if (!match && greedy && i != strarr.length - 1) {
+						// Reconstruct the original text using the next two tokens
+						var nextToken = strarr[i + 1].matchedStr || strarr[i + 1],
+						    combStr = str + nextToken;
+
+						if (i < strarr.length - 2) {
+							combStr += strarr[i + 2].matchedStr || strarr[i + 2];
+						}
+
+						// Try the pattern again on the reconstructed text
+						pattern.lastIndex = 0;
+						match = pattern.exec(combStr);
+						if (!match) {
+							continue;
+						}
+
+						var from = match.index + (lookbehind ? match[1].length : 0);
+						// To be a valid candidate, the new match has to start inside of str
+						if (from >= str.length) {
+							continue;
+						}
+						var to = match.index + match[0].length,
+						    len = str.length + nextToken.length;
+
+						// Number of tokens to delete and replace with the new match
+						delNum = 3;
+
+						if (to <= len) {
+							if (strarr[i + 1].greedy) {
+								continue;
+							}
+							delNum = 2;
+							combStr = combStr.slice(0, len);
+						}
+						str = combStr;
+					}
+
+					if (!match) {
+						continue;
+					}
+
+					if(lookbehind) {
+						lookbehindLength = match[1].length;
+					}
+
+					var from = match.index + lookbehindLength,
+					    match = match[0].slice(lookbehindLength),
+					    to = from + match.length,
+					    before = str.slice(0, from),
+					    after = str.slice(to);
+
+					var args = [i, delNum];
+
+					if (before) {
+						args.push(before);
+					}
+
+					var wrapped = new Token(token, inside? _.tokenize(match, inside) : match, alias, match, greedy);
+
+					args.push(wrapped);
+
+					if (after) {
+						args.push(after);
+					}
+
+					Array.prototype.splice.apply(strarr, args);
+				}
+			}
+		}
+
+		return strarr;
+	},
+
+	hooks: {
+		all: {},
+
+		add: function (name, callback) {
+			var hooks = _.hooks.all;
+
+			hooks[name] = hooks[name] || [];
+
+			hooks[name].push(callback);
+		},
+
+		run: function (name, env) {
+			var callbacks = _.hooks.all[name];
+
+			if (!callbacks || !callbacks.length) {
+				return;
+			}
+
+			for (var i=0, callback; callback = callbacks[i++];) {
+				callback(env);
+			}
+		}
+	}
+};
+
+var Token = _.Token = function(type, content, alias, matchedStr, greedy) {
+	this.type = type;
+	this.content = content;
+	this.alias = alias;
+	// Copy of the full string this token was created from
+	this.matchedStr = matchedStr || null;
+	this.greedy = !!greedy;
+};
+
+Token.stringify = function(o, language, parent) {
+	if (typeof o == 'string') {
+		return o;
+	}
+
+	if (_.util.type(o) === 'Array') {
+		return o.map(function(element) {
+			return Token.stringify(element, language, o);
+		}).join('');
+	}
+
+	var env = {
+		type: o.type,
+		content: Token.stringify(o.content, language, parent),
+		tag: 'span',
+		classes: ['token', o.type],
+		attributes: {},
+		language: language,
+		parent: parent
+	};
+
+	if (env.type == 'comment') {
+		env.attributes['spellcheck'] = 'true';
+	}
+
+	if (o.alias) {
+		var aliases = _.util.type(o.alias) === 'Array' ? o.alias : [o.alias];
+		Array.prototype.push.apply(env.classes, aliases);
+	}
+
+	_.hooks.run('wrap', env);
+
+	var attributes = '';
+
+	for (var name in env.attributes) {
+		attributes += (attributes ? ' ' : '') + name + '="' + (env.attributes[name] || '') + '"';
+	}
+
+	return '<' + env.tag + ' class="' + env.classes.join(' ') + '" ' + attributes + '>' + env.content + '</' + env.tag + '>';
+
+};
+
+if (!_self.document) {
+	if (!_self.addEventListener) {
+		// in Node.js
+		return _self.Prism;
+	}
+ 	// In worker
+	_self.addEventListener('message', function(evt) {
+		var message = JSON.parse(evt.data),
+		    lang = message.language,
+		    code = message.code,
+		    immediateClose = message.immediateClose;
+
+		_self.postMessage(_.highlight(code, _.languages[lang], lang));
+		if (immediateClose) {
+			_self.close();
+		}
+	}, false);
+
+	return _self.Prism;
+}
+
+//Get current script and highlight
+var script = document.currentScript || [].slice.call(document.getElementsByTagName("script")).pop();
+
+if (script) {
+	_.filename = script.src;
+
+	if (document.addEventListener && !script.hasAttribute('data-manual')) {
+		if(document.readyState !== "loading") {
+			requestAnimationFrame(_.highlightAll, 0);
+		}
+		else {
+			document.addEventListener('DOMContentLoaded', _.highlightAll);
+		}
+	}
+}
+
+return _self.Prism;
+
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+	module.exports = Prism;
+}
+
+// hack for components to work correctly in node.js
+if (typeof global !== 'undefined') {
+	global.Prism = Prism;
+}
+
+
+/* **********************************************
+     Begin prism-markup.js
+********************************************** */
+
+Prism.languages.markup = {
+	'comment': /<!--[\w\W]*?-->/,
+	'prolog': /<\?[\w\W]+?\?>/,
+	'doctype': /<!DOCTYPE[\w\W]+?>/,
+	'cdata': /<!\[CDATA\[[\w\W]*?]]>/i,
+	'tag': {
+		pattern: /<\/?(?!\d)[^\s>\/=.$<]+(?:\s+[^\s>\/=]+(?:=(?:("|')(?:\\\1|\\?(?!\1)[\w\W])*\1|[^\s'">=]+))?)*\s*\/?>/i,
+		inside: {
+			'tag': {
+				pattern: /^<\/?[^\s>\/]+/i,
+				inside: {
+					'punctuation': /^<\/?/,
+					'namespace': /^[^\s>\/:]+:/
+				}
+			},
+			'attr-value': {
+				pattern: /=(?:('|")[\w\W]*?(\1)|[^\s>]+)/i,
+				inside: {
+					'punctuation': /[=>"']/
+				}
+			},
+			'punctuation': /\/?>/,
+			'attr-name': {
+				pattern: /[^\s>\/]+/,
+				inside: {
+					'namespace': /^[^\s>\/:]+:/
+				}
+			}
+
+		}
+	},
+	'entity': /&#?[\da-z]{1,8};/i
+};
+
+// Plugin to make entity title show the real entity, idea by Roman Komarov
+Prism.hooks.add('wrap', function(env) {
+
+	if (env.type === 'entity') {
+		env.attributes['title'] = env.content.replace(/&amp;/, '&');
+	}
+});
+
+Prism.languages.xml = Prism.languages.markup;
+Prism.languages.html = Prism.languages.markup;
+Prism.languages.mathml = Prism.languages.markup;
+Prism.languages.svg = Prism.languages.markup;
+
+
+/* **********************************************
+     Begin prism-css.js
+********************************************** */
+
+Prism.languages.css = {
+	'comment': /\/\*[\w\W]*?\*\//,
+	'atrule': {
+		pattern: /@[\w-]+?.*?(;|(?=\s*\{))/i,
+		inside: {
+			'rule': /@[\w-]+/
+			// See rest below
+		}
+	},
+	'url': /url\((?:(["'])(\\(?:\r\n|[\w\W])|(?!\1)[^\\\r\n])*\1|.*?)\)/i,
+	'selector': /[^\{\}\s][^\{\};]*?(?=\s*\{)/,
+	'string': /("|')(\\(?:\r\n|[\w\W])|(?!\1)[^\\\r\n])*\1/,
+	'property': /(\b|\B)[\w-]+(?=\s*:)/i,
+	'important': /\B!important\b/i,
+	'function': /[-a-z0-9]+(?=\()/i,
+	'punctuation': /[(){};:]/
+};
+
+Prism.languages.css['atrule'].inside.rest = Prism.util.clone(Prism.languages.css);
+
+if (Prism.languages.markup) {
+	Prism.languages.insertBefore('markup', 'tag', {
+		'style': {
+			pattern: /(<style[\w\W]*?>)[\w\W]*?(?=<\/style>)/i,
+			lookbehind: true,
+			inside: Prism.languages.css,
+			alias: 'language-css'
+		}
+	});
+	
+	Prism.languages.insertBefore('inside', 'attr-value', {
+		'style-attr': {
+			pattern: /\s*style=("|').*?\1/i,
+			inside: {
+				'attr-name': {
+					pattern: /^\s*style/i,
+					inside: Prism.languages.markup.tag.inside
+				},
+				'punctuation': /^\s*=\s*['"]|['"]\s*$/,
+				'attr-value': {
+					pattern: /.+/i,
+					inside: Prism.languages.css
+				}
+			},
+			alias: 'language-css'
+		}
+	}, Prism.languages.markup.tag);
+}
+
+/* **********************************************
+     Begin prism-clike.js
+********************************************** */
+
+Prism.languages.clike = {
+	'comment': [
+		{
+			pattern: /(^|[^\\])\/\*[\w\W]*?\*\//,
+			lookbehind: true
+		},
+		{
+			pattern: /(^|[^\\:])\/\/.*/,
+			lookbehind: true
+		}
+	],
+	'string': {
+		pattern: /(["'])(\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
+		greedy: true
+	},
+	'class-name': {
+		pattern: /((?:\b(?:class|interface|extends|implements|trait|instanceof|new)\s+)|(?:catch\s+\())[a-z0-9_\.\\]+/i,
+		lookbehind: true,
+		inside: {
+			punctuation: /(\.|\\)/
+		}
+	},
+	'keyword': /\b(if|else|while|do|for|return|in|instanceof|function|new|try|throw|catch|finally|null|break|continue)\b/,
+	'boolean': /\b(true|false)\b/,
+	'function': /[a-z0-9_]+(?=\()/i,
+	'number': /\b-?(?:0x[\da-f]+|\d*\.?\d+(?:e[+-]?\d+)?)\b/i,
+	'operator': /--?|\+\+?|!=?=?|<=?|>=?|==?=?|&&?|\|\|?|\?|\*|\/|~|\^|%/,
+	'punctuation': /[{}[\];(),.:]/
+};
+
+
+/* **********************************************
+     Begin prism-javascript.js
+********************************************** */
+
+Prism.languages.javascript = Prism.languages.extend('clike', {
+	'keyword': /\b(as|async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|null|of|package|private|protected|public|return|set|static|super|switch|this|throw|try|typeof|var|void|while|with|yield)\b/,
+	'number': /\b-?(0x[\dA-Fa-f]+|0b[01]+|0o[0-7]+|\d*\.?\d+([Ee][+-]?\d+)?|NaN|Infinity)\b/,
+	// Allow for all non-ASCII characters (See http://stackoverflow.com/a/2008444)
+	'function': /[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*(?=\()/i
+});
+
+Prism.languages.insertBefore('javascript', 'keyword', {
+	'regex': {
+		pattern: /(^|[^/])\/(?!\/)(\[.+?]|\\.|[^/\\\r\n])+\/[gimyu]{0,5}(?=\s*($|[\r\n,.;})]))/,
+		lookbehind: true,
+		greedy: true
+	}
+});
+
+Prism.languages.insertBefore('javascript', 'string', {
+	'template-string': {
+		pattern: /`(?:\\\\|\\?[^\\])*?`/,
+		greedy: true,
+		inside: {
+			'interpolation': {
+				pattern: /\$\{[^}]+\}/,
+				inside: {
+					'interpolation-punctuation': {
+						pattern: /^\$\{|\}$/,
+						alias: 'punctuation'
+					},
+					rest: Prism.languages.javascript
+				}
+			},
+			'string': /[\s\S]+/
+		}
+	}
+});
+
+if (Prism.languages.markup) {
+	Prism.languages.insertBefore('markup', 'tag', {
+		'script': {
+			pattern: /(<script[\w\W]*?>)[\w\W]*?(?=<\/script>)/i,
+			lookbehind: true,
+			inside: Prism.languages.javascript,
+			alias: 'language-javascript'
+		}
+	});
+}
+
+Prism.languages.js = Prism.languages.javascript;
+
+/* **********************************************
+     Begin prism-file-highlight.js
+********************************************** */
+
+(function () {
+	if (typeof self === 'undefined' || !self.Prism || !self.document || !document.querySelector) {
+		return;
+	}
+
+	self.Prism.fileHighlight = function() {
+
+		var Extensions = {
+			'js': 'javascript',
+			'py': 'python',
+			'rb': 'ruby',
+			'ps1': 'powershell',
+			'psm1': 'powershell',
+			'sh': 'bash',
+			'bat': 'batch',
+			'h': 'c',
+			'tex': 'latex'
+		};
+
+		if(Array.prototype.forEach) { // Check to prevent error in IE8
+			Array.prototype.slice.call(document.querySelectorAll('pre[data-src]')).forEach(function (pre) {
+				var src = pre.getAttribute('data-src');
+
+				var language, parent = pre;
+				var lang = /\blang(?:uage)?-(?!\*)(\w+)\b/i;
+				while (parent && !lang.test(parent.className)) {
+					parent = parent.parentNode;
+				}
+
+				if (parent) {
+					language = (pre.className.match(lang) || [, ''])[1];
+				}
+
+				if (!language) {
+					var extension = (src.match(/\.(\w+)$/) || [, ''])[1];
+					language = Extensions[extension] || extension;
+				}
+
+				var code = document.createElement('code');
+				code.className = 'language-' + language;
+
+				pre.textContent = '';
+
+				code.textContent = 'Loading…';
+
+				pre.appendChild(code);
+
+				var xhr = new XMLHttpRequest();
+
+				xhr.open('GET', src, true);
+
+				xhr.onreadystatechange = function () {
+					if (xhr.readyState == 4) {
+
+						if (xhr.status < 400 && xhr.responseText) {
+							code.textContent = xhr.responseText;
+
+							Prism.highlightElement(code);
+						}
+						else if (xhr.status >= 400) {
+							code.textContent = '✖ Error ' + xhr.status + ' while fetching file: ' + xhr.statusText;
+						}
+						else {
+							code.textContent = '✖ Error: File does not exist or is empty';
+						}
+					}
+				};
+
+				xhr.send(null);
+			});
+		}
+
+	};
+
+	document.addEventListener('DOMContentLoaded', self.Prism.fileHighlight);
+
+})();
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],48:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -9839,7 +10624,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],48:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -9857,6 +10642,10 @@ var _client_renderer = require('./client_renderer');
 
 var _client_renderer2 = _interopRequireDefault(_client_renderer);
 
+var _article = require('article');
+
+var _article2 = _interopRequireDefault(_article);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -9872,9 +10661,7 @@ var instance = false;
 exports.default = instance;
 
 
-var errorEls = {};
 var reconnectInterval = void 0;
-var timers = {};
 
 var DevelopmentServer = function (_EventEmitter) {
   _inherits(DevelopmentServer, _EventEmitter);
@@ -9891,10 +10678,6 @@ var DevelopmentServer = function (_EventEmitter) {
     exports.default = instance = _this;
 
     _this.fileList = {};
-
-    _dom2.default.ready.then(function () {
-      return _dom2.default.body().append('<div class=cp-alert-container></div>');
-    });
     return _this;
   }
 
@@ -9912,18 +10695,18 @@ var DevelopmentServer = function (_EventEmitter) {
         // it's trying to reconnect so normal to be erroring
         if (reconnectInterval) return;
         console.error(err);
-        _this2.showAlert({
-          html: '\n            <div class=cp-heading>\n              Can\'t connect to https://localhost:8000\n            </div>',
+        _this2.sendAlert({
+          head: 'Can\'t connect to https://localhost:8000',
           type: 'error',
           id: 'connect'
         });
-        article.removeState('dev-server');
+        _article2.default.removeState('dev-server');
       };
 
       ws.onclose = function (e) {
         if (!reconnectInterval) {
-          _this2.showAlert({
-            html: '\n              <div class=cp-heading>\n                Lost Connection To Development Server\n              </div>',
+          _this2.sendAlert({
+            head: 'Lost Connection To Development Server',
             id: 'connect',
             type: 'error',
             timeout: false
@@ -9940,36 +10723,54 @@ var DevelopmentServer = function (_EventEmitter) {
           firstMessage = false;
 
           if (data.version !== version) {
-            var html = '\n              <div class=cp-heading>Your Development Server Is Out Of Date</div>\n              <div>\n                The current version is v' + version + ' and you are running\n                v' + (data.version || '0.0.0') + '. You must update it like this:\n              </div>\n              <pre>git pull\n              npm install</pre>\n            ';
-            _this2.showAlert({ html: html, id: 'connect', timeout: false });
+            _this2.sendAlert({
+              head: 'Your Development Server Is Out Of Date',
+              body: 'The current version is v' + version + ' and you are running v' + (data.version || '0.0.0') + '. You must update it like this:',
+              pre: 'git pull\nnpm install',
+              id: 'connect',
+              timeout: false
+            });
             reject();
             return;
           }
 
           _this2.fileList = data.fileList;
-          _this2.showAlert({
-            html: '<div class=cp-heading>Connected To Development Server</div>',
+          _this2.sendAlert({
+            body: 'Connected To Development Server',
             id: 'connect'
           });
+
           if (reconnectInterval) {
             clearInterval(reconnectInterval);
             reconnectInterval = undefined;
           }
+
           resolve();
         }
 
         if (data.error) {
-          var _html = void 0;
-          if (data.filename) _html = '<div class=cp-heading>' + data.error.type + ' Error: ' + data.filename + '</div>';else _html = '<div class=cp-heading>' + data.error.type + ' Error</div>';
-          _html += '<div class=cp-message>' + data.error.message + '</div>';
-          if (data.error.line) _html += '<div>line: ' + data.error.line + '</div>';
-          if (data.error.column) _html += '<div>column: ' + data.error.column + '</div>';
-          if (data.error.extract) _html += '<pre>' + data.error.extract + '</pre>';
-          _this2.showAlert({ html: _html, type: 'error', id: data.assetPath, timeout: false });
+
+          var head = void 0;
+          if (data.filename) head = data.error.type + ' Error: ' + data.filename;else head = data.error.type + ' Error';
+
+          var body = data.error.message;
+          if (data.error.line) body += '\nline: ' + data.error.line;
+          if (data.error.column) body += '\ncolumn: ' + data.error.column;
+
+          _this2.sendAlert({
+            head: head,
+            body: body,
+            pre: data.error.extract,
+            type: 'error',
+            id: data.assetPath,
+            timeout: false
+          });
+
           console.error(data.error.message, data.error);
         } else if (data.assetPath) {
-          _this2.showAlert({
-            html: '<div>Update: ' + data.assetPath + '</div>',
+
+          _this2.sendAlert({
+            body: 'Update: ' + data.assetPath,
             id: data.assetPath
           });
           _this2.fileList = data.fileList;
@@ -9979,42 +10780,8 @@ var DevelopmentServer = function (_EventEmitter) {
     });
   };
 
-  // types: info, error (or whatever you add in CSS)
-
-
-  DevelopmentServer.prototype.showAlert = function showAlert(_ref) {
-    var html = _ref.html;
-    var _ref$type = _ref.type;
-    var type = _ref$type === undefined ? 'info' : _ref$type;
-    var id = _ref.id;
-    var _ref$timeout = _ref.timeout;
-    var timeout = _ref$timeout === undefined ? 2000 : _ref$timeout;
-
-
-    var el = _dom2.default.create('<div class="cp-alert ' + type + '">' + html + '</div>');
-
-    var removeAlert = function removeAlert() {
-      (0, _dom2.default)(el).addClass('hidden').on('animationend', function () {
-        el.remove();
-        errorEls[id] = null;
-      });
-    };
-
-    // replace existing
-    if (errorEls[id]) errorEls[id].remove();
-
-    errorEls[id] = el;
-
-    (0, _dom2.default)('.cp-alert-container').append(el);
-    (0, _dom2.default)(el).on('click', function () {
-      return removeAlert();
-    });
-
-    if (timeout) timers[id] = setTimeout(function () {
-      return removeAlert();
-    }, timeout);else clearTimeout(timers[id]);
-
-    return el;
+  DevelopmentServer.prototype.sendAlert = function sendAlert(args) {
+    _article2.default.send('alert', args);
   };
 
   return DevelopmentServer;
@@ -10022,7 +10789,7 @@ var DevelopmentServer = function (_EventEmitter) {
 
 new DevelopmentServer();
 
-},{"./client_renderer":"client_renderer","dom":"dom","events":"events"}],49:[function(require,module,exports){
+},{"./client_renderer":"client_renderer","article":"article","dom":"dom","events":"events"}],50:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
@@ -10037,7 +10804,7 @@ exports.default = {
   "twitter": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon twitter\"><path d=\"M30 7.7c-.8 1.2-1.8 2.2-2.9 3v.8c0 1.6-.2 3.1-.7 4.7s-1.1 3-2.1 4.5-2 2.7-3.3 3.8c-1.3 1.1-2.8 2-4.6 2.6-1.8.7-3.7 1-5.7 1-3.2 0-6.1-.9-8.8-2.6.4 0 .9.1 1.4.1 2.7 0 5-.8 7.1-2.5-1.2 0-2.4-.4-3.3-1.2s-1.7-1.7-2-2.9c.4.1.8.1 1.1.1.5 0 1-.1 1.5-.2-1.3-.3-2.4-.9-3.3-2s-1.3-2.3-1.3-3.7v-.1c.8.5 1.7.7 2.6.7-.8-.5-1.4-1.2-1.9-2.1-.4-.8-.6-1.7-.6-2.7 0-1.1.3-2 .8-2.9 1.4 1.8 3.2 3.2 5.2 4.3s4.3 1.7 6.6 1.8c-.1-.5-.1-.9-.1-1.3 0-1.6.6-3 1.7-4.1s2.4-1.8 4-1.8c1.7 0 3.1.6 4.2 1.8 1.3-.3 2.5-.7 3.6-1.4-.4 1.4-1.3 2.4-2.5 3.2 1.1-.1 2.2-.4 3.3-.9z\"/></svg>"
 };
 
-},{}],50:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 'use strict';
 
 var _client_renderer = require('./client_renderer');
@@ -10048,7 +10815,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 window.render = _client_renderer2.default;
 
-},{"./client_renderer":"client_renderer"}],51:[function(require,module,exports){
+},{"./client_renderer":"client_renderer"}],52:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10082,7 +10849,7 @@ function factory() {
 
     br: '<br>',
 
-    date: '{{ formatDate publication_date "longDate" }}',
+    date: '<time datetime="{{publication_date}}">{{ formatDate publication_date "longDate" }}</time>',
 
     play: '<span class="cp-play-button">' + _icons2.default.play + '</span>',
     audio: '<span class="cp-audio-button">' + _icons2.default.audio + '</span>',
@@ -10125,13 +10892,16 @@ function factory() {
   handlebars.registerHelper('cover', function () {
     var options = arguments[arguments.length - 1];
 
+    var size = 'low';
+    if (arguments.length > 1) size = arguments[arguments.length - 1];
+
     // there is no cover image
     var cover = options.data.root.cover;
     if (!cover) {
-      if (options.fn) return '<div>' + options.fn(this) + '</div>';else return '';
+      if (options.fn) return '<div class=cover>' + options.fn(this) + '</div>';else return '';
     }
 
-    var source = u.findSource(cover.media.srcset, 'low');
+    var source = u.findSource(cover.media.srcset, size);
 
     var cpID = cover.id;
 
@@ -10214,7 +10984,7 @@ function factory() {
   return handlebars;
 }
 
-},{"./icons":49,"./utility":52,"dateformat":3,"handlebars":33}],52:[function(require,module,exports){
+},{"./icons":50,"./utility":53,"dateformat":3,"handlebars":33}],53:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10264,14 +11034,14 @@ var unscopedPath = exports.unscopedPath = function unscopedPath(pathPrefix, path
   } else return 'https://codex.press' + path;
 };
 
-},{}],53:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
 
-var _highlight = require('highlight.js');
+var _prismjs = require('prismjs');
 
-var _highlight2 = _interopRequireDefault(_highlight);
+var _prismjs2 = _interopRequireDefault(_prismjs);
 
 var _marked = require('marked');
 
@@ -10328,7 +11098,9 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var ArticleView = function (_View) {
   _inherits(ArticleView, _View);
 
-  function ArticleView(attrs) {
+  function ArticleView() {
+    var attrs = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
     _classCallCheck(this, ArticleView);
 
     // fresh factory
@@ -10440,8 +11212,6 @@ var ArticleView = function (_View) {
         v = new _article_embed2.default(data);break;
     }
 
-    if (v.is_empty) return;
-
     this.views.push(v);
     v.article = this;
     return v;
@@ -10451,35 +11221,57 @@ var ArticleView = function (_View) {
     return 'article';
   };
 
-  ArticleView.prototype.set = function set(data) {
+  ArticleView.prototype.update = function update(data) {
+    if (!this.views) return;
     var v = this.views.find(function (v) {
       return v.attrs.id == data.id;
     });
-    if (v) v.attrs = data;
+    if (v) v.set(data);
     return v;
   };
 
   ArticleView.prototype.remove = function remove(id) {
-    this.views.find(function (v) {
-      return v.id;
-    }).remove();
+    var view = this.views.find(function (v) {
+      return v.attrs.id == id;
+    });
+    if (view) {
+      view.remove();
+      view.parent.children = view.parent.children.filter(function (v) {
+        return v !== view;
+      });
+      this.views = this.views.filter(function (v) {
+        return v !== view;
+      });
+    }
   };
 
-  ArticleView.prototype.add = function add(data) {};
+  ArticleView.prototype.add = function add(data) {
+    var view = this.makeView(data);
+    this.views.push(view);
+    if (data.parent_id) {
+      if (data.parent_id === this.attrs.id) view.parent = this;else view.parent = this.views.find(function (v) {
+        return v.attrs.id === data.parent_id;
+      });
+      view.parent.children.splice(data.index, 0, view);
+      console.log(view.parent);
+    }
+    return view;
+  };
 
   return ArticleView;
 }(_view2.default);
 
-// Thanks to Docco and Jeremy Ashkenas:
-// https://jashkenas.github.io/docco/
-
 exports.default = ArticleView;
+
+
 function renderJavascriptSource(source) {
   var sections = [];
   var commentRe = RegExp('^\s*//');
   var code = void 0,
       docs = void 0;
+
   code = docs = '';
+
   var saveSection = function saveSection() {
     sections.push({ code: code, docs: docs });
     code = docs = '';
@@ -10493,27 +11285,34 @@ function renderJavascriptSource(source) {
       code += line + '\n';
     }
   });
+
   saveSection();
+
+  var renderer = new _marked2.default.Renderer();
+
+  // let's you add class to the <pre> block
+  renderer.code = function (code, language) {
+    code = _prismjs2.default.highlight(code, _prismjs2.default.languages.javascript);
+    return '<pre class=language-javascript><code>' + code + '</code></pre>';
+  };
 
   return sections.map(function (_ref) {
     var code = _ref.code;
     var docs = _ref.docs;
 
 
-    var highlighted = _highlight2.default.highlight('javascript', code).value;
+    var highlighted = _prismjs2.default.highlight(code, _prismjs2.default.languages.javascript);
 
     var markdowned = (0, _marked2.default)(docs, {
-      smartypants: true,
-      highlight: function highlight(code) {
-        return _highlight2.default.highlight('javascript', code).value;
-      }
+      renderer: renderer,
+      smartypants: true
     });
 
-    return '\n      <section>\n        <div class=comment>' + markdowned + '</div>\n        <pre class=hljs>' + highlighted + '</pre>\n      </section>';
+    return '\n      <section>\n        <div class=comment>' + markdowned + '</div>\n        <pre class=language-javascript>' + highlighted + '</pre>\n      </section>';
   }).join('');
 }
 
-},{"../templates":51,"./article_embed":54,"./audio":55,"./block":56,"./graf":57,"./html_block":58,"./image":59,"./index":60,"./video":61,"./view":62,"highlight.js":63,"marked":45}],54:[function(require,module,exports){
+},{"../templates":52,"./article_embed":55,"./audio":56,"./block":57,"./graf":58,"./html_block":59,"./image":60,"./index":61,"./video":62,"./view":63,"marked":45,"prismjs":47}],55:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10627,7 +11426,7 @@ var ArticleEmbed = function (_View) {
 
 exports.default = ArticleEmbed;
 
-},{"../utility":52,"./index":60,"./view":62,"handlebars":33}],55:[function(require,module,exports){
+},{"../utility":53,"./index":61,"./view":63,"handlebars":33}],56:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10680,7 +11479,7 @@ var Audio = function (_View) {
 
 exports.default = Audio;
 
-},{"../utility":52,"./view":62,"handlebars":33}],56:[function(require,module,exports){
+},{"../utility":53,"./view":63,"handlebars":33}],57:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10711,7 +11510,7 @@ var Block = function (_View) {
 
 exports.default = Block;
 
-},{"./view":62}],57:[function(require,module,exports){
+},{"./view":63}],58:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10734,7 +11533,7 @@ var template = '\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n
 
 // Single mustache { turns to {{> so that it renders a partial, however 
 // it can be escaped like \{
-var partialRe = /([^\\]*?)\{{1}(.*?[^\\])\}{1}/g;
+var partialRe = /(^|[^\\])\{{1}(.*?[^\\])\}{1}/g;
 
 var Graf = function (_View) {
   _inherits(Graf, _View);
@@ -10745,11 +11544,18 @@ var Graf = function (_View) {
     var _this = _possibleConstructorReturn(this, _View.call(this, attrs));
 
     _this.errors = [];
-    _this.is_empty = _this.attrs.body.trim().length === 0;
     return _this;
   }
 
+  Graf.prototype.isEmpty = function isEmpty() {
+    return this.attrs.body.trim().length === 0 && this.attrs.classes.length === 0;
+  };
+
   Graf.prototype.html = function html() {
+
+    if (this.isEmpty()) {
+      if (this.article.attrs.client) return '<p x-cp-id="' + this.attrs.id + '" style="display: none;"></p>';else return '';
+    }
 
     var content = '';
 
@@ -10816,7 +11622,7 @@ var Graf = function (_View) {
 
 exports.default = Graf;
 
-},{"../utility":52,"./view":62}],58:[function(require,module,exports){
+},{"../utility":53,"./view":63}],59:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -10831,9 +11637,9 @@ var _view2 = _interopRequireDefault(_view);
 
 var _utility = require('../utility');
 
-var _highlight = require('highlight.js');
+var _prismjs = require('prismjs');
 
-var _highlight2 = _interopRequireDefault(_highlight);
+var _prismjs2 = _interopRequireDefault(_prismjs);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -10843,7 +11649,10 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n  {{#if cpId }}x-cp-id={{  id  }}{{/if ~}}\n  {{#if classes}} class="{{  classes  }}"{{/if}}>\n    {{{  content  }}}\n</{{ tagName  }}>\n');
+// import hljs from 'highlight.js';
+
+
+var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes}} class="{{  classes  }}"{{/if}}>\n    {{{  content  }}}\n</{{ tagName  }}>\n');
 
 var HTMLBlock = function (_View) {
   _inherits(HTMLBlock, _View);
@@ -10859,8 +11668,13 @@ var HTMLBlock = function (_View) {
     var content = (0, _utility.unscopeLinks)(this.attrs.body, this.article.attrs.path_prefix);
 
     if (this.attrs.classes.includes('escaped')) {
-      var highlighted = _highlight2.default.highlight('javascript', content).value;
-      content = '<pre><code>' + highlighted + '</code></pre>';
+      // default html
+      var language = 'html';
+      if (this.attrs.classes.includes('language-less')) language = 'less';
+      if (this.attrs.classes.includes('language-css')) language = 'css';
+      if (this.attrs.classes.includes('language-javascript')) language = 'javascript';
+      var highlighted = _prismjs2.default.highlight(content, _prismjs2.default.languages[language]);
+      content = '\n        <pre class=language-' + language + '><code>' + highlighted + '</code></pre>\n      ';
     }
 
     return template({
@@ -10877,7 +11691,7 @@ var HTMLBlock = function (_View) {
 
 exports.default = HTMLBlock;
 
-},{"../utility":52,"./view":62,"handlebars":33,"highlight.js":63}],59:[function(require,module,exports){
+},{"../utility":53,"./view":63,"handlebars":33,"prismjs":47}],60:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -11040,7 +11854,7 @@ var ImageView = function (_View) {
 
 exports.default = ImageView;
 
-},{"../utility":52,"./view":62,"handlebars":33}],60:[function(require,module,exports){
+},{"../utility":53,"./view":63,"handlebars":33}],61:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -11104,7 +11918,7 @@ var Index = function (_View) {
 
 exports.default = Index;
 
-},{"./article_embed":54,"./view":62,"handlebars":33}],61:[function(require,module,exports){
+},{"./article_embed":55,"./view":63,"handlebars":33}],62:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -11207,7 +12021,7 @@ var VideoView = function (_View) {
 
 exports.default = VideoView;
 
-},{"../utility":52,"./view":62,"handlebars":33}],62:[function(require,module,exports){
+},{"../utility":53,"./view":63,"handlebars":33}],63:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -11250,12 +12064,16 @@ var View = function (_Super) {
 
     var _this = _possibleConstructorReturn(this, _Super.call(this));
 
-    _this.attrs = attrs;
-    _this.attrs.classes = _this.attrs.classes || [];
+    _this.set(attrs);
     _this.parent = undefined;
     _this.children = [];
     return _this;
   }
+
+  View.prototype.set = function set(attrs) {
+    this.attrs = attrs;
+    this.attrs.classes = this.attrs.classes || [];
+  };
 
   View.prototype.html = function html() {
     return this.template({
@@ -11307,1068 +12125,7 @@ exports.default = View;
 
 View.prototype.template = template;
 
-},{"events":"events","handlebars":33}],63:[function(require,module,exports){
-'use strict';
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
-/*! highlight.js v9.6.0 | BSD3 License | git.io/hljslicense */
-(function (factory) {
-
-  // Find the global object for export to both the browser and web workers.
-  var globalObject = (typeof window === 'undefined' ? 'undefined' : _typeof(window)) === 'object' && window || (typeof self === 'undefined' ? 'undefined' : _typeof(self)) === 'object' && self;
-
-  // Setup highlight.js for different environments. First is Node.js or
-  // CommonJS.
-  if (typeof exports !== 'undefined') {
-    factory(exports);
-  } else if (globalObject) {
-    // Export hljs globally even when using AMD for cases when this script
-    // is loaded with others that may still expect a global hljs.
-    globalObject.hljs = factory({});
-
-    // Finally register the global hljs with AMD.
-    if (typeof define === 'function' && define.amd) {
-      define([], function () {
-        return globalObject.hljs;
-      });
-    }
-  }
-})(function (hljs) {
-  // Convenience variables for build-in objects
-  var ArrayProto = [],
-      objectKeys = Object.keys;
-
-  // Global internal variables used within the highlight.js library.
-  var languages = {},
-      aliases = {};
-
-  // Regular expressions used throughout the highlight.js library.
-  var noHighlightRe = /^(no-?highlight|plain|text)$/i,
-      languagePrefixRe = /\blang(?:uage)?-([\w-]+)\b/i,
-      fixMarkupRe = /((^(<[^>]+>|\t|)+|(?:\n)))/gm;
-
-  var spanEndTag = '</span>';
-
-  // Global options used when within external APIs. This is modified when
-  // calling the `hljs.configure` function.
-  var options = {
-    classPrefix: 'hljs-',
-    tabReplace: null,
-    useBR: false,
-    languages: undefined
-  };
-
-  // Object map that is used to escape some common HTML characters.
-  var escapeRegexMap = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;'
-  };
-
-  /* Utility functions */
-
-  function escape(value) {
-    return value.replace(/[&<>]/gm, function (character) {
-      return escapeRegexMap[character];
-    });
-  }
-
-  function tag(node) {
-    return node.nodeName.toLowerCase();
-  }
-
-  function testRe(re, lexeme) {
-    var match = re && re.exec(lexeme);
-    return match && match.index === 0;
-  }
-
-  function isNotHighlighted(language) {
-    return noHighlightRe.test(language);
-  }
-
-  function blockLanguage(block) {
-    var i, match, length, _class;
-    var classes = block.className + ' ';
-
-    classes += block.parentNode ? block.parentNode.className : '';
-
-    // language-* takes precedence over non-prefixed class names.
-    match = languagePrefixRe.exec(classes);
-    if (match) {
-      return getLanguage(match[1]) ? match[1] : 'no-highlight';
-    }
-
-    classes = classes.split(/\s+/);
-
-    for (i = 0, length = classes.length; i < length; i++) {
-      _class = classes[i];
-
-      if (isNotHighlighted(_class) || getLanguage(_class)) {
-        return _class;
-      }
-    }
-  }
-
-  function inherit(parent, obj) {
-    var key;
-    var result = {};
-
-    for (key in parent) {
-      result[key] = parent[key];
-    }if (obj) for (key in obj) {
-      result[key] = obj[key];
-    }return result;
-  }
-
-  /* Stream merging */
-
-  function nodeStream(node) {
-    var result = [];
-    (function _nodeStream(node, offset) {
-      for (var child = node.firstChild; child; child = child.nextSibling) {
-        if (child.nodeType === 3) offset += child.nodeValue.length;else if (child.nodeType === 1) {
-          result.push({
-            event: 'start',
-            offset: offset,
-            node: child
-          });
-          offset = _nodeStream(child, offset);
-          // Prevent void elements from having an end tag that would actually
-          // double them in the output. There are more void elements in HTML
-          // but we list only those realistically expected in code display.
-          if (!tag(child).match(/br|hr|img|input/)) {
-            result.push({
-              event: 'stop',
-              offset: offset,
-              node: child
-            });
-          }
-        }
-      }
-      return offset;
-    })(node, 0);
-    return result;
-  }
-
-  function mergeStreams(original, highlighted, value) {
-    var processed = 0;
-    var result = '';
-    var nodeStack = [];
-
-    function selectStream() {
-      if (!original.length || !highlighted.length) {
-        return original.length ? original : highlighted;
-      }
-      if (original[0].offset !== highlighted[0].offset) {
-        return original[0].offset < highlighted[0].offset ? original : highlighted;
-      }
-
-      /*
-      To avoid starting the stream just before it should stop the order is
-      ensured that original always starts first and closes last:
-       if (event1 == 'start' && event2 == 'start')
-        return original;
-      if (event1 == 'start' && event2 == 'stop')
-        return highlighted;
-      if (event1 == 'stop' && event2 == 'start')
-        return original;
-      if (event1 == 'stop' && event2 == 'stop')
-        return highlighted;
-       ... which is collapsed to:
-      */
-      return highlighted[0].event === 'start' ? original : highlighted;
-    }
-
-    function open(node) {
-      function attr_str(a) {
-        return ' ' + a.nodeName + '="' + escape(a.value) + '"';
-      }
-      result += '<' + tag(node) + ArrayProto.map.call(node.attributes, attr_str).join('') + '>';
-    }
-
-    function close(node) {
-      result += '</' + tag(node) + '>';
-    }
-
-    function render(event) {
-      (event.event === 'start' ? open : close)(event.node);
-    }
-
-    while (original.length || highlighted.length) {
-      var stream = selectStream();
-      result += escape(value.substr(processed, stream[0].offset - processed));
-      processed = stream[0].offset;
-      if (stream === original) {
-        /*
-        On any opening or closing tag of the original markup we first close
-        the entire highlighted node stack, then render the original tag along
-        with all the following original tags at the same offset and then
-        reopen all the tags on the highlighted stack.
-        */
-        nodeStack.reverse().forEach(close);
-        do {
-          render(stream.splice(0, 1)[0]);
-          stream = selectStream();
-        } while (stream === original && stream.length && stream[0].offset === processed);
-        nodeStack.reverse().forEach(open);
-      } else {
-        if (stream[0].event === 'start') {
-          nodeStack.push(stream[0].node);
-        } else {
-          nodeStack.pop();
-        }
-        render(stream.splice(0, 1)[0]);
-      }
-    }
-    return result + escape(value.substr(processed));
-  }
-
-  /* Initialization */
-
-  function compileLanguage(language) {
-
-    function reStr(re) {
-      return re && re.source || re;
-    }
-
-    function langRe(value, global) {
-      return new RegExp(reStr(value), 'm' + (language.case_insensitive ? 'i' : '') + (global ? 'g' : ''));
-    }
-
-    function compileMode(mode, parent) {
-      if (mode.compiled) return;
-      mode.compiled = true;
-
-      mode.keywords = mode.keywords || mode.beginKeywords;
-      if (mode.keywords) {
-        var compiled_keywords = {};
-
-        var flatten = function flatten(className, str) {
-          if (language.case_insensitive) {
-            str = str.toLowerCase();
-          }
-          str.split(' ').forEach(function (kw) {
-            var pair = kw.split('|');
-            compiled_keywords[pair[0]] = [className, pair[1] ? Number(pair[1]) : 1];
-          });
-        };
-
-        if (typeof mode.keywords === 'string') {
-          // string
-          flatten('keyword', mode.keywords);
-        } else {
-          objectKeys(mode.keywords).forEach(function (className) {
-            flatten(className, mode.keywords[className]);
-          });
-        }
-        mode.keywords = compiled_keywords;
-      }
-      mode.lexemesRe = langRe(mode.lexemes || /\w+/, true);
-
-      if (parent) {
-        if (mode.beginKeywords) {
-          mode.begin = '\\b(' + mode.beginKeywords.split(' ').join('|') + ')\\b';
-        }
-        if (!mode.begin) mode.begin = /\B|\b/;
-        mode.beginRe = langRe(mode.begin);
-        if (!mode.end && !mode.endsWithParent) mode.end = /\B|\b/;
-        if (mode.end) mode.endRe = langRe(mode.end);
-        mode.terminator_end = reStr(mode.end) || '';
-        if (mode.endsWithParent && parent.terminator_end) mode.terminator_end += (mode.end ? '|' : '') + parent.terminator_end;
-      }
-      if (mode.illegal) mode.illegalRe = langRe(mode.illegal);
-      if (mode.relevance == null) mode.relevance = 1;
-      if (!mode.contains) {
-        mode.contains = [];
-      }
-      var expanded_contains = [];
-      mode.contains.forEach(function (c) {
-        if (c.variants) {
-          c.variants.forEach(function (v) {
-            expanded_contains.push(inherit(c, v));
-          });
-        } else {
-          expanded_contains.push(c === 'self' ? mode : c);
-        }
-      });
-      mode.contains = expanded_contains;
-      mode.contains.forEach(function (c) {
-        compileMode(c, mode);
-      });
-
-      if (mode.starts) {
-        compileMode(mode.starts, parent);
-      }
-
-      var terminators = mode.contains.map(function (c) {
-        return c.beginKeywords ? '\\.?(' + c.begin + ')\\.?' : c.begin;
-      }).concat([mode.terminator_end, mode.illegal]).map(reStr).filter(Boolean);
-      mode.terminators = terminators.length ? langRe(terminators.join('|'), true) : { exec: function exec() /*s*/{
-          return null;
-        } };
-    }
-
-    compileMode(language);
-  }
-
-  /*
-  Core highlighting function. Accepts a language name, or an alias, and a
-  string with the code to highlight. Returns an object with the following
-  properties:
-   - relevance (int)
-  - value (an HTML string with highlighting markup)
-   */
-  function highlight(name, value, ignore_illegals, continuation) {
-
-    function subMode(lexeme, mode) {
-      var i, length;
-
-      for (i = 0, length = mode.contains.length; i < length; i++) {
-        if (testRe(mode.contains[i].beginRe, lexeme)) {
-          return mode.contains[i];
-        }
-      }
-    }
-
-    function endOfMode(mode, lexeme) {
-      if (testRe(mode.endRe, lexeme)) {
-        while (mode.endsParent && mode.parent) {
-          mode = mode.parent;
-        }
-        return mode;
-      }
-      if (mode.endsWithParent) {
-        return endOfMode(mode.parent, lexeme);
-      }
-    }
-
-    function isIllegal(lexeme, mode) {
-      return !ignore_illegals && testRe(mode.illegalRe, lexeme);
-    }
-
-    function keywordMatch(mode, match) {
-      var match_str = language.case_insensitive ? match[0].toLowerCase() : match[0];
-      return mode.keywords.hasOwnProperty(match_str) && mode.keywords[match_str];
-    }
-
-    function buildSpan(classname, insideSpan, leaveOpen, noPrefix) {
-      var classPrefix = noPrefix ? '' : options.classPrefix,
-          openSpan = '<span class="' + classPrefix,
-          closeSpan = leaveOpen ? '' : spanEndTag;
-
-      openSpan += classname + '">';
-
-      return openSpan + insideSpan + closeSpan;
-    }
-
-    function processKeywords() {
-      var keyword_match, last_index, match, result;
-
-      if (!top.keywords) return escape(mode_buffer);
-
-      result = '';
-      last_index = 0;
-      top.lexemesRe.lastIndex = 0;
-      match = top.lexemesRe.exec(mode_buffer);
-
-      while (match) {
-        result += escape(mode_buffer.substr(last_index, match.index - last_index));
-        keyword_match = keywordMatch(top, match);
-        if (keyword_match) {
-          relevance += keyword_match[1];
-          result += buildSpan(keyword_match[0], escape(match[0]));
-        } else {
-          result += escape(match[0]);
-        }
-        last_index = top.lexemesRe.lastIndex;
-        match = top.lexemesRe.exec(mode_buffer);
-      }
-      return result + escape(mode_buffer.substr(last_index));
-    }
-
-    function processSubLanguage() {
-      var explicit = typeof top.subLanguage === 'string';
-      if (explicit && !languages[top.subLanguage]) {
-        return escape(mode_buffer);
-      }
-
-      var result = explicit ? highlight(top.subLanguage, mode_buffer, true, continuations[top.subLanguage]) : highlightAuto(mode_buffer, top.subLanguage.length ? top.subLanguage : undefined);
-
-      // Counting embedded language score towards the host language may be disabled
-      // with zeroing the containing mode relevance. Usecase in point is Markdown that
-      // allows XML everywhere and makes every XML snippet to have a much larger Markdown
-      // score.
-      if (top.relevance > 0) {
-        relevance += result.relevance;
-      }
-      if (explicit) {
-        continuations[top.subLanguage] = result.top;
-      }
-      return buildSpan(result.language, result.value, false, true);
-    }
-
-    function processBuffer() {
-      result += top.subLanguage != null ? processSubLanguage() : processKeywords();
-      mode_buffer = '';
-    }
-
-    function startNewMode(mode) {
-      result += mode.className ? buildSpan(mode.className, '', true) : '';
-      top = Object.create(mode, { parent: { value: top } });
-    }
-
-    function processLexeme(buffer, lexeme) {
-
-      mode_buffer += buffer;
-
-      if (lexeme == null) {
-        processBuffer();
-        return 0;
-      }
-
-      var new_mode = subMode(lexeme, top);
-      if (new_mode) {
-        if (new_mode.skip) {
-          mode_buffer += lexeme;
-        } else {
-          if (new_mode.excludeBegin) {
-            mode_buffer += lexeme;
-          }
-          processBuffer();
-          if (!new_mode.returnBegin && !new_mode.excludeBegin) {
-            mode_buffer = lexeme;
-          }
-        }
-        startNewMode(new_mode, lexeme);
-        return new_mode.returnBegin ? 0 : lexeme.length;
-      }
-
-      var end_mode = endOfMode(top, lexeme);
-      if (end_mode) {
-        var origin = top;
-        if (origin.skip) {
-          mode_buffer += lexeme;
-        } else {
-          if (!(origin.returnEnd || origin.excludeEnd)) {
-            mode_buffer += lexeme;
-          }
-          processBuffer();
-          if (origin.excludeEnd) {
-            mode_buffer = lexeme;
-          }
-        }
-        do {
-          if (top.className) {
-            result += spanEndTag;
-          }
-          if (!top.skip) {
-            relevance += top.relevance;
-          }
-          top = top.parent;
-        } while (top !== end_mode.parent);
-        if (end_mode.starts) {
-          startNewMode(end_mode.starts, '');
-        }
-        return origin.returnEnd ? 0 : lexeme.length;
-      }
-
-      if (isIllegal(lexeme, top)) throw new Error('Illegal lexeme "' + lexeme + '" for mode "' + (top.className || '<unnamed>') + '"');
-
-      /*
-      Parser should not reach this point as all types of lexemes should be caught
-      earlier, but if it does due to some bug make sure it advances at least one
-      character forward to prevent infinite looping.
-      */
-      mode_buffer += lexeme;
-      return lexeme.length || 1;
-    }
-
-    var language = getLanguage(name);
-    if (!language) {
-      throw new Error('Unknown language: "' + name + '"');
-    }
-
-    compileLanguage(language);
-    var top = continuation || language;
-    var continuations = {}; // keep continuations for sub-languages
-    var result = '',
-        current;
-    for (current = top; current !== language; current = current.parent) {
-      if (current.className) {
-        result = buildSpan(current.className, '', true) + result;
-      }
-    }
-    var mode_buffer = '';
-    var relevance = 0;
-    try {
-      var match,
-          count,
-          index = 0;
-      while (true) {
-        top.terminators.lastIndex = index;
-        match = top.terminators.exec(value);
-        if (!match) break;
-        count = processLexeme(value.substr(index, match.index - index), match[0]);
-        index = match.index + count;
-      }
-      processLexeme(value.substr(index));
-      for (current = top; current.parent; current = current.parent) {
-        // close dangling modes
-        if (current.className) {
-          result += spanEndTag;
-        }
-      }
-      return {
-        relevance: relevance,
-        value: result,
-        language: name,
-        top: top
-      };
-    } catch (e) {
-      if (e.message && e.message.indexOf('Illegal') !== -1) {
-        return {
-          relevance: 0,
-          value: escape(value)
-        };
-      } else {
-        throw e;
-      }
-    }
-  }
-
-  /*
-  Highlighting with language detection. Accepts a string with the code to
-  highlight. Returns an object with the following properties:
-   - language (detected language)
-  - relevance (int)
-  - value (an HTML string with highlighting markup)
-  - second_best (object with the same structure for second-best heuristically
-    detected language, may be absent)
-   */
-  function highlightAuto(text, languageSubset) {
-    languageSubset = languageSubset || options.languages || objectKeys(languages);
-    var result = {
-      relevance: 0,
-      value: escape(text)
-    };
-    var second_best = result;
-    languageSubset.filter(getLanguage).forEach(function (name) {
-      var current = highlight(name, text, false);
-      current.language = name;
-      if (current.relevance > second_best.relevance) {
-        second_best = current;
-      }
-      if (current.relevance > result.relevance) {
-        second_best = result;
-        result = current;
-      }
-    });
-    if (second_best.language) {
-      result.second_best = second_best;
-    }
-    return result;
-  }
-
-  /*
-  Post-processing of the highlighted markup:
-   - replace TABs with something more useful
-  - replace real line-breaks with '<br>' for non-pre containers
-   */
-  function fixMarkup(value) {
-    return !(options.tabReplace || options.useBR) ? value : value.replace(fixMarkupRe, function (match, p1) {
-      if (options.useBR && match === '\n') {
-        return '<br>';
-      } else if (options.tabReplace) {
-        return p1.replace(/\t/g, options.tabReplace);
-      }
-    });
-  }
-
-  function buildClassName(prevClassName, currentLang, resultLang) {
-    var language = currentLang ? aliases[currentLang] : resultLang,
-        result = [prevClassName.trim()];
-
-    if (!prevClassName.match(/\bhljs\b/)) {
-      result.push('hljs');
-    }
-
-    if (prevClassName.indexOf(language) === -1) {
-      result.push(language);
-    }
-
-    return result.join(' ').trim();
-  }
-
-  /*
-  Applies highlighting to a DOM node containing code. Accepts a DOM node and
-  two optional parameters for fixMarkup.
-  */
-  function highlightBlock(block) {
-    var node, originalStream, result, resultNode, text;
-    var language = blockLanguage(block);
-
-    if (isNotHighlighted(language)) return;
-
-    if (options.useBR) {
-      node = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
-      node.innerHTML = block.innerHTML.replace(/\n/g, '').replace(/<br[ \/]*>/g, '\n');
-    } else {
-      node = block;
-    }
-    text = node.textContent;
-    result = language ? highlight(language, text, true) : highlightAuto(text);
-
-    originalStream = nodeStream(node);
-    if (originalStream.length) {
-      resultNode = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
-      resultNode.innerHTML = result.value;
-      result.value = mergeStreams(originalStream, nodeStream(resultNode), text);
-    }
-    result.value = fixMarkup(result.value);
-
-    block.innerHTML = result.value;
-    block.className = buildClassName(block.className, language, result.language);
-    block.result = {
-      language: result.language,
-      re: result.relevance
-    };
-    if (result.second_best) {
-      block.second_best = {
-        language: result.second_best.language,
-        re: result.second_best.relevance
-      };
-    }
-  }
-
-  /*
-  Updates highlight.js global options with values passed in the form of an object.
-  */
-  function configure(user_options) {
-    options = inherit(options, user_options);
-  }
-
-  /*
-  Applies highlighting to all <pre><code>..</code></pre> blocks on a page.
-  */
-  function initHighlighting() {
-    if (initHighlighting.called) return;
-    initHighlighting.called = true;
-
-    var blocks = document.querySelectorAll('pre code');
-    ArrayProto.forEach.call(blocks, highlightBlock);
-  }
-
-  /*
-  Attaches highlighting to the page load event.
-  */
-  function initHighlightingOnLoad() {
-    addEventListener('DOMContentLoaded', initHighlighting, false);
-    addEventListener('load', initHighlighting, false);
-  }
-
-  function registerLanguage(name, language) {
-    var lang = languages[name] = language(hljs);
-    if (lang.aliases) {
-      lang.aliases.forEach(function (alias) {
-        aliases[alias] = name;
-      });
-    }
-  }
-
-  function listLanguages() {
-    return objectKeys(languages);
-  }
-
-  function getLanguage(name) {
-    name = (name || '').toLowerCase();
-    return languages[name] || languages[aliases[name]];
-  }
-
-  /* Interface definition */
-
-  hljs.highlight = highlight;
-  hljs.highlightAuto = highlightAuto;
-  hljs.fixMarkup = fixMarkup;
-  hljs.highlightBlock = highlightBlock;
-  hljs.configure = configure;
-  hljs.initHighlighting = initHighlighting;
-  hljs.initHighlightingOnLoad = initHighlightingOnLoad;
-  hljs.registerLanguage = registerLanguage;
-  hljs.listLanguages = listLanguages;
-  hljs.getLanguage = getLanguage;
-  hljs.inherit = inherit;
-
-  // Common regexps
-  hljs.IDENT_RE = '[a-zA-Z]\\w*';
-  hljs.UNDERSCORE_IDENT_RE = '[a-zA-Z_]\\w*';
-  hljs.NUMBER_RE = '\\b\\d+(\\.\\d+)?';
-  hljs.C_NUMBER_RE = '(-?)(\\b0[xX][a-fA-F0-9]+|(\\b\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)'; // 0x..., 0..., decimal, float
-  hljs.BINARY_NUMBER_RE = '\\b(0b[01]+)'; // 0b...
-  hljs.RE_STARTERS_RE = '!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|-|-=|/=|/|:|;|<<|<<=|<=|<|===|==|=|>>>=|>>=|>=|>>>|>>|>|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~';
-
-  // Common modes
-  hljs.BACKSLASH_ESCAPE = {
-    begin: '\\\\[\\s\\S]', relevance: 0
-  };
-  hljs.APOS_STRING_MODE = {
-    className: 'string',
-    begin: '\'', end: '\'',
-    illegal: '\\n',
-    contains: [hljs.BACKSLASH_ESCAPE]
-  };
-  hljs.QUOTE_STRING_MODE = {
-    className: 'string',
-    begin: '"', end: '"',
-    illegal: '\\n',
-    contains: [hljs.BACKSLASH_ESCAPE]
-  };
-  hljs.PHRASAL_WORDS_MODE = {
-    begin: /\b(a|an|the|are|I'm|isn't|don't|doesn't|won't|but|just|should|pretty|simply|enough|gonna|going|wtf|so|such|will|you|your|like)\b/
-  };
-  hljs.COMMENT = function (begin, end, inherits) {
-    var mode = hljs.inherit({
-      className: 'comment',
-      begin: begin, end: end,
-      contains: []
-    }, inherits || {});
-    mode.contains.push(hljs.PHRASAL_WORDS_MODE);
-    mode.contains.push({
-      className: 'doctag',
-      begin: '(?:TODO|FIXME|NOTE|BUG|XXX):',
-      relevance: 0
-    });
-    return mode;
-  };
-  hljs.C_LINE_COMMENT_MODE = hljs.COMMENT('//', '$');
-  hljs.C_BLOCK_COMMENT_MODE = hljs.COMMENT('/\\*', '\\*/');
-  hljs.HASH_COMMENT_MODE = hljs.COMMENT('#', '$');
-  hljs.NUMBER_MODE = {
-    className: 'number',
-    begin: hljs.NUMBER_RE,
-    relevance: 0
-  };
-  hljs.C_NUMBER_MODE = {
-    className: 'number',
-    begin: hljs.C_NUMBER_RE,
-    relevance: 0
-  };
-  hljs.BINARY_NUMBER_MODE = {
-    className: 'number',
-    begin: hljs.BINARY_NUMBER_RE,
-    relevance: 0
-  };
-  hljs.CSS_NUMBER_MODE = {
-    className: 'number',
-    begin: hljs.NUMBER_RE + '(' + '%|em|ex|ch|rem' + '|vw|vh|vmin|vmax' + '|cm|mm|in|pt|pc|px' + '|deg|grad|rad|turn' + '|s|ms' + '|Hz|kHz' + '|dpi|dpcm|dppx' + ')?',
-    relevance: 0
-  };
-  hljs.REGEXP_MODE = {
-    className: 'regexp',
-    begin: /\//, end: /\/[gimuy]*/,
-    illegal: /\n/,
-    contains: [hljs.BACKSLASH_ESCAPE, {
-      begin: /\[/, end: /\]/,
-      relevance: 0,
-      contains: [hljs.BACKSLASH_ESCAPE]
-    }]
-  };
-  hljs.TITLE_MODE = {
-    className: 'title',
-    begin: hljs.IDENT_RE,
-    relevance: 0
-  };
-  hljs.UNDERSCORE_TITLE_MODE = {
-    className: 'title',
-    begin: hljs.UNDERSCORE_IDENT_RE,
-    relevance: 0
-  };
-  hljs.METHOD_GUARD = {
-    // excludes method names from keyword processing
-    begin: '\\.\\s*' + hljs.UNDERSCORE_IDENT_RE,
-    relevance: 0
-  };
-
-  hljs.registerLanguage('css', function (hljs) {
-    var IDENT_RE = '[a-zA-Z-][a-zA-Z0-9_-]*';
-    var RULE = {
-      begin: /[A-Z\_\.\-]+\s*:/, returnBegin: true, end: ';', endsWithParent: true,
-      contains: [{
-        className: 'attribute',
-        begin: /\S/, end: ':', excludeEnd: true,
-        starts: {
-          endsWithParent: true, excludeEnd: true,
-          contains: [{
-            begin: /[\w-]+\(/, returnBegin: true,
-            contains: [{
-              className: 'built_in',
-              begin: /[\w-]+/
-            }, {
-              begin: /\(/, end: /\)/,
-              contains: [hljs.APOS_STRING_MODE, hljs.QUOTE_STRING_MODE]
-            }]
-          }, hljs.CSS_NUMBER_MODE, hljs.QUOTE_STRING_MODE, hljs.APOS_STRING_MODE, hljs.C_BLOCK_COMMENT_MODE, {
-            className: 'number', begin: '#[0-9A-Fa-f]+'
-          }, {
-            className: 'meta', begin: '!important'
-          }]
-        }
-      }]
-    };
-
-    return {
-      case_insensitive: true,
-      illegal: /[=\/|'\$]/,
-      contains: [hljs.C_BLOCK_COMMENT_MODE, {
-        className: 'selector-id', begin: /#[A-Za-z0-9_-]+/
-      }, {
-        className: 'selector-class', begin: /\.[A-Za-z0-9_-]+/
-      }, {
-        className: 'selector-attr',
-        begin: /\[/, end: /\]/,
-        illegal: '$'
-      }, {
-        className: 'selector-pseudo',
-        begin: /:(:)?[a-zA-Z0-9\_\-\+\(\)"'.]+/
-      }, {
-        begin: '@(font-face|page)',
-        lexemes: '[a-z-]+',
-        keywords: 'font-face page'
-      }, {
-        begin: '@', end: '[{;]', // at_rule eating first "{" is a good thing
-        // because it doesn’t let it to be parsed as
-        // a rule set but instead drops parser into
-        // the default mode which is how it should be.
-        illegal: /:/, // break on Less variables @var: ...
-        contains: [{
-          className: 'keyword',
-          begin: /\w+/
-        }, {
-          begin: /\s/, endsWithParent: true, excludeEnd: true,
-          relevance: 0,
-          contains: [hljs.APOS_STRING_MODE, hljs.QUOTE_STRING_MODE, hljs.CSS_NUMBER_MODE]
-        }]
-      }, {
-        className: 'selector-tag', begin: IDENT_RE,
-        relevance: 0
-      }, {
-        begin: '{', end: '}',
-        illegal: /\S/,
-        contains: [hljs.C_BLOCK_COMMENT_MODE, RULE]
-      }]
-    };
-  });
-
-  hljs.registerLanguage('javascript', function (hljs) {
-    var IDENT_RE = '[A-Za-z$_][0-9A-Za-z$_]*';
-    var KEYWORDS = {
-      keyword: 'in of if for while finally var new function do return void else break catch ' + 'instanceof with throw case default try this switch continue typeof delete ' + 'let yield const export super debugger as async await static ' +
-      // ECMAScript 6 modules import
-      'import from as',
-
-      literal: 'true false null undefined NaN Infinity',
-      built_in: 'eval isFinite isNaN parseFloat parseInt decodeURI decodeURIComponent ' + 'encodeURI encodeURIComponent escape unescape Object Function Boolean Error ' + 'EvalError InternalError RangeError ReferenceError StopIteration SyntaxError ' + 'TypeError URIError Number Math Date String RegExp Array Float32Array ' + 'Float64Array Int16Array Int32Array Int8Array Uint16Array Uint32Array ' + 'Uint8Array Uint8ClampedArray ArrayBuffer DataView JSON Intl arguments require ' + 'module console window document Symbol Set Map WeakSet WeakMap Proxy Reflect ' + 'Promise'
-    };
-    var NUMBER = {
-      className: 'number',
-      variants: [{ begin: '\\b(0[bB][01]+)' }, { begin: '\\b(0[oO][0-7]+)' }, { begin: hljs.C_NUMBER_RE }],
-      relevance: 0
-    };
-    var PARAMS_CONTAINS = [hljs.APOS_STRING_MODE, hljs.QUOTE_STRING_MODE, NUMBER, hljs.REGEXP_MODE, hljs.C_BLOCK_COMMENT_MODE, hljs.C_LINE_COMMENT_MODE];
-    return {
-      aliases: ['js', 'jsx'],
-      keywords: KEYWORDS,
-      contains: [{
-        className: 'meta',
-        relevance: 10,
-        begin: /^\s*['"]use (strict|asm)['"]/
-      }, {
-        className: 'meta',
-        begin: /^#!/, end: /$/
-      }, hljs.APOS_STRING_MODE, hljs.QUOTE_STRING_MODE, { // template string
-        className: 'string',
-        begin: '`', end: '`',
-        contains: [hljs.BACKSLASH_ESCAPE, {
-          className: 'subst',
-          begin: '\\$\\{', end: '\\}'
-        }]
-      }, hljs.C_LINE_COMMENT_MODE, hljs.C_BLOCK_COMMENT_MODE, NUMBER, { // object attr container
-        begin: /[{,]\s*/, relevance: 0,
-        contains: [{
-          begin: IDENT_RE + '\\s*:', returnBegin: true,
-          relevance: 0,
-          contains: [{ className: 'attr', begin: IDENT_RE, relevance: 0 }]
-        }]
-      }, { // "value" container
-        begin: '(' + hljs.RE_STARTERS_RE + '|\\b(case|return|throw)\\b)\\s*',
-        keywords: 'return throw case',
-        contains: [hljs.C_LINE_COMMENT_MODE, hljs.C_BLOCK_COMMENT_MODE, hljs.REGEXP_MODE, {
-          className: 'function',
-          begin: '(\\(.*?\\)|' + IDENT_RE + ')\\s*=>', returnBegin: true,
-          end: '\\s*=>',
-          contains: [{
-            className: 'params',
-            variants: [{
-              begin: IDENT_RE
-            }, {
-              begin: /\(\s*\)/
-            }, {
-              begin: /\(/, end: /\)/,
-              excludeBegin: true, excludeEnd: true,
-              keywords: KEYWORDS,
-              contains: PARAMS_CONTAINS
-            }]
-          }]
-        }, { // E4X / JSX
-          begin: /</, end: /(\/\w+|\w+\/)>/,
-          subLanguage: 'xml',
-          contains: [{ begin: /<\w+\s*\/>/, skip: true }, {
-            begin: /<\w+/, end: /(\/\w+|\w+\/)>/, skip: true,
-            contains: [{ begin: /<\w+\s*\/>/, skip: true }, 'self']
-          }]
-        }],
-        relevance: 0
-      }, {
-        className: 'function',
-        beginKeywords: 'function', end: /\{/, excludeEnd: true,
-        contains: [hljs.inherit(hljs.TITLE_MODE, { begin: IDENT_RE }), {
-          className: 'params',
-          begin: /\(/, end: /\)/,
-          excludeBegin: true,
-          excludeEnd: true,
-          contains: PARAMS_CONTAINS
-        }],
-        illegal: /\[|%/
-      }, {
-        begin: /\$[(.]/ // relevance booster for a pattern common to JS libs: `$(something)` and `$.something`
-      }, hljs.METHOD_GUARD, { // ES6 class
-        className: 'class',
-        beginKeywords: 'class', end: /[{;=]/, excludeEnd: true,
-        illegal: /[:"\[\]]/,
-        contains: [{ beginKeywords: 'extends' }, hljs.UNDERSCORE_TITLE_MODE]
-      }, {
-        beginKeywords: 'constructor', end: /\{/, excludeEnd: true
-      }],
-      illegal: /#(?!!)/
-    };
-  });
-
-  hljs.registerLanguage('less', function (hljs) {
-    var IDENT_RE = '[\\w-]+'; // yes, Less identifiers may begin with a digit
-    var INTERP_IDENT_RE = '(' + IDENT_RE + '|@{' + IDENT_RE + '})';
-
-    /* Generic Modes */
-
-    var RULES = [],
-        VALUE = []; // forward def. for recursive modes
-
-    var STRING_MODE = function STRING_MODE(c) {
-      return {
-        // Less strings are not multiline (also include '~' for more consistent coloring of "escaped" strings)
-        className: 'string', begin: '~?' + c + '.*?' + c
-      };
-    };
-
-    var IDENT_MODE = function IDENT_MODE(name, begin, relevance) {
-      return {
-        className: name, begin: begin, relevance: relevance
-      };
-    };
-
-    var PARENS_MODE = {
-      // used only to properly balance nested parens inside mixin call, def. arg list
-      begin: '\\(', end: '\\)', contains: VALUE, relevance: 0
-    };
-
-    // generic Less highlighter (used almost everywhere except selectors):
-    VALUE.push(hljs.C_LINE_COMMENT_MODE, hljs.C_BLOCK_COMMENT_MODE, STRING_MODE("'"), STRING_MODE('"'), hljs.CSS_NUMBER_MODE, // fixme: it does not include dot for numbers like .5em :(
-    {
-      begin: '(url|data-uri)\\(',
-      starts: { className: 'string', end: '[\\)\\n]', excludeEnd: true }
-    }, IDENT_MODE('number', '#[0-9A-Fa-f]+\\b'), PARENS_MODE, IDENT_MODE('variable', '@@?' + IDENT_RE, 10), IDENT_MODE('variable', '@{' + IDENT_RE + '}'), IDENT_MODE('built_in', '~?`[^`]*?`'), // inline javascript (or whatever host language) *multiline* string
-    { // @media features (it’s here to not duplicate things in AT_RULE_MODE with extra PARENS_MODE overriding):
-      className: 'attribute', begin: IDENT_RE + '\\s*:', end: ':', returnBegin: true, excludeEnd: true
-    }, {
-      className: 'meta',
-      begin: '!important'
-    });
-
-    var VALUE_WITH_RULESETS = VALUE.concat({
-      begin: '{', end: '}', contains: RULES
-    });
-
-    var MIXIN_GUARD_MODE = {
-      beginKeywords: 'when', endsWithParent: true,
-      contains: [{ beginKeywords: 'and not' }].concat(VALUE) // using this form to override VALUE’s 'function' match
-    };
-
-    /* Rule-Level Modes */
-
-    var RULE_MODE = {
-      begin: INTERP_IDENT_RE + '\\s*:', returnBegin: true, end: '[;}]',
-      relevance: 0,
-      contains: [{
-        className: 'attribute',
-        begin: INTERP_IDENT_RE, end: ':', excludeEnd: true,
-        starts: {
-          endsWithParent: true, illegal: '[<=$]',
-          relevance: 0,
-          contains: VALUE
-        }
-      }]
-    };
-
-    var AT_RULE_MODE = {
-      className: 'keyword',
-      begin: '@(import|media|charset|font-face|(-[a-z]+-)?keyframes|supports|document|namespace|page|viewport|host)\\b',
-      starts: { end: '[;{}]', returnEnd: true, contains: VALUE, relevance: 0 }
-    };
-
-    // variable definitions and calls
-    var VAR_RULE_MODE = {
-      className: 'variable',
-      variants: [
-      // using more strict pattern for higher relevance to increase chances of Less detection.
-      // this is *the only* Less specific statement used in most of the sources, so...
-      // (we’ll still often loose to the css-parser unless there's '//' comment,
-      // simply because 1 variable just can't beat 99 properties :)
-      { begin: '@' + IDENT_RE + '\\s*:', relevance: 15 }, { begin: '@' + IDENT_RE }],
-      starts: { end: '[;}]', returnEnd: true, contains: VALUE_WITH_RULESETS }
-    };
-
-    var SELECTOR_MODE = {
-      // first parse unambiguous selectors (i.e. those not starting with tag)
-      // then fall into the scary lookahead-discriminator variant.
-      // this mode also handles mixin definitions and calls
-      variants: [{
-        begin: '[\\.#:&\\[>]', end: '[;{}]' // mixin calls end with ';'
-      }, {
-        begin: INTERP_IDENT_RE + '[^;]*{',
-        end: '{'
-      }],
-      returnBegin: true,
-      returnEnd: true,
-      illegal: '[<=\'$"]',
-      contains: [hljs.C_LINE_COMMENT_MODE, hljs.C_BLOCK_COMMENT_MODE, MIXIN_GUARD_MODE, IDENT_MODE('keyword', 'all\\b'), IDENT_MODE('variable', '@{' + IDENT_RE + '}'), // otherwise it’s identified as tag
-      IDENT_MODE('selector-tag', INTERP_IDENT_RE + '%?', 0), // '%' for more consistent coloring of @keyframes "tags"
-      IDENT_MODE('selector-id', '#' + INTERP_IDENT_RE), IDENT_MODE('selector-class', '\\.' + INTERP_IDENT_RE, 0), IDENT_MODE('selector-tag', '&', 0), { className: 'selector-attr', begin: '\\[', end: '\\]' }, { className: 'selector-pseudo', begin: /:(:)?[a-zA-Z0-9\_\-\+\(\)"'.]+/ }, { begin: '\\(', end: '\\)', contains: VALUE_WITH_RULESETS }, // argument list of parametric mixins
-      { begin: '!important' } // eat !important after mixin call or it will be colored as tag
-      ]
-    };
-
-    RULES.push(hljs.C_LINE_COMMENT_MODE, hljs.C_BLOCK_COMMENT_MODE, AT_RULE_MODE, VAR_RULE_MODE, RULE_MODE, SELECTOR_MODE);
-
-    return {
-      case_insensitive: true,
-      illegal: '[=>\'/<($"]',
-      contains: RULES
-    };
-  });
-
-  return hljs;
-});
-
-},{}],"client_renderer":[function(require,module,exports){
+},{"events":"events","handlebars":33}],"client_renderer":[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -12555,7 +12312,7 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
         return _this3.articleView.addPartialFromAsset(path, text);
       });
     })).then(function () {
-      return _this3.replaceViewHTML(view);
+      return _article2.default.replace(view);
     }).catch(function (err) {
       return console.error(err);
     });
@@ -12610,20 +12367,31 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
 
 
   ClientRenderer.prototype.updateAsset = function updateAsset(path) {
-    var _this4 = this;
+
+    var altPath = void 0;
+    if (path.slice(-4) === '.hbs') altPath = path.slice(0, -4);
 
     // inline asset
-    if (this.articleView.handlebars.partials[path] || this.articleView.handlebars.partials[path + '.hbs']) {
+    if (this.articleView.handlebars.partials[path] || this.articleView.handlebars.partials[altPath]) {
+
+      delete this.articleView.handlebars.partials[altPath];
+      delete this.articleView.handlebars.partials[path];
+
       // Remove from fetchedAssets so it will fetch again even if it errored 
       // last time.
       this.fetchedAssets = this.fetchedAssets.filter(function (a) {
-        return a !== path;
+        return a !== path && a !== altPath;
       });
+
+      console.log(this.fetchedAssets);
+
       // re-render the views that depend on this asset for a patrial.
       this.articleView.views.forEach(function (view) {
         if (view.attrs.type === 'Graf' && view.partials().some(function (p) {
-          return p === path || p + '.hbs' === path;
-        })) _this4.replaceViewHTML(view);
+          return p === path || p === altPath;
+        })) {
+          _article2.default.replace(view);
+        }
       });
     }
     // JS update checks if it's in this frame then reloads
@@ -12655,27 +12423,30 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
   // LIVE PREVIEW
 
   ClientRenderer.prototype.change = function change(data) {
-    // console.log('change', data);
-    var view = this.articleView.set(data);
-    if (view) this.replaceViewHTML(view);
-  };
-
-  ClientRenderer.prototype.replaceViewHTML = function replaceViewHTML(view) {
-    var target = _dom2.default.first('[x-cp-id="' + view.attrs.id + '"]');
-    target.outerHTML = view.html();
+    // console.log('change',data);
+    var view = this.articleView.update(data);
+    _article2.default.replace(view);
   };
 
   ClientRenderer.prototype.add = function add(data) {
-    var target = _dom2.default.first('[x-cp-id=' + data.parent_id + ']');
-    this.articleView.add(data);
-    target.outerHTML = this.articleView.replace(data);
+    console.log('add', data);
+    var view = this.articleView.add(data, data.index);
+    _article2.default.replace(view);
+  };
+
+  ClientRenderer.prototype.add = function add(view) {
+    var container = _dom2.default.first('[x-cp-id="' + view.parent_id + '"]');
+    console.log(container);
+    if (data.index > 0) _dom2.default.insertAfter(container.children[data.index - 1], view.html());else _dom2.default.prepend(container, view.html());
   };
 
   ClientRenderer.prototype.remove = function remove(data) {
-    console.log('remove', e);
+    // console.log('remove',data);
+    this.articleView.remove(data.id);
+    _article2.default.remove(data.id);
   };
 
-  // used for errors, etc.
+  // used to show asset status/errors in a Graf
 
 
   ClientRenderer.prototype.replaceGrafText = function replaceGrafText(id, text) {
@@ -12690,6 +12461,7 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
 
   ClientRenderer.prototype.setStyle = function setStyle(style) {
     _dom2.default.first(document, 'head style').innerHTML = style;
+    _article2.default.resize();
   };
 
   return ClientRenderer;
@@ -12707,4 +12479,4 @@ function makeScriptTag(url) {
   return el;
 }
 
-},{"./development_server":48,"./views/article":53,"article":"article","dom":"dom","env":"env","events":"events","log":"log"}]},{},[50]);
+},{"./development_server":49,"./views/article":54,"article":"article","dom":"dom","env":"env","events":"events","log":"log"}]},{},[51]);

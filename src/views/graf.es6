@@ -12,18 +12,32 @@ let template = (`
 
 // Single mustache { turns to {{> so that it renders a partial, however 
 // it can be escaped like \{
-let partialRe = /([^\\]*?)\{{1}(.*?[^\\])\}{1}/g;
+let partialRe = /(^|[^\\])\{{1}(.*?[^\\])\}{1}/g;
 
 export default class Graf extends View {
 
   constructor(attrs) {
     super(attrs);
     this.errors = [];
-    this.is_empty = (this.attrs.body.trim().length === 0)
+  }
+
+
+  isEmpty() {
+    return (
+      this.attrs.body.trim().length === 0 &&
+      this.attrs.classes.length === 0
+    );
   }
 
 
   html() {
+
+    if (this.isEmpty()) {
+      if (this.article.attrs.client)
+        return `<p x-cp-id="${this.attrs.id}" style="display: none;"></p>`;
+      else
+        return '';
+    }
 
     let content = '';
 

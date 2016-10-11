@@ -24,10 +24,15 @@ export default class View extends Super {
 
   constructor(attrs = {}) {
     super();
-    this.attrs = attrs;
-    this.attrs.classes = this.attrs.classes || [];
+    this.set(attrs);
     this.parent = undefined;
     this.children = [];
+  }
+
+
+  set(attrs) {
+    this.attrs = attrs;
+    this.attrs.classes = this.attrs.classes || [];
   }
 
 

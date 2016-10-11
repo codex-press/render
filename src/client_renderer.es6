@@ -132,7 +132,7 @@ export class ClientRenderer extends EventEmitter() {
       })
       .then(text => this.articleView.addPartialFromAsset(path, text));
     }))
-    .then(() => this.replaceViewHTML(view))
+    .then(() => article.replace(view))
     .catch(err => console.error(err));
 
   }
@@ -185,7 +185,6 @@ export class ClientRenderer extends EventEmitter() {
       ));
     }
 
-
     return Promise.all(tags.map(el => {
       dom.append(document.head, el);
       return new Promise((resolve, reject) => {
@@ -200,17 +199,31 @@ export class ClientRenderer extends EventEmitter() {
   // events from devServer
   updateAsset(path) {
 
+    let altPath;
+    if (path.slice(-4) === '.hbs')
+      altPath = path.slice(0, -4);
+
     // inline asset
     if (this.articleView.handlebars.partials[path] ||
-       this.articleView.handlebars.partials[path + '.hbs']) {
+       this.articleView.handlebars.partials[altPath]) {
+
+      delete this.articleView.handlebars.partials[altPath]
+      delete this.articleView.handlebars.partials[path]
+
       // Remove from fetchedAssets so it will fetch again even if it errored 
       // last time.
-      this.fetchedAssets = this.fetchedAssets.filter(a => a !== path);
+      this.fetchedAssets = this.fetchedAssets.filter(a =>
+        a !== path && a !== altPath
+      );
+
+      console.log(this.fetchedAssets);
+
       // re-render the views that depend on this asset for a patrial.
       this.articleView.views.forEach(view => {
         if (view.attrs.type === 'Graf' &&
-            view.partials().some(p => p === path || `${p}.hbs` === path))
-          this.replaceViewHTML(view)
+            view.partials().some(p => p === path || p === altPath)) {
+          article.replace(view)
+        }
       });
     }
     // JS update checks if it's in this frame then reloads
@@ -241,36 +254,40 @@ export class ClientRenderer extends EventEmitter() {
 
 
 
-
-
   // LIVE PREVIEW
 
   change(data) {
-    // console.log('change', data);
-    let view = this.articleView.set(data);
-    if (view)
-      this.replaceViewHTML(view);
-  }
-
-  replaceViewHTML(view) {
-    let target = dom.first(`[x-cp-id="${view.attrs.id}"]`)
-    target.outerHTML = view.html();
+    // console.log('change',data);
+    let view = this.articleView.update(data);
+    article.replace(view);
   }
 
 
   add(data) {
-    let target = dom.first(`[x-cp-id=${data.parent_id}]`)
-    this.articleView.add(data);
-    target.outerHTML = this.articleView.replace(data);
+    console.log('add', data);
+    let view = this.articleView.add(data, data.index);
+    article.replace(view);
+  }
+
+
+  add(view) {
+    let container = dom.first(`[x-cp-id="${view.parent_id}"]`)
+    console.log(container);
+    if (data.index > 0)
+      dom.insertAfter(container.children[data.index - 1], view.html());
+    else
+      dom.prepend(container, view.html());
   }
 
 
   remove(data) {
-    console.log('remove', e);
+    // console.log('remove',data);
+    this.articleView.remove(data.id);
+    article.remove(data.id);
   }
 
 
-  // used for errors, etc.
+  // used to show asset status/errors in a Graf
   replaceGrafText(id, text) {
     if (dom.first(`[x-cp-id="${id}"]`))
       dom.first(`[x-cp-id="${id}"]`).textContent = text;
@@ -287,6 +304,7 @@ export class ClientRenderer extends EventEmitter() {
 
   setStyle(style) {
     dom.first(document, 'head style').innerHTML = style;
+    article.resize();
   }
 
 }
@@ -303,3 +321,4 @@ function makeScriptTag(url) {
   el.src = url;
   return el;
 }
+

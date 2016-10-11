@@ -2,13 +2,15 @@ import Handlebars from 'handlebars';
 
 import View from './view';
 import {unscopeLinks} from '../utility';
-import hljs from 'highlight.js';
+
+// import hljs from 'highlight.js';
+import prism from 'prismjs';
 
 
 let template = Handlebars.compile(`
 <{{  tagName  ~}}
   {{#if isOverlay}} x-cp-overlay{{/if ~}}
-  {{#if cpId }}x-cp-id={{  id  }}{{/if ~}}
+  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}
   {{#if classes}} class="{{  classes  }}"{{/if}}>
     {{{  content  }}}
 </{{ tagName  }}>
@@ -24,8 +26,18 @@ export default class HTMLBlock extends View {
     );
 
     if (this.attrs.classes.includes('escaped')) {
-      let highlighted = hljs.highlight('javascript', content).value;
-      content = `<pre><code>${highlighted}</code></pre>`;
+      // default html
+      let language = 'html';
+      if (this.attrs.classes.includes('language-less'))
+        language = 'less';
+      if (this.attrs.classes.includes('language-css'))
+        language = 'css';
+      if (this.attrs.classes.includes('language-javascript'))
+        language = 'javascript';
+      let highlighted = prism.highlight(content, prism.languages[language]);
+      content = (`
+        <pre class=language-${language}><code>${highlighted}</code></pre>
+      `);
     }
 
     return template({

@@ -12,7 +12,7 @@ export default function factory() {
 
     br:         '<br>',
 
-    date:       '{{ formatDate publication_date "longDate" }}',
+    date:       '<time datetime="{{publication_date}}">{{ formatDate publication_date "longDate" }}</time>',
 
     play:       `<span class="cp-play-button">${icons.play}</span>`,
     audio:      `<span class="cp-audio-button">${icons.audio}</span>`,
@@ -59,16 +59,20 @@ export default function factory() {
   handlebars.registerHelper('cover', function() {
     let options = arguments[arguments.length - 1];
 
+    let size = 'low';
+    if (arguments.length > 1)
+       size = arguments[arguments.length - 1];
+
     // there is no cover image
     let cover = options.data.root.cover;
     if (!cover) {
       if (options.fn)
-        return '<div>' + options.fn(this) + '</div>';
+        return '<div class=cover>' + options.fn(this) + '</div>';
       else
         return '';
     }
 
-    let source = u.findSource(cover.media.srcset, 'low');
+    let source = u.findSource(cover.media.srcset, size);
 
     let cpID = cover.id;
 

@@ -45,8 +45,11 @@ export default class Graf extends View {
     if (this.attrs.body.indexOf('{') < 0)
       return this.htmlFromContent(this.attrs.body);
 
+    // hack to solve a problem where above regex fails on back to back things
+    let body = this.attrs.body.replace('}{', '} {');
+
     // make the body into a template so things like { date } work
-    let source = this.attrs.body.replace(partialRe, '$1{{>$2}}');
+    let source = body.replace(partialRe, '$1{{>$2}}');
 
     try {
       let compiled = this.article.handlebars.compile(source);

@@ -11562,8 +11562,11 @@ var Graf = function (_View) {
     // normal paragraph, no templating
     if (this.attrs.body.indexOf('{') < 0) return this.htmlFromContent(this.attrs.body);
 
+    // hack to solve a problem where above regex fails on back to back things
+    var body = this.attrs.body.replace('}{', '} {');
+
     // make the body into a template so things like { date } work
-    var source = this.attrs.body.replace(partialRe, '$1{{>$2}}');
+    var source = body.replace(partialRe, '$1{{>$2}}');
 
     try {
       var compiled = this.article.handlebars.compile(source);

@@ -61,7 +61,7 @@ export default function factory() {
 
     let size = 'low';
     if (arguments.length > 1)
-       size = arguments[arguments.length - 1];
+       size = arguments[0];
 
     // there is no cover image
     let cover = options.data.root.cover;

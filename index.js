@@ -10893,7 +10893,7 @@ function factory() {
     var options = arguments[arguments.length - 1];
 
     var size = 'low';
-    if (arguments.length > 1) size = arguments[arguments.length - 1];
+    if (arguments.length > 1) size = arguments[0];
 
     // there is no cover image
     var cover = options.data.root.cover;

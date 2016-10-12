@@ -104,8 +104,7 @@ export default class ArticleView extends View {
 
 
   addPartialFromHTMLBlock(data) {
-    this.handlebars.registerPartial(data.classes.slice(1).join('.'), source);
-    this.handlebars.registerPartial(data.asset_path.slice(0, -4), source);
+    this.handlebars.registerPartial(data.classes.slice(1).join('.'), data.body);
   }
 
 

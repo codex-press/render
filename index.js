@@ -11180,8 +11180,7 @@ var ArticleView = function (_View) {
   }
 
   ArticleView.prototype.addPartialFromHTMLBlock = function addPartialFromHTMLBlock(data) {
-    this.handlebars.registerPartial(data.classes.slice(1).join('.'), source);
-    this.handlebars.registerPartial(data.asset_path.slice(0, -4), source);
+    this.handlebars.registerPartial(data.classes.slice(1).join('.'), data.body);
   };
 
   ArticleView.prototype.addPartialFromAsset = function addPartialFromAsset(path, source) {
@@ -11726,10 +11725,10 @@ var backgroundImageTemplate = _handlebars2.default.compile('\n  <{{tagName}} x-c
 // no cropping here. But with Javascript, it will constrain width if it's
 // too big for the container (like for the max-height 100vh). JS positions
 // overlays on top and perhaps will move the ones below to the side.
-var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n\n      <div class=content>\n        <div class=frame>\n          <div class=shim style="padding-top: {{  padding  }}%;"></div>\n          <img class=thumb src="{{  thumbURL  }}" draggable=false> \n          <img class=full draggable=false> \n        </div>\n        {{{  children  }}}\n      </div>\n\n    {{else}}\n\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <img src="{{  sourceURL  }}" draggable=false> \n      </div>\n      {{{  children  }}}\n\n    {{/if}}\n\n  </figure>\n');
+var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n      {{{  children  }}}\n\n    {{else}}\n\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <img src="{{  sourceURL  }}" draggable=false> \n      </div>\n      {{{  children  }}}\n\n    {{/if}}\n\n  </figure>\n');
 
 // JS only: cropping and nice overlays on top
-var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    <div class=content>\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <div class=crop-box></div>\n        <div class=crop>\n          <img class=thumb src="{{  thumbURL  }}" draggable=false> \n          <img class=full draggable=false> \n        </div>\n      </div>\n      {{{  children  }}}\n    </div>\n\n  </figure>\n');
+var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop-box></div>\n      <div class=crop>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n    </div>\n\n    {{{  children  }}}\n\n  </figure>\n');
 
 var ImageView = function (_View) {
   _inherits(ImageView, _View);
@@ -11950,10 +11949,10 @@ var attributes = '\n  {{#unless javascript}}\n    poster="{{  posterURL  }}" src
 var simpleTemplate = _handlebars2.default.compile('\n  <video x-cp-video x-cp-id={{  cpID  }}\n    class="{{  classes  }}"\n    ' + attributes + '>\n  </video>\n');
 
 // no crop
-var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n\n      <div class=content>\n        <div class=frame>\n          <div class=shim style="padding-top: {{  padding  }}%;"></div>\n          <video ' + attributes + '></video>\n          <img class=thumb src="{{  thumbURL  }}" draggable=false> \n          <img class=poster draggable=false> \n        </div>\n        {{{  children  }}}\n      </div>\n\n    {{else}}\n\n      <video ' + attributes + '></video>\n      {{{  children  }}}\n\n    {{/if}}\n\n\n  </figure>\n');
+var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <video ' + attributes + '></video>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=poster draggable=false> \n      </div>\n\n      {{{  children  }}}\n\n    {{else}}\n\n      <div class=frame>\n        <video ' + attributes + '></video>\n      </div>\n      {{{  children  }}}\n\n    {{/if}}\n\n\n  </figure>\n');
 
 // with cropping, JS only
-var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{classes}}">\n\n    <div class=content>\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <div class=crop>\n          <video ' + attributes + '></video>\n          <img class=thumb src="{{thumbURL}}" draggable=false> \n          <img class=poster draggable=false> \n        </div>\n      </div>\n\n      {{{  children  }}}\n    </div>\n\n  </figure>\n');
+var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{classes}}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop>\n        <video ' + attributes + '></video>\n        <img class=thumb src="{{thumbURL}}" draggable=false> \n        <img class=poster draggable=false> \n      </div>\n\n      {{{  children  }}}\n    </div>\n\n  </figure>\n');
 
 var VideoView = function (_View) {
   _inherits(VideoView, _View);
@@ -12219,11 +12218,6 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
     _this.bind({ 'state:dev-server': 'changeDevServer' }, _article2.default);
     return _this;
   }
-
-  // changeDevServer(value) {
-  //   location.reload();
-  // }
-
 
   ClientRenderer.prototype.message = function message(e) {
     this.trigger(e.data.event, e.data.args);

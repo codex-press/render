@@ -43,14 +43,12 @@ let figureTemplate = Handlebars.compile(`
 
     {{#if javascript}}
 
-      <div class=content>
-        <div class=frame>
-          <div class=shim style="padding-top: {{  padding  }}%;"></div>
-          <img class=thumb src="{{  thumbURL  }}" draggable=false> 
-          <img class=full draggable=false> 
-        </div>
-        {{{  children  }}}
+      <div class=frame>
+        <div class=shim style="padding-top: {{  padding  }}%;"></div>
+        <img class=thumb src="{{  thumbURL  }}" draggable=false> 
+        <img class=full draggable=false> 
       </div>
+      {{{  children  }}}
 
     {{else}}
 
@@ -70,17 +68,16 @@ let figureTemplate = Handlebars.compile(`
 let cropTemplate = Handlebars.compile(`
   <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">
 
-    <div class=content>
-      <div class=frame>
-        <div class=shim style="padding-top: {{  padding  }}%;"></div>
-        <div class=crop-box></div>
-        <div class=crop>
-          <img class=thumb src="{{  thumbURL  }}" draggable=false> 
-          <img class=full draggable=false> 
-        </div>
+    <div class=frame>
+      <div class=shim style="padding-top: {{  padding  }}%;"></div>
+      <div class=crop-box></div>
+      <div class=crop>
+        <img class=thumb src="{{  thumbURL  }}" draggable=false> 
+        <img class=full draggable=false> 
       </div>
-      {{{  children  }}}
     </div>
+
+    {{{  children  }}}
 
   </figure>
 `);

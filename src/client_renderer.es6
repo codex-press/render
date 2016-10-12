@@ -45,10 +45,6 @@ export class ClientRenderer extends EventEmitter() {
     this.bind({'state:dev-server' : 'changeDevServer'}, article);
   }
 
-  // changeDevServer(value) {
-  //   location.reload();
-  // }
-
 
   message(e) {
     this.trigger(e.data.event, e.data.args);

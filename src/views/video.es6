@@ -29,19 +29,20 @@ let figureTemplate = Handlebars.compile(`
 
     {{#if javascript}}
 
-      <div class=content>
-        <div class=frame>
-          <div class=shim style="padding-top: {{  padding  }}%;"></div>
-          <video ${attributes}></video>
-          <img class=thumb src="{{  thumbURL  }}" draggable=false> 
-          <img class=poster draggable=false> 
-        </div>
-        {{{  children  }}}
+      <div class=frame>
+        <div class=shim style="padding-top: {{  padding  }}%;"></div>
+        <video ${attributes}></video>
+        <img class=thumb src="{{  thumbURL  }}" draggable=false> 
+        <img class=poster draggable=false> 
       </div>
+
+      {{{  children  }}}
 
     {{else}}
 
-      <video ${attributes}></video>
+      <div class=frame>
+        <video ${attributes}></video>
+      </div>
       {{{  children  }}}
 
     {{/if}}
@@ -55,14 +56,12 @@ let figureTemplate = Handlebars.compile(`
 let cropTemplate = Handlebars.compile(`
   <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{classes}}">
 
-    <div class=content>
-      <div class=frame>
-        <div class=shim style="padding-top: {{  padding  }}%;"></div>
-        <div class=crop>
-          <video ${attributes}></video>
-          <img class=thumb src="{{thumbURL}}" draggable=false> 
-          <img class=poster draggable=false> 
-        </div>
+    <div class=frame>
+      <div class=shim style="padding-top: {{  padding  }}%;"></div>
+      <div class=crop>
+        <video ${attributes}></video>
+        <img class=thumb src="{{thumbURL}}" draggable=false> 
+        <img class=poster draggable=false> 
       </div>
 
       {{{  children  }}}

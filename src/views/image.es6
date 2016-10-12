@@ -52,10 +52,7 @@ let figureTemplate = Handlebars.compile(`
 
     {{else}}
 
-      <div class=frame>
-        <div class=shim style="padding-top: {{  padding  }}%;"></div>
-        <img src="{{  sourceURL  }}" draggable=false> 
-      </div>
+      <img src="{{  sourceURL  }}" draggable=false> 
       {{{  children  }}}
 
     {{/if}}

@@ -40,9 +40,7 @@ let figureTemplate = Handlebars.compile(`
 
     {{else}}
 
-      <div class=frame>
-        <video ${attributes}></video>
-      </div>
+      <video ${attributes}></video>
       {{{  children  }}}
 
     {{/if}}

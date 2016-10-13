@@ -32,32 +32,38 @@ class DevelopmentServer extends EventEmitter() {
 
       let ws = new WebSocket('wss://localhost:8000');
 
-      ws.onerror = err => {
-        // it's trying to reconnect so normal to be erroring
+      ws.onclose = err => {
+
+        // never got a single message so alert that it's not available
         if (firstConnection) {
-          firstConnection = false;
           this.sendAlert({
             head: 'Can\'t connect to https://localhost:8000',
             type: 'error',
             id: 'connect',
           });
+          // disabling it will leave the message since just the child
+          // frame will be reloaded with server data
+          article.removeState('dev-server');
+
+          // not really used but makes sense
+          reject();
         }
-      };
+        else {
 
+          // first time we got a close, so alert that it was lost
+          if (!reconnectTimeout) {
+            this.sendAlert({
+              head: 'Lost Connection To Development Server',
+              id: 'connect',
+              type: 'error',
+              timeout: false
+            });
+          }
 
-      ws.onclose = e => {
-
-        // first 'close' event
-        if (!reconnectTimeout) {
-          this.sendAlert({
-            head: 'Lost Connection To Development Server',
-            id: 'connect',
-            type: 'error',
-            timeout: false
-          });
+          // continue trying to reconnect
+          reconnectTimeout = setTimeout(this.connect.bind(this), 2000);
         }
 
-        reconnectTimeout = setTimeout(this.connect.bind(this), 2000);
       };
 
 

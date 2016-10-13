@@ -42,7 +42,6 @@ export class ClientRenderer extends EventEmitter() {
     this.fetchedAssets = [];
     this.bind(callbacks);
     this.bind({message: 'message'}, window);
-    this.bind({'state:dev-server' : 'changeDevServer'}, article);
   }
 
 

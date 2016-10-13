@@ -10692,31 +10692,36 @@ var DevelopmentServer = function (_EventEmitter) {
 
       var ws = new WebSocket('wss://localhost:8000');
 
-      ws.onerror = function (err) {
-        // it's trying to reconnect so normal to be erroring
+      ws.onclose = function (err) {
+
+        // never got a single message so alert that it's not available
         if (firstConnection) {
-          firstConnection = false;
           _this2.sendAlert({
             head: 'Can\'t connect to https://localhost:8000',
             type: 'error',
             id: 'connect'
           });
+          // disabling it will leave the message since just the child
+          // frame will be reloaded with server data
+          _article2.default.removeState('dev-server');
+
+          // not really used but makes sense
+          reject();
+        } else {
+
+          // first time we got a close, so alert that it was lost
+          if (!reconnectTimeout) {
+            _this2.sendAlert({
+              head: 'Lost Connection To Development Server',
+              id: 'connect',
+              type: 'error',
+              timeout: false
+            });
+          }
+
+          // continue trying to reconnect
+          reconnectTimeout = setTimeout(_this2.connect.bind(_this2), 2000);
         }
-      };
-
-      ws.onclose = function (e) {
-
-        // first 'close' event
-        if (!reconnectTimeout) {
-          _this2.sendAlert({
-            head: 'Lost Connection To Development Server',
-            id: 'connect',
-            type: 'error',
-            timeout: false
-          });
-        }
-
-        reconnectTimeout = setTimeout(_this2.connect.bind(_this2), 2000);
       };
 
       // can't use onopen because we need the data in the first message so 
@@ -12219,7 +12224,6 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
     _this.fetchedAssets = [];
     _this.bind(callbacks);
     _this.bind({ message: 'message' }, window);
-    _this.bind({ 'state:dev-server': 'changeDevServer' }, _article2.default);
     return _this;
   }
 

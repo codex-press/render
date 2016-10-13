@@ -80,9 +80,7 @@ let cropTemplate = Handlebars.compile(`
 `);
 
 
-
 export default class ImageView extends View {
-
 
   constructor(attrs) {
     super(attrs);

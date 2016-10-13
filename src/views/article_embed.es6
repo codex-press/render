@@ -36,7 +36,10 @@ export default class ArticleEmbed extends View {
       this.attrs.article.metadata,
       this.attrs.article,
       {attrs: this.attrs},
-      {javascript: this.article.attrs.javascript}
+      {
+        javascript: this.article.attrs.javascript,
+        content_origin: this.article.attrs.content_origin
+      }
     );
   }
 

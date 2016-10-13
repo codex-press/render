@@ -11125,6 +11125,8 @@ var ArticleView = function (_View) {
       facebook_app_id: _this.attrs.facebook_app_id || '1092197300805177'
     }, _this.attrs.metadata);
 
+    _this.templateAttrs.content_origin = _this.attrs.content_origin;
+
     if (!_this.templateAttrs.share_message) _this.templateAttrs.share_message = _this.attrs.title;
 
     var templates = _this.attrs.content.filter(function (c) {
@@ -11360,7 +11362,10 @@ var ArticleEmbed = function (_View) {
   }
 
   ArticleEmbed.prototype.makeAttrs = function makeAttrs() {
-    return Object.assign({}, this.attrs.article.classed_content, this.attrs.article.metadata, this.attrs.article, { attrs: this.attrs }, { javascript: this.article.attrs.javascript });
+    return Object.assign({}, this.attrs.article.classed_content, this.attrs.article.metadata, this.attrs.article, { attrs: this.attrs }, {
+      javascript: this.article.attrs.javascript,
+      content_origin: this.article.attrs.content_origin
+    });
   };
 
   ArticleEmbed.prototype.html = function html() {

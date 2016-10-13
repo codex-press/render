@@ -41,8 +41,10 @@ export default class ArticleView extends View {
         twitter_handle: this.attrs.twitter_handle,
         facebook_app_id: this.attrs.facebook_app_id || '1092197300805177',
       },
-      this.attrs.metadata
+      this.attrs.metadata,
     );
+
+    this.templateAttrs.content_origin = this.attrs.content_origin;
 
     if (!this.templateAttrs.share_message)
       this.templateAttrs.share_message = this.attrs.title;

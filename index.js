@@ -10661,7 +10661,8 @@ var instance = false;
 exports.default = instance;
 
 
-var reconnectInterval = void 0;
+var reconnectTimeout = void 0;
+var firstConnection = true;
 
 var DevelopmentServer = function (_EventEmitter) {
   _inherits(DevelopmentServer, _EventEmitter);
@@ -10693,62 +10694,60 @@ var DevelopmentServer = function (_EventEmitter) {
 
       ws.onerror = function (err) {
         // it's trying to reconnect so normal to be erroring
-        if (reconnectInterval) return;
-        console.error(err);
-        _this2.sendAlert({
-          head: 'Can\'t connect to https://localhost:8000',
-          type: 'error',
-          id: 'connect'
-        });
-        _article2.default.removeState('dev-server');
+        if (firstConnection) {
+          firstConnection = false;
+          _this2.sendAlert({
+            head: 'Can\'t connect to https://localhost:8000',
+            type: 'error',
+            id: 'connect'
+          });
+        }
       };
 
       ws.onclose = function (e) {
-        if (!reconnectInterval) {
+
+        // first 'close' event
+        if (!reconnectTimeout) {
           _this2.sendAlert({
             head: 'Lost Connection To Development Server',
             id: 'connect',
             type: 'error',
             timeout: false
           });
-          reconnectInterval = setInterval(_this2.connect.bind(_this2), 2000);
         }
+
+        reconnectTimeout = setTimeout(_this2.connect.bind(_this2), 2000);
       };
 
+      // can't use onopen because we need the data in the first message so 
+      // instead must wait for the first message
       var firstMessage = true;
       ws.onmessage = function (e) {
         var data = JSON.parse(e.data);
 
+        _this2.fileList = data.fileList;
         if (firstMessage) {
+          reconnectTimeout = undefined;
+          firstConnection = false;
           firstMessage = false;
 
-          if (data.version !== version) {
+          if (data.version === version) {
+            _this2.sendAlert({
+              body: 'Connected To Development Server',
+              id: 'connect'
+            });
+            resolve();
+          } else {
             _this2.sendAlert({
               head: 'Your Development Server Is Out Of Date',
-              body: 'The current version is v' + version + ' and you are running v' + (data.version || '0.0.0') + '. You must update it like this:',
+              body: 'The current version is v' + version + ' and you are running\n                v' + (data.version || '0.0.0') + '. You must update it like this:',
               pre: 'git pull\nnpm install',
               id: 'connect',
               timeout: false
             });
             reject();
-            return;
           }
-
-          _this2.fileList = data.fileList;
-          _this2.sendAlert({
-            body: 'Connected To Development Server',
-            id: 'connect'
-          });
-
-          if (reconnectInterval) {
-            clearInterval(reconnectInterval);
-            reconnectInterval = undefined;
-          }
-
-          resolve();
-        }
-
-        if (data.error) {
+        } else if (data.error) {
 
           var head = void 0;
           if (data.filename) head = data.error.type + ' Error: ' + data.filename;else head = data.error.type + ' Error';

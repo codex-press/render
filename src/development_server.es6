@@ -9,7 +9,8 @@ let version = '0.0.1';
 let instance = false;
 export {instance as default};
 
-let reconnectInterval;
+let reconnectTimeout;
+let firstConnection = true;
 
 class DevelopmentServer extends EventEmitter() {
 
@@ -27,71 +28,72 @@ class DevelopmentServer extends EventEmitter() {
 
   // returns Promise to a loaded fileList
   connect() {
-
     return new Promise((resolve, reject) => {
 
       let ws = new WebSocket('wss://localhost:8000');
 
       ws.onerror = err => {
         // it's trying to reconnect so normal to be erroring
-        if (reconnectInterval)
-          return;
-        console.error(err);
-        this.sendAlert({
-          head: 'Can\'t connect to https://localhost:8000',
-          type: 'error',
-          id: 'connect',
-        });
-        article.removeState('dev-server');
+        if (firstConnection) {
+          firstConnection = false;
+          this.sendAlert({
+            head: 'Can\'t connect to https://localhost:8000',
+            type: 'error',
+            id: 'connect',
+          });
+        }
       };
 
 
       ws.onclose = e => {
-        if (!reconnectInterval) {
+
+        // first 'close' event
+        if (!reconnectTimeout) {
           this.sendAlert({
             head: 'Lost Connection To Development Server',
             id: 'connect',
             type: 'error',
             timeout: false
           });
-          reconnectInterval = setInterval(this.connect.bind(this), 2000);
         }
+
+        reconnectTimeout = setTimeout(this.connect.bind(this), 2000);
       };
 
+
+      // can't use onopen because we need the data in the first message so 
+      // instead must wait for the first message
       let firstMessage = true;
       ws.onmessage = e => {
         let data = JSON.parse(e.data);
 
+        this.fileList = data.fileList;
         if (firstMessage) {
+          reconnectTimeout = undefined;
+          firstConnection = false;
           firstMessage = false;
 
-          if (data.version !== version) {
+          if (data.version === version) {
+            this.sendAlert({
+              body: 'Connected To Development Server',
+              id: 'connect',
+            });
+            resolve();
+          }
+          else {
             this.sendAlert({
               head: 'Your Development Server Is Out Of Date',
-              body: `The current version is v${version} and you are running v${data.version || '0.0.0'}. You must update it like this:`,
+              body: `The current version is v${version} and you are running
+                v${data.version || '0.0.0'}. You must update it like this:`,
               pre: 'git pull\nnpm install',
               id: 'connect',
               timeout: false
             });
             reject();
-            return;
           }
-
-          this.fileList = data.fileList;
-          this.sendAlert({
-            body: 'Connected To Development Server',
-            id: 'connect',
-          });
-
-          if (reconnectInterval) {
-            clearInterval(reconnectInterval);
-            reconnectInterval = undefined;
-          }
-
-          resolve();
         }
 
-        if (data.error) {
+        else if (data.error) {
 
           let head;
           if (data.filename)

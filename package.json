@@ -1,8 +1,8 @@
 {
   "scripts": {
     "start": "npm run watch & npm run watch-dev & npm run watch-module",
-    "watch-dev": "watchify src/index.es6 -d -r ./src/client_renderer:client_renderer -x dom -x log -x article -x events -x env -o index.dev.js --extension=.es6",
-    "watch": "watchify src/index.es6 -r ./src/client_renderer:client_renderer -x dom -x log -x article -x events -x env -o index.js --extension=.es6",
+    "watch-dev": "watchify src/index.es6 -d -r ./src/client_renderer:client_renderer -x dom -x log -x article -x events -x env -x utility -o index.dev.js --extension=.es6",
+    "watch": "watchify src/index.es6 -r ./src/client_renderer:client_renderer -x dom -x log -x article -x events -x env -x utility -o index.js --extension=.es6",
     "watch-module": "babel src -w -d ../server/render"
   },
   "babel": {

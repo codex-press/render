@@ -93,11 +93,18 @@ export default class Graf extends View {
 
 
   partials() {
+
+    // :( This is third place this is hard coded
+    let builtIn = 'br date play audio share fullscreen email reddit twitter facebook play_icon audio_icon fullscreen_icon share_icon email_icon reddit_icon twitter_icon facebook_icon'.split(/ /);
+
     let partials = [];
     let match;
     partialRe.lastIndex = 0;
-    while (match = partialRe.exec(this.attrs.body))
-      partials.push(match[2].trim());
+    while (match = partialRe.exec(this.attrs.body)) {
+      let name = match[2].trim()
+      if (!partials.includes(name) && !builtIn.includes(name))
+        partials.push(name);
+    }
     return partials;
   }
 

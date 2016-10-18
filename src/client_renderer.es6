@@ -2,6 +2,7 @@ import EventEmitter from 'events';
 import article from 'article';
 import * as log from 'log';
 import * as env from 'env';
+import * as u from 'utility';
 import dom from 'dom';
 import ArticleView from './views/article';
 import devServer from './development_server';
@@ -71,8 +72,8 @@ export class ClientRenderer extends EventEmitter() {
 
 
   // The problem is Handlebars doesn't say which partial was missing. We must
-  // check if they've all loaded. Load them if not. Or error if they've all been
-  // loaded since any number of things could go wrong.
+  // check if they've all loaded. Load them if not. Or error if they've all
+  // been loaded since any number of things could go wrong.
   assetMissing(view, error) {
     let builtIn = 'br date play audio share fullscreen email reddit twitter facebook play_icon audio_icon fullscreen_icon share_icon email_icon reddit_icon twitter_icon facebook_icon'.split(/ /);
 
@@ -83,12 +84,6 @@ export class ClientRenderer extends EventEmitter() {
       !this.fetchedAssets.includes(name) &&
       !this.fetchedAssets.includes(name + '.hbs')
     );
-
-    if (toFetch.length === 0) {
-      console.error(error.message);
-      setTimeout(() => this.replaceGrafText(view.attrs.id, error.message));
-      return;
-    }
 
     Promise.all(toFetch.map(path => {
 
@@ -125,9 +120,9 @@ export class ClientRenderer extends EventEmitter() {
           return message;
         }
       })
-      .then(text => this.articleView.addPartialFromAsset(path, text));
+      .then(text => this.articleView.addPartialFromAsset(path, text))
+      .then(() => this.reRenderViewsWithPartial(path))
     }))
-    .then(() => article.replace(view))
     .catch(err => console.error(err));
 
   }
@@ -142,6 +137,7 @@ export class ClientRenderer extends EventEmitter() {
 
       // serve from development
       let repo = base_path.match(/^(.*?)([-./]|$)/)[1];
+
       if (devServer.fileList[repo]) {
         let url = 'https://localhost:8000/';
         // add JS and/or CSS depending on if they exist in offerings
@@ -211,15 +207,8 @@ export class ClientRenderer extends EventEmitter() {
         a !== path && a !== altPath
       );
 
-      console.log(this.fetchedAssets);
+      this.reRenderViewsWithPartial(path);
 
-      // re-render the views that depend on this asset for a patrial.
-      this.articleView.views.forEach(view => {
-        if (view.attrs.type === 'Graf' &&
-            view.partials().some(p => p === path || p === altPath)) {
-          article.replace(view)
-        }
-      });
     }
     // JS update checks if it's in this frame then reloads
     if (path.match(/js$/)) { 
@@ -247,6 +236,20 @@ export class ClientRenderer extends EventEmitter() {
 
   }
 
+
+  reRenderViewsWithPartial(path) {
+
+    let altPath;
+    if (path.slice(-4) === '.hbs')
+      altPath = path.slice(0, -4);
+
+    this.articleView.views.forEach(view => {
+      if (view.attrs.type === 'Graf' &&
+          view.partials().some(p => p === path || p === altPath)) {
+        article.replace(view)
+      }
+    });
+  }
 
 
   // LIVE PREVIEW

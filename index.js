@@ -11612,12 +11612,18 @@ var Graf = function (_View) {
   };
 
   Graf.prototype.partials = function partials() {
+
+    // :( This is third place this is hard coded
+    var builtIn = 'br date play audio share fullscreen email reddit twitter facebook play_icon audio_icon fullscreen_icon share_icon email_icon reddit_icon twitter_icon facebook_icon'.split(/ /);
+
     var partials = [];
     var match = void 0;
     partialRe.lastIndex = 0;
     while (match = partialRe.exec(this.attrs.body)) {
-      partials.push(match[2].trim());
-    }return partials;
+      var name = match[2].trim();
+      if (!partials.includes(name) && !builtIn.includes(name)) partials.push(name);
+    }
+    return partials;
   };
 
   Graf.prototype.defaultTagName = function defaultTagName() {
@@ -12160,6 +12166,10 @@ var _env = require('env');
 
 var env = _interopRequireWildcard(_env);
 
+var _utility = require('utility');
+
+var u = _interopRequireWildcard(_utility);
+
 var _dom = require('dom');
 
 var _dom2 = _interopRequireDefault(_dom);
@@ -12254,8 +12264,8 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
   };
 
   // The problem is Handlebars doesn't say which partial was missing. We must
-  // check if they've all loaded. Load them if not. Or error if they've all been
-  // loaded since any number of things could go wrong.
+  // check if they've all loaded. Load them if not. Or error if they've all
+  // been loaded since any number of things could go wrong.
 
 
   ClientRenderer.prototype.assetMissing = function assetMissing(view, error) {
@@ -12268,14 +12278,6 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
     var toFetch = view.partials().filter(function (name) {
       return !builtIn.includes(name) && !_this3.fetchedAssets.includes(name) && !_this3.fetchedAssets.includes(name + '.hbs');
     });
-
-    if (toFetch.length === 0) {
-      console.error(error.message);
-      setTimeout(function () {
-        return _this3.replaceGrafText(view.attrs.id, error.message);
-      });
-      return;
-    }
 
     Promise.all(toFetch.map(function (path) {
 
@@ -12315,10 +12317,10 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
         }
       }).then(function (text) {
         return _this3.articleView.addPartialFromAsset(path, text);
+      }).then(function () {
+        return _this3.reRenderViewsWithPartial(path);
       });
-    })).then(function () {
-      return _article2.default.replace(view);
-    }).catch(function (err) {
+    })).catch(function (err) {
       return console.error(err);
     });
   };
@@ -12331,6 +12333,7 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
 
       // serve from development
       var repo = base_path.match(/^(.*?)([-./]|$)/)[1];
+
       if (_development_server2.default.fileList[repo]) {
         var url = 'https://localhost:8000/';
         // add JS and/or CSS depending on if they exist in offerings
@@ -12388,16 +12391,7 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
         return a !== path && a !== altPath;
       });
 
-      console.log(this.fetchedAssets);
-
-      // re-render the views that depend on this asset for a patrial.
-      this.articleView.views.forEach(function (view) {
-        if (view.attrs.type === 'Graf' && view.partials().some(function (p) {
-          return p === path || p === altPath;
-        })) {
-          _article2.default.replace(view);
-        }
-      });
+      this.reRenderViewsWithPartial(path);
     }
     // JS update checks if it's in this frame then reloads
     if (path.match(/js$/)) {
@@ -12423,6 +12417,20 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
           _dom2.default.append(document.head, el);
         }
       }
+  };
+
+  ClientRenderer.prototype.reRenderViewsWithPartial = function reRenderViewsWithPartial(path) {
+
+    var altPath = void 0;
+    if (path.slice(-4) === '.hbs') altPath = path.slice(0, -4);
+
+    this.articleView.views.forEach(function (view) {
+      if (view.attrs.type === 'Graf' && view.partials().some(function (p) {
+        return p === path || p === altPath;
+      })) {
+        _article2.default.replace(view);
+      }
+    });
   };
 
   // LIVE PREVIEW
@@ -12484,4 +12492,4 @@ function makeScriptTag(url) {
   return el;
 }
 
-},{"./development_server":49,"./views/article":54,"article":"article","dom":"dom","env":"env","events":"events","log":"log"}]},{},[51]);
+},{"./development_server":49,"./views/article":54,"article":"article","dom":"dom","env":"env","events":"events","log":"log","utility":"utility"}]},{},[51]);

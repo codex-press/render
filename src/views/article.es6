@@ -147,34 +147,46 @@ export default class ArticleView extends View {
   update(data) {
     if (!this.views)
       return;
-    let v = this.views.find(v => v.attrs.id == data.id);
-    if (v)
-      v.set(data);
-    return v;
+    let view = this.views.find(v => v.attrs.id == data.id);
+    if (view)
+      view.set(data);
+    return view;
   }
 
 
   remove(id) {
     let view = this.views.find(v => v.attrs.id == id);
-    if (view) {
+    // will remove children recursively in view.es6
+    if (view)
       view.remove();
-      view.parent.children = view.parent.children.filter(v => v !== view)
-      this.views = this.views.filter(v => v !== view)
-    }
+    return view;
   }
 
 
-  add(data) {
-    let view = this.makeView(data);
-    this.views.push(view);
-    if (data.parent_id) {
-      if (data.parent_id === this.attrs.id)
-        view.parent = this;
-      else
-        view.parent = this.views.find(v => v.attrs.id === data.parent_id)
-      view.parent.children.splice(data.index, 0, view);
-      console.log(view.parent)
+  add(data, index) {
+
+    let recursiveAdd = (data, parent) => {
+      let view = this.makeView(data);
+      this.views.push(view);
+      view.parent = parent;
+      // make child views
+      if (data.content)
+        view.children = data.content.map(d => recursiveAdd(d, view));
+      return view;
     }
+
+    let parent;
+    if (data.parent_id == this.attrs.id)
+      parent = this;
+    else
+      parent = this.views.find(v => v.attrs.id === data.parent_id)
+
+    let view = recursiveAdd(data, parent);
+
+    // add to the parent's children array
+    view.parent.children.splice(index, 0, view);
+
+    console.log(view);
     return view;
   }
 

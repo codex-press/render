@@ -6,7 +6,7 @@ import {unscopeLinks} from '../utility';
 
 let template = Handlebars.compile(`
   <{{  tagName  }} class="{{  classes  }}"
-    {{#if cpID  }}id={{  cpID  }}{{/if }}>
+    {{#if cpID  }}x-cp-id={{  cpID  }}{{/if }}>
     {{{  content  }}}
   </{{  tagName  }}>
 `);
@@ -45,20 +45,12 @@ export default class ArticleEmbed extends View {
 
 
   html() {
+    // this should only happen on the client since server replaces 
+    // 'all_content' with the content
     if (this.attrs.template === 'all_content')
-      return this.contentHTML();
+      return `<div x-cp-id=${ this.attrs.id } style="display:none;"></div>`;
     else
       return this.templateHTML();
-  }
-
-
-  contentHTML() {
-    return template({
-      tagName: this.articleTagName(),
-      classes: this.articleClasses(),
-      cpID: this.article.attrs.client ? this.attrs.id : '',
-      content: this.childrenHTML(),
-    });
   }
 
 
@@ -87,8 +79,11 @@ export default class ArticleEmbed extends View {
     }
 
     let contentTemplate = this.article.templates.find(t => {
+      console.log(t.descriptor, this.attrs.template, t.descriptor === this.attrs.template);
       return t.descriptor === this.attrs.template
     });
+
+    console.log(this.attrs.template, this.article.templates[0].descriptor);
 
     if (contentTemplate)
       contentTemplate = contentTemplate.compiled

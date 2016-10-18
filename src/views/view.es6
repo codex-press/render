@@ -36,6 +36,13 @@ export default class View extends Super {
   }
 
 
+  remove() {
+    this.article.views = this.article.views.filter(v => v !== this);
+    this.parent.children = this.parent.children.filter(v => v !== this);
+    // this.children.map(c => c.remove());
+  }
+
+
   html() {
     return this.template({
       attrs: this.attrs,

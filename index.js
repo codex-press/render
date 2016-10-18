@@ -10627,8 +10627,12 @@ process.umask = function() { return 0; };
 },{}],49:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.default = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _dom = require('dom');
 
@@ -10673,7 +10677,7 @@ var DevelopmentServer = function (_EventEmitter) {
     _classCallCheck(this, DevelopmentServer);
 
     // singleton
-    var _this = _possibleConstructorReturn(this, _EventEmitter.call(this));
+    var _this = _possibleConstructorReturn(this, (DevelopmentServer.__proto__ || Object.getPrototypeOf(DevelopmentServer)).call(this));
 
     if (instance) return _ret = instance, _possibleConstructorReturn(_this, _ret);
     exports.default = instance = _this;
@@ -10685,108 +10689,112 @@ var DevelopmentServer = function (_EventEmitter) {
   // returns Promise to a loaded fileList
 
 
-  DevelopmentServer.prototype.connect = function connect() {
-    var _this2 = this;
+  _createClass(DevelopmentServer, [{
+    key: 'connect',
+    value: function connect() {
+      var _this2 = this;
 
-    return new Promise(function (resolve, reject) {
+      return new Promise(function (resolve, reject) {
 
-      var ws = new WebSocket('wss://localhost:8000');
+        var ws = new WebSocket('wss://localhost:8000');
 
-      ws.onclose = function (err) {
+        ws.onclose = function (err) {
 
-        // never got a single message so alert that it's not available
-        if (firstConnection) {
-          _this2.sendAlert({
-            head: 'Can\'t connect to https://localhost:8000',
-            type: 'error',
-            id: 'connect'
-          });
-          // disabling it will leave the message since just the child
-          // frame will be reloaded with server data
-          _article2.default.removeState('dev-server');
-
-          // not really used but makes sense
-          reject();
-        } else {
-
-          // first time we got a close, so alert that it was lost
-          if (!reconnectTimeout) {
+          // never got a single message so alert that it's not available
+          if (firstConnection) {
             _this2.sendAlert({
-              head: 'Lost Connection To Development Server',
-              id: 'connect',
+              head: 'Can\'t connect to https://localhost:8000',
               type: 'error',
-              timeout: false
-            });
-          }
-
-          // continue trying to reconnect
-          reconnectTimeout = setTimeout(_this2.connect.bind(_this2), 2000);
-        }
-      };
-
-      // can't use onopen because we need the data in the first message so 
-      // instead must wait for the first message
-      var firstMessage = true;
-      ws.onmessage = function (e) {
-        var data = JSON.parse(e.data);
-
-        _this2.fileList = data.fileList;
-        if (firstMessage) {
-          reconnectTimeout = undefined;
-          firstConnection = false;
-          firstMessage = false;
-
-          if (data.version === version) {
-            _this2.sendAlert({
-              body: 'Connected To Development Server',
               id: 'connect'
             });
-            resolve();
+            // disabling it will leave the message since just the child
+            // frame will be reloaded with server data
+            _article2.default.removeState('dev-server');
+
+            // not really used but makes sense
+            reject();
           } else {
+
+            // first time we got a close, so alert that it was lost
+            if (!reconnectTimeout) {
+              _this2.sendAlert({
+                head: 'Lost Connection To Development Server',
+                id: 'connect',
+                type: 'error',
+                timeout: false
+              });
+            }
+
+            // continue trying to reconnect
+            reconnectTimeout = setTimeout(_this2.connect.bind(_this2), 2000);
+          }
+        };
+
+        // can't use onopen because we need the data in the first message so 
+        // instead must wait for the first message
+        var firstMessage = true;
+        ws.onmessage = function (e) {
+          var data = JSON.parse(e.data);
+
+          _this2.fileList = data.fileList;
+          if (firstMessage) {
+            reconnectTimeout = undefined;
+            firstConnection = false;
+            firstMessage = false;
+
+            if (data.version === version) {
+              _this2.sendAlert({
+                body: 'Connected To Development Server',
+                id: 'connect'
+              });
+              resolve();
+            } else {
+              _this2.sendAlert({
+                head: 'Your Development Server Is Out Of Date',
+                body: 'The current version is v' + version + ' and you are running\n                v' + (data.version || '0.0.0') + '. You must update it like this:',
+                pre: 'git pull\nnpm install',
+                id: 'connect',
+                timeout: false
+              });
+              reject();
+            }
+          } else if (data.error) {
+
+            var head = void 0;
+            if (data.filename) head = data.error.type + ' Error: ' + data.filename;else head = data.error.type + ' Error';
+
+            var body = data.error.message;
+            if (data.error.line) body += '\nline: ' + data.error.line;
+            if (data.error.column) body += '\ncolumn: ' + data.error.column;
+
             _this2.sendAlert({
-              head: 'Your Development Server Is Out Of Date',
-              body: 'The current version is v' + version + ' and you are running\n                v' + (data.version || '0.0.0') + '. You must update it like this:',
-              pre: 'git pull\nnpm install',
-              id: 'connect',
+              head: head,
+              body: body,
+              pre: data.error.extract,
+              type: 'error',
+              id: data.assetPath,
               timeout: false
             });
-            reject();
+
+            console.error(data.error.message, data.error);
+          } else if (data.assetPath) {
+
+            _this2.sendAlert({
+              body: 'Update: ' + data.assetPath,
+              id: data.assetPath
+            });
+            _this2.fileList = data.fileList;
+            _client_renderer2.default.updateAsset(data.assetPath);
           }
-        } else if (data.error) {
-
-          var head = void 0;
-          if (data.filename) head = data.error.type + ' Error: ' + data.filename;else head = data.error.type + ' Error';
-
-          var body = data.error.message;
-          if (data.error.line) body += '\nline: ' + data.error.line;
-          if (data.error.column) body += '\ncolumn: ' + data.error.column;
-
-          _this2.sendAlert({
-            head: head,
-            body: body,
-            pre: data.error.extract,
-            type: 'error',
-            id: data.assetPath,
-            timeout: false
-          });
-
-          console.error(data.error.message, data.error);
-        } else if (data.assetPath) {
-
-          _this2.sendAlert({
-            body: 'Update: ' + data.assetPath,
-            id: data.assetPath
-          });
-          _this2.fileList = data.fileList;
-          _client_renderer2.default.updateAsset(data.assetPath);
-        }
-      };
-    });
-  };
-
-  DevelopmentServer.prototype.sendAlert = function sendAlert(args) {
-    _article2.default.send('alert', args);
-  };
+        };
+      });
+    }
+  }, {
+    key: 'sendAlert',
+    value: function sendAlert(args) {
+      _article2.default.send('alert', args);
+    }
+  }]);
 
   return DevelopmentServer;
 }((0, _events2.default)());
@@ -10796,7 +10804,9 @@ new DevelopmentServer();
 },{"./client_renderer":"client_renderer","article":"article","dom":"dom","events":"events"}],50:[function(require,module,exports){
 "use strict";
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.default = {
   "audio": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon audio\"><path d=\"M19.6 7.1c4.8 2.9 5.4 14.1 0 16.7-.9.4-.1 1.7.8 1.3 6.5-3.2 5.8-15.8 0-19.3-.9-.4-1.6.9-.8 1.3z\" class=\"on\"/><path d=\"M22.6 2.6c7.9 4.4 7.9 21.3 0 25.7-.8.5-.1 1.8.8 1.3 8.9-5 8.9-23.3 0-28.3-.9-.4-1.6.9-.8 1.3z\" class=\"on\"/><path d=\"M17.5 11.5c2 1.6 2.7 6.3.2 7.8-.8.5-.1 1.8.8 1.3 3.3-2 3-8 .2-10.2-.9-.5-2 .5-1.2 1.1z\" class=\"on\"/><path d=\"M26.7 18.6c.1.1.1.2 0 .3L25 20.6c-.1.1-.2.1-.3 0L22.1 18l-2.6 2.6c-.1.1-.2.1-.3 0l-1.7-1.7c-.1-.1-.1-.2 0-.3L20 16l-2.6-2.6c-.1-.1-.1-.2 0-.3l1.7-1.7c.1-.1.2-.1.3 0L22 14l2.6-2.6c.1-.1.2-.1.3 0l1.7 1.7c.1.1.1.2 0 .3L24.1 16l2.6 2.6z\" class=\"off\"/><path d=\"M14.3 6c-.3 0-.4.1-.7.3L8 12H3.2c-.3 0-.6 0-.9.3-.2.1-.3.4-.3.7v7c0 .3.1.6.3.7s.4.3.7.3h4.8l5.7 5.7c.3.1.4.3.7.3.3 0 .6-.1.7-.3.1-.1.3-.4.3-.7V7c0-.3-.1-.6-.3-.7 0-.2-.3-.3-.6-.3z\"/></svg>",
   "email": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon email\"><path d=\"M28.1 24.1V12.7c-.3.4-.7.7-1 1-2.8 2-8.7 6.5-9.3 6.8-.6.3-1 .4-1.6.4-.4 0-1-.1-1.6-.4-.6-.3-6.5-4.7-9.3-6.8-.4-.3-.7-.7-1-1v11.4c0 .1 0 .3.1.3 0 .1.1.1.3.1h23c.1 0 .3 0 .3-.1-.1 0 .1-.2.1-.3zm0-15.6v-.6l-.1-.3-.1-.1H4.5c-.1 0-.3 0-.3.1-.1.2-.1.2-.1.3 0 1.7.7 3.1 2.2 4.2 2.1 1.6 8.3 6.8 9.6 6.8.3 0 .4 0 .7-.1.3-.1.4-.3.7-.4.3-.1 6.2-4.7 8.1-6.2.7-.4 1.2-1 1.8-1.7.7-.8.9-1.5.9-2zm1.9-.6v16.2c0 .7-.3 1.3-.7 1.7-.4.4-1 .7-1.8.7h-23c-.7 0-1.3-.3-1.8-.7-.4-.4-.7-1-.7-1.7V7.9c0-.7.3-1.3.7-1.7s1-.7 1.8-.7h23c.7 0 1.3.3 1.8.7.4.4.7 1.1.7 1.7z\"/></svg>",
@@ -10822,7 +10832,9 @@ window.render = _client_renderer2.default;
 },{"./client_renderer":"client_renderer"}],52:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.default = factory;
 
 var _handlebars = require('handlebars');
@@ -10991,7 +11003,9 @@ function factory() {
 },{"./icons":50,"./utility":53,"dateformat":3,"handlebars":33}],53:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
@@ -11041,7 +11055,11 @@ var unscopedPath = exports.unscopedPath = function unscopedPath(pathPrefix, path
 },{}],54:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _prismjs = require('prismjs');
 
@@ -11108,7 +11126,7 @@ var ArticleView = function (_View) {
     _classCallCheck(this, ArticleView);
 
     // fresh factory
-    var _this = _possibleConstructorReturn(this, _View.call(this, attrs));
+    var _this = _possibleConstructorReturn(this, (ArticleView.__proto__ || Object.getPrototypeOf(ArticleView)).call(this, attrs));
 
     _this.handlebars = (0, _templates2.default)();
 
@@ -11185,83 +11203,101 @@ var ArticleView = function (_View) {
     return _this;
   }
 
-  ArticleView.prototype.addPartialFromHTMLBlock = function addPartialFromHTMLBlock(data) {
-    this.handlebars.registerPartial(data.classes.slice(1).join('.'), data.body);
-  };
-
-  ArticleView.prototype.addPartialFromAsset = function addPartialFromAsset(path, source) {
-    if (/\.es6$/.test(path)) source = renderJavascriptSource(source);
-    if (/\.hbs/.test(path)) this.handlebars.registerPartial(path.slice(0, -4), source);
-    this.handlebars.registerPartial(path, source);
-  };
-
-  ArticleView.prototype.makeView = function makeView(data) {
-
-    var v = void 0;
-    switch (data.type) {
-      case 'Graf':
-        v = new _graf2.default(data);break;
-      case 'Image':
-        v = new _image2.default(data);break;
-      case 'Video':
-        v = new _video2.default(data);break;
-      case 'Audio':
-        v = new _audio2.default(data);break;
-      case 'Block':
-        v = new _block2.default(data);break;
-      case 'Index':
-        v = new _index2.default(data);break;
-      case 'HTMLBlock':
-        v = new _html_block2.default(data);break;
-      case 'ArticleEmbed':
-        v = new _article_embed2.default(data);break;
+  _createClass(ArticleView, [{
+    key: 'addPartialFromHTMLBlock',
+    value: function addPartialFromHTMLBlock(data) {
+      this.handlebars.registerPartial(data.classes.slice(1).join('.'), data.body);
     }
-
-    this.views.push(v);
-    v.article = this;
-    return v;
-  };
-
-  ArticleView.prototype.defaultTagName = function defaultTagName() {
-    return 'article';
-  };
-
-  ArticleView.prototype.update = function update(data) {
-    if (!this.views) return;
-    var v = this.views.find(function (v) {
-      return v.attrs.id == data.id;
-    });
-    if (v) v.set(data);
-    return v;
-  };
-
-  ArticleView.prototype.remove = function remove(id) {
-    var view = this.views.find(function (v) {
-      return v.attrs.id == id;
-    });
-    if (view) {
-      view.remove();
-      view.parent.children = view.parent.children.filter(function (v) {
-        return v !== view;
-      });
-      this.views = this.views.filter(function (v) {
-        return v !== view;
-      });
+  }, {
+    key: 'addPartialFromAsset',
+    value: function addPartialFromAsset(path, source) {
+      if (/\.es6$/.test(path)) source = renderJavascriptSource(source);
+      if (/\.hbs/.test(path)) this.handlebars.registerPartial(path.slice(0, -4), source);
+      this.handlebars.registerPartial(path, source);
     }
-  };
+  }, {
+    key: 'makeView',
+    value: function makeView(data) {
 
-  ArticleView.prototype.add = function add(data) {
-    var view = this.makeView(data);
-    this.views.push(view);
-    if (data.parent_id) {
-      if (data.parent_id === this.attrs.id) view.parent = this;else view.parent = this.views.find(function (v) {
+      var v = void 0;
+      switch (data.type) {
+        case 'Graf':
+          v = new _graf2.default(data);break;
+        case 'Image':
+          v = new _image2.default(data);break;
+        case 'Video':
+          v = new _video2.default(data);break;
+        case 'Audio':
+          v = new _audio2.default(data);break;
+        case 'Block':
+          v = new _block2.default(data);break;
+        case 'Index':
+          v = new _index2.default(data);break;
+        case 'HTMLBlock':
+          v = new _html_block2.default(data);break;
+        case 'ArticleEmbed':
+          v = new _article_embed2.default(data);break;
+      }
+
+      this.views.push(v);
+      v.article = this;
+      return v;
+    }
+  }, {
+    key: 'defaultTagName',
+    value: function defaultTagName() {
+      return 'article';
+    }
+  }, {
+    key: 'update',
+    value: function update(data) {
+      if (!this.views) return;
+      var view = this.views.find(function (v) {
+        return v.attrs.id == data.id;
+      });
+      if (view) view.set(data);
+      return view;
+    }
+  }, {
+    key: 'remove',
+    value: function remove(id) {
+      var view = this.views.find(function (v) {
+        return v.attrs.id == id;
+      });
+      // will remove children recursively in view.es6
+      if (view) view.remove();
+      return view;
+    }
+  }, {
+    key: 'add',
+    value: function add(data, index) {
+      var _this2 = this;
+
+      var recursiveAdd = function recursiveAdd(data, parent) {
+        var view = _this2.makeView(data);
+        _this2.views.push(view);
+        view.parent = parent;
+        // make child views
+        if (data.content) view.children = data.content.map(function (d) {
+          return recursiveAdd(d, view);
+        });
+        return view;
+      };
+
+      var parent = void 0;
+      if (data.parent_id == this.attrs.id) parent = this;else parent = this.views.find(function (v) {
         return v.attrs.id === data.parent_id;
       });
-      view.parent.children.splice(data.index, 0, view);
-      console.log(view.parent);
+
+      var view = recursiveAdd(data, parent);
+
+      // add to the parent's children array
+      view.parent.children.splice(index, 0, view);
+
+      console.log(view);
+      return view;
     }
-    return view;
-  };
+  }]);
 
   return ArticleView;
 }(_view2.default);
@@ -11320,7 +11356,11 @@ function renderJavascriptSource(source) {
 },{"../templates":52,"./article_embed":55,"./audio":56,"./block":57,"./graf":58,"./html_block":59,"./image":60,"./index":61,"./video":62,"./view":63,"marked":45,"prismjs":47}],55:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _handlebars = require('handlebars');
 
@@ -11344,7 +11384,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var template = _handlebars2.default.compile('\n  <{{  tagName  }} class="{{  classes  }}"\n    {{#if cpID  }}id={{  cpID  }}{{/if }}>\n    {{{  content  }}}\n  </{{  tagName  }}>\n');
+var template = _handlebars2.default.compile('\n  <{{  tagName  }} class="{{  classes  }}"\n    {{#if cpID  }}x-cp-id={{  cpID  }}{{/if }}>\n    {{{  content  }}}\n  </{{  tagName  }}>\n');
 
 var defaultTemplate = _handlebars2.default.compile('\n  <h3><a href="{{  url  }}"> {{  title  }} </a></h3>\n  <p class=description>{{  description  }}</p>\n');
 
@@ -11359,75 +11399,78 @@ var ArticleEmbed = function (_View) {
     _classCallCheck(this, ArticleEmbed);
 
     // if it comes from Index children it doesn't have this
-    var _this = _possibleConstructorReturn(this, _View.call(this, attrs));
+    var _this = _possibleConstructorReturn(this, (ArticleEmbed.__proto__ || Object.getPrototypeOf(ArticleEmbed)).call(this, attrs));
 
     _this.attrs.type = 'ArticleEmbed';
     return _this;
   }
 
-  ArticleEmbed.prototype.makeAttrs = function makeAttrs() {
-    return Object.assign({}, this.attrs.article.classed_content, this.attrs.article.metadata, this.attrs.article, { attrs: this.attrs }, {
-      javascript: this.article.attrs.javascript,
-      content_origin: this.article.attrs.content_origin
-    });
-  };
-
-  ArticleEmbed.prototype.html = function html() {
-    if (this.attrs.template === 'all_content') return this.contentHTML();else return this.templateHTML();
-  };
-
-  ArticleEmbed.prototype.contentHTML = function contentHTML() {
-    return template({
-      tagName: this.articleTagName(),
-      classes: this.articleClasses(),
-      cpID: this.article.attrs.client ? this.attrs.id : '',
-      content: this.childrenHTML()
-    });
-  };
-
-  ArticleEmbed.prototype.articleTagName = function articleTagName() {
-    var classes = this.attrs.article.classes || [];
-    var first = (classes[0] || '').toLowerCase();
-    return _view.tags.includes(first) ? classes[0] : 'aside';
-  };
-
-  ArticleEmbed.prototype.articleClasses = function articleClasses() {
-    if (this.articleTagName() === this.attrs.classes[0]) return this.attrs.article.classes.slice(1).join(' ');else return (this.attrs.article.classes || []).join(' ');
-  };
-
-  ArticleEmbed.prototype.templateHTML = function templateHTML() {
-    var _this2 = this;
-
-    if (this.parent instanceof _index2.default) {
-      var _html = void 0;
-      try {
-        _html = this.parent.entryTemplate.compiled(this.makeAttrs());
-      } catch (e) {
-        _html = '<div>' + e.message + '</div>';
-      }
-      return (0, _utility.unscopeLinks)(_html, this.article.attrs.path_prefix);
-    }
-
-    var contentTemplate = this.article.templates.find(function (t) {
-      return t.descriptor === _this2.attrs.template;
-    });
-
-    if (contentTemplate) contentTemplate = contentTemplate.compiled;else contentTemplate = defaultTemplate;
-
-    var html = void 0;
-    try {
-      html = template({
-        cpID: this.article.attrs.client ? this.attrs.id : '',
-        classes: 'article ' + this.classes(),
-        tagName: this.tagName(),
-        content: contentTemplate(this.makeAttrs())
+  _createClass(ArticleEmbed, [{
+    key: 'makeAttrs',
+    value: function makeAttrs() {
+      return Object.assign({}, this.attrs.article.classed_content, this.attrs.article.metadata, this.attrs.article, { attrs: this.attrs }, {
+        javascript: this.article.attrs.javascript,
+        content_origin: this.article.attrs.content_origin
       });
-    } catch (e) {
-      html = e.message;
     }
+  }, {
+    key: 'html',
+    value: function html() {
+      // this should only happen on the client since server replaces 
+      // 'all_content' with the content
+      if (this.attrs.template === 'all_content') return '<div x-cp-id=' + this.attrs.id + ' style="display:none;"></div>';else return this.templateHTML();
+    }
+  }, {
+    key: 'articleTagName',
+    value: function articleTagName() {
+      var classes = this.attrs.article.classes || [];
+      var first = (classes[0] || '').toLowerCase();
+      return _view.tags.includes(first) ? classes[0] : 'aside';
+    }
+  }, {
+    key: 'articleClasses',
+    value: function articleClasses() {
+      if (this.articleTagName() === this.attrs.classes[0]) return this.attrs.article.classes.slice(1).join(' ');else return (this.attrs.article.classes || []).join(' ');
+    }
+  }, {
+    key: 'templateHTML',
+    value: function templateHTML() {
+      var _this2 = this;
 
-    return (0, _utility.unscopeLinks)(html, this.article.attrs.path_prefix);
-  };
+      if (this.parent instanceof _index2.default) {
+        var _html = void 0;
+        try {
+          _html = this.parent.entryTemplate.compiled(this.makeAttrs());
+        } catch (e) {
+          _html = '<div>' + e.message + '</div>';
+        }
+        return (0, _utility.unscopeLinks)(_html, this.article.attrs.path_prefix);
+      }
+
+      var contentTemplate = this.article.templates.find(function (t) {
+        console.log(t.descriptor, _this2.attrs.template, t.descriptor === _this2.attrs.template);
+        return t.descriptor === _this2.attrs.template;
+      });
+
+      console.log(this.attrs.template, this.article.templates[0].descriptor);
+
+      if (contentTemplate) contentTemplate = contentTemplate.compiled;else contentTemplate = defaultTemplate;
+
+      var html = void 0;
+      try {
+        html = template({
+          cpID: this.article.attrs.client ? this.attrs.id : '',
+          classes: 'article ' + this.classes(),
+          tagName: this.tagName(),
+          content: contentTemplate(this.makeAttrs())
+        });
+      } catch (e) {
+        html = e.message;
+      }
+
+      return (0, _utility.unscopeLinks)(html, this.article.attrs.path_prefix);
+    }
+  }]);
 
   return ArticleEmbed;
 }(_view2.default);
@@ -11437,7 +11480,11 @@ exports.default = ArticleEmbed;
 },{"../utility":53,"./index":61,"./view":63,"handlebars":33}],56:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _handlebars = require('handlebars');
 
@@ -11465,22 +11512,25 @@ var Audio = function (_View) {
   function Audio(attrs) {
     _classCallCheck(this, Audio);
 
-    return _possibleConstructorReturn(this, _View.call(this, attrs));
+    return _possibleConstructorReturn(this, (Audio.__proto__ || Object.getPrototypeOf(Audio)).call(this, attrs));
   }
 
-  Audio.prototype.html = function html() {
-    this.source = (0, _utility.findSource)(this.attrs.media.srcset, this.article.attrs.quality);
+  _createClass(Audio, [{
+    key: 'html',
+    value: function html() {
+      this.source = (0, _utility.findSource)(this.attrs.media.srcset, this.article.attrs.quality);
 
-    var sourceUrl = this.article.attrs.content_origin + this.source.url;
+      var sourceUrl = this.article.attrs.content_origin + this.source.url;
 
-    return this.template({
-      sourceUrl: sourceUrl,
-      attrs: this.attrs,
-      javascript: this.article.attrs.javascript,
-      classes: this.classes(),
-      tagName: this.tagName() || 'div'
-    });
-  };
+      return this.template({
+        sourceUrl: sourceUrl,
+        attrs: this.attrs,
+        javascript: this.article.attrs.javascript,
+        classes: this.classes(),
+        tagName: this.tagName() || 'div'
+      });
+    }
+  }]);
 
   return Audio;
 }(_view2.default);
@@ -11490,7 +11540,9 @@ exports.default = Audio;
 },{"../utility":53,"./view":63,"handlebars":33}],57:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
 var _view = require('./view');
 
@@ -11510,7 +11562,7 @@ var Block = function (_View) {
   function Block() {
     _classCallCheck(this, Block);
 
-    return _possibleConstructorReturn(this, _View.apply(this, arguments));
+    return _possibleConstructorReturn(this, (Block.__proto__ || Object.getPrototypeOf(Block)).apply(this, arguments));
   }
 
   return Block;
@@ -11521,7 +11573,11 @@ exports.default = Block;
 },{"./view":63}],58:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _view = require('./view');
 
@@ -11549,90 +11605,97 @@ var Graf = function (_View) {
   function Graf(attrs) {
     _classCallCheck(this, Graf);
 
-    var _this = _possibleConstructorReturn(this, _View.call(this, attrs));
+    var _this = _possibleConstructorReturn(this, (Graf.__proto__ || Object.getPrototypeOf(Graf)).call(this, attrs));
 
     _this.errors = [];
     return _this;
   }
 
-  Graf.prototype.isEmpty = function isEmpty() {
-    return this.attrs.body.trim().length === 0 && this.attrs.classes.length === 0;
-  };
-
-  Graf.prototype.html = function html() {
-
-    if (this.isEmpty()) {
-      if (this.article.attrs.client) return '<p x-cp-id="' + this.attrs.id + '" style="display: none;"></p>';else return '';
+  _createClass(Graf, [{
+    key: 'isEmpty',
+    value: function isEmpty() {
+      return this.attrs.body.trim().length === 0 && this.attrs.classes.length === 0;
     }
+  }, {
+    key: 'html',
+    value: function html() {
 
-    var content = '';
-
-    // normal paragraph, no templating
-    if (this.attrs.body.indexOf('{') < 0) return this.htmlFromContent(this.attrs.body);
-
-    // hack to solve a problem where above regex fails on back to back things
-    var body = this.attrs.body.replace('}{', '} {');
-
-    // make the body into a template so things like { date } work
-    var source = body.replace(partialRe, '$1{{>$2}}');
-
-    try {
-      var compiled = this.article.handlebars.compile(source);
-      content = compiled(this.article.templateAttrs);
-      // escaped curly brackets turned to normal curly brackets
-      content = content.replace(/\\{/g, '{').replace(/\\}/g, '}');
-      return this.htmlFromContent(content);
-    } catch (error) {
-      var message = void 0;
-      if (this.article.trigger) {
-        this.article.trigger('assetMissing', this, error);
-        message = 'Loading... ' + this.partials().join(' ');
-      } else {
-        if (this.article.attrs.client) {
-          console.warn(source);
-          console.error(error);
-        }
-        message = error.message;
+      if (this.isEmpty()) {
+        if (this.article.attrs.client) return '<p x-cp-id="' + this.attrs.id + '" style="display: none;"></p>';else return '';
       }
-      return this.htmlFromContent(message);
+
+      var content = '';
+
+      // normal paragraph, no templating
+      if (this.attrs.body.indexOf('{') < 0) return this.htmlFromContent(this.attrs.body);
+
+      // hack to solve a problem where above regex fails on back to back things
+      var body = this.attrs.body.replace('}{', '} {');
+
+      // make the body into a template so things like { date } work
+      var source = body.replace(partialRe, '$1{{>$2}}');
+
+      try {
+        var compiled = this.article.handlebars.compile(source);
+        content = compiled(this.article.templateAttrs);
+        // escaped curly brackets turned to normal curly brackets
+        content = content.replace(/\\{/g, '{').replace(/\\}/g, '}');
+        return this.htmlFromContent(content);
+      } catch (error) {
+        var message = void 0;
+        if (this.article.trigger) {
+          this.article.trigger('assetMissing', this, error);
+          message = 'Loading... ' + this.partials().join(' ');
+        } else {
+          if (this.article.attrs.client) {
+            console.warn(source);
+            console.error(error);
+          }
+          message = error.message;
+        }
+        return this.htmlFromContent(message);
+      }
     }
-  };
+  }, {
+    key: 'htmlFromContent',
+    value: function htmlFromContent(content) {
+      // change links for virtual hosts
+      content = (0, _utility.unscopeLinks)(content, this.article.attrs.path_prefix);
 
-  Graf.prototype.htmlFromContent = function htmlFromContent(content) {
-    // change links for virtual hosts
-    content = (0, _utility.unscopeLinks)(content, this.article.attrs.path_prefix);
-
-    return this.article.handlebars.compile(template)({
-      content: content,
-      isOverlay: this.isOverlay(),
-      cpID: this.article.attrs.client || this.isOverlay() ? this.attrs.id : '',
-      classes: this.classes(),
-      tagName: this.tagName()
-    });
-  };
-
-  Graf.prototype.partials = function partials() {
-
-    // :( This is third place this is hard coded
-    var builtIn = 'br date play audio share fullscreen email reddit twitter facebook play_icon audio_icon fullscreen_icon share_icon email_icon reddit_icon twitter_icon facebook_icon'.split(/ /);
-
-    var partials = [];
-    var match = void 0;
-    partialRe.lastIndex = 0;
-    while (match = partialRe.exec(this.attrs.body)) {
-      var name = match[2].trim();
-      if (!partials.includes(name) && !builtIn.includes(name)) partials.push(name);
+      return this.article.handlebars.compile(template)({
+        content: content,
+        isOverlay: this.isOverlay(),
+        cpID: this.article.attrs.client || this.isOverlay() ? this.attrs.id : '',
+        classes: this.classes(),
+        tagName: this.tagName()
+      });
     }
-    return partials;
-  };
+  }, {
+    key: 'partials',
+    value: function partials() {
 
-  Graf.prototype.defaultTagName = function defaultTagName() {
-    if (this.path().some(function (c) {
-      return ['Image', 'Video'].includes(c.attrs.type);
-    })) return 'div';
+      // :( This is third place this is hard coded
+      var builtIn = 'br date play audio share fullscreen email reddit twitter facebook play_icon audio_icon fullscreen_icon share_icon email_icon reddit_icon twitter_icon facebook_icon'.split(/ /);
 
-    return 'p';
-  };
+      var partials = [];
+      var match = void 0;
+      partialRe.lastIndex = 0;
+      while (match = partialRe.exec(this.attrs.body)) {
+        var name = match[2].trim();
+        if (!partials.includes(name) && !builtIn.includes(name)) partials.push(name);
+      }
+      return partials;
+    }
+  }, {
+    key: 'defaultTagName',
+    value: function defaultTagName() {
+      if (this.path().some(function (c) {
+        return ['Image', 'Video'].includes(c.attrs.type);
+      })) return 'div';
+
+      return 'p';
+    }
+  }]);
 
   return Graf;
 }(_view2.default);
@@ -11642,7 +11705,11 @@ exports.default = Graf;
 },{"../utility":53,"./view":63}],59:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _handlebars = require('handlebars');
 
@@ -11677,31 +11744,34 @@ var HTMLBlock = function (_View) {
   function HTMLBlock() {
     _classCallCheck(this, HTMLBlock);
 
-    return _possibleConstructorReturn(this, _View.apply(this, arguments));
+    return _possibleConstructorReturn(this, (HTMLBlock.__proto__ || Object.getPrototypeOf(HTMLBlock)).apply(this, arguments));
   }
 
-  HTMLBlock.prototype.html = function html() {
+  _createClass(HTMLBlock, [{
+    key: 'html',
+    value: function html() {
 
-    var content = (0, _utility.unscopeLinks)(this.attrs.body, this.article.attrs.path_prefix);
+      var content = (0, _utility.unscopeLinks)(this.attrs.body, this.article.attrs.path_prefix);
 
-    if (this.attrs.classes.includes('escaped')) {
-      // default html
-      var language = 'html';
-      if (this.attrs.classes.includes('language-less')) language = 'less';
-      if (this.attrs.classes.includes('language-css')) language = 'css';
-      if (this.attrs.classes.includes('language-javascript')) language = 'javascript';
-      var highlighted = _prismjs2.default.highlight(content, _prismjs2.default.languages[language]);
-      content = '\n        <pre class=language-' + language + '><code>' + highlighted + '</code></pre>\n      ';
+      if (this.attrs.classes.includes('escaped')) {
+        // default html
+        var language = 'html';
+        if (this.attrs.classes.includes('language-less')) language = 'less';
+        if (this.attrs.classes.includes('language-css')) language = 'css';
+        if (this.attrs.classes.includes('language-javascript')) language = 'javascript';
+        var highlighted = _prismjs2.default.highlight(content, _prismjs2.default.languages[language]);
+        content = '\n        <pre class=language-' + language + '><code>' + highlighted + '</code></pre>\n      ';
+      }
+
+      return template({
+        content: content,
+        isOverlay: this.isOverlay(),
+        cpID: this.article.attrs.client ? this.attrs.id : '',
+        classes: this.classes(),
+        tagName: this.tagName() || 'div'
+      });
     }
-
-    return template({
-      content: content,
-      isOverlay: this.isOverlay(),
-      cpID: this.article.attrs.client ? this.attrs.id : '',
-      classes: this.classes(),
-      tagName: this.tagName() || 'div'
-    });
-  };
+  }]);
 
   return HTMLBlock;
 }(_view2.default);
@@ -11711,7 +11781,13 @@ exports.default = HTMLBlock;
 },{"../utility":53,"./view":63,"handlebars":33,"prismjs":47}],60:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
 var _handlebars = require('handlebars');
 
@@ -11751,120 +11827,132 @@ var ImageView = function (_View) {
   function ImageView(attrs) {
     _classCallCheck(this, ImageView);
 
-    var _this = _possibleConstructorReturn(this, _View.call(this, attrs));
+    var _this = _possibleConstructorReturn(this, (ImageView.__proto__ || Object.getPrototypeOf(ImageView)).call(this, attrs));
 
     _this.aspectRatio = _this.attrs.media.original_height / _this.attrs.media.original_width;
     return _this;
   }
 
-  ImageView.prototype.html = function html() {
-    this.source = (0, _utility.findSource)(this.attrs.media.srcset, this.quality());
-    this.sourceURL = this.article.attrs.content_origin + this.source.url;
+  _createClass(ImageView, [{
+    key: 'html',
+    value: function html() {
+      this.source = (0, _utility.findSource)(this.attrs.media.srcset, this.quality());
+      this.sourceURL = this.article.attrs.content_origin + this.source.url;
 
-    // setting <img> just gives you an image and you're on your own
-    if (this.tagName() === 'img') return this.simpleHTML();
-    // any other tag name besides <figure> will use background image 
-    else if (this.tagName() !== 'figure') return this.backgroundHTML();
-      // crop requires JS
-      else if (this.attrs.crop && this.article.attrs.javascript) return this.cropHTML();else return this.figureHTML();
-  };
-
-  ImageView.prototype.simpleHTML = function simpleHTML() {
-
-    var highestSource = (0, _utility.findSource)(this.attrs.media.srcset, 'high');
-    var maxWidth = Math.round(1.2 * Math.min(highestSource.width, this.attrs.media.original_width));
-
-    return simpleTemplate({
-      cpID: this.attrs.id,
-      classes: this.classes(),
-      maxWidth: maxWidth,
-      sourceURL: this.sourceURL,
-      thumbURL: this.thumbSource(),
-      javascript: this.article.attrs.javascript
-    });
-  };
-
-  ImageView.prototype.backgroundHTML = function backgroundHTML() {
-
-    // CSS doesn't let us set this satisfactorily but this is close
-    var position = void 0;
-    if (this.attrs.crop) {
-      var x = this.attrs.crop.left + this.attrs.crop.width / 2;
-      var y = this.attrs.crop.top + this.attrs.crop.height / 2;
-      var round = function round(n) {
-        return Math.round(n * 1000) / 10;
-      };
-      position = ' background-position: ' + round(x) + '% ' + round(y) + '%';
+      // setting <img> just gives you an image and you're on your own
+      if (this.tagName() === 'img') return this.simpleHTML();
+      // any other tag name besides <figure> will use background image 
+      else if (this.tagName() !== 'figure') return this.backgroundHTML();
+        // crop requires JS
+        else if (this.attrs.crop && this.article.attrs.javascript) return this.cropHTML();else return this.figureHTML();
     }
+  }, {
+    key: 'simpleHTML',
+    value: function simpleHTML() {
 
-    var highestSource = (0, _utility.findSource)(this.attrs.media.srcset, 'high');
-    var maxWidth = 1.2 * highestSource.width;
-    var maxHeight = 1.2 * highestSource.height;
+      var highestSource = (0, _utility.findSource)(this.attrs.media.srcset, 'high');
+      var maxWidth = Math.round(1.2 * Math.min(highestSource.width, this.attrs.media.original_width));
 
-    var url = void 0;
-    if (this.article.attrs.javascript) url = this.thumbSource();else url = this.sourceURL;
+      return simpleTemplate({
+        cpID: this.attrs.id,
+        classes: this.classes(),
+        maxWidth: maxWidth,
+        sourceURL: this.sourceURL,
+        thumbURL: this.thumbSource(),
+        javascript: this.article.attrs.javascript
+      });
+    }
+  }, {
+    key: 'backgroundHTML',
+    value: function backgroundHTML() {
 
-    return backgroundImageTemplate({
-      tagName: this.tagName(),
-      cpID: this.attrs.id,
-      classes: this.classes(),
-      url: url,
-      position: position,
-      maxWidth: maxWidth,
-      maxHeight: maxHeight,
-      padding: this.aspectRatio * 1000 / 10,
-      children: this.childrenHTML(),
-      javascript: this.article.attrs.javascript
-    });
-  };
+      // CSS doesn't let us set this satisfactorily but this is close
+      var position = void 0;
+      if (this.attrs.crop) {
+        var x = this.attrs.crop.left + this.attrs.crop.width / 2;
+        var y = this.attrs.crop.top + this.attrs.crop.height / 2;
+        var round = function round(n) {
+          return Math.round(n * 1000) / 10;
+        };
+        position = ' background-position: ' + round(x) + '% ' + round(y) + '%';
+      }
 
-  ImageView.prototype.figureHTML = function figureHTML() {
-    return figureTemplate({
-      cpID: this.attrs.id,
-      classes: this.classes(),
-      sourceURL: this.sourceURL,
-      thumbURL: this.thumbSource(),
-      padding: this.aspectRatio * 1000 / 10,
-      children: this.childrenHTML(),
-      javascript: this.article.attrs.javascript
-    });
-  };
+      var highestSource = (0, _utility.findSource)(this.attrs.media.srcset, 'high');
+      var maxWidth = 1.2 * highestSource.width;
+      var maxHeight = 1.2 * highestSource.height;
 
-  ImageView.prototype.cropHTML = function cropHTML() {
-    return cropTemplate({
-      cpID: this.attrs.id,
-      classes: this.classes(),
-      sourceURL: this.sourceURL,
-      thumbURL: this.thumbSource(),
-      padding: this.aspectRatio * 1000 / 10,
-      children: this.childrenHTML(),
-      javascript: this.article.attrs.javascript
-    });
-  };
+      var url = void 0;
+      if (this.article.attrs.javascript) url = this.thumbSource();else url = this.sourceURL;
 
-  ImageView.prototype.classes = function classes() {
-    if (this.article.attrs.javascript) return _View.prototype.classes.call(this) + ' loading';else return _View.prototype.classes.call(this);
-  };
-
-  ImageView.prototype.tagName = function tagName() {
-    if (this.attrs.classes && this.attrs.classes[0] === 'img') return 'img';else return _View.prototype.tagName.call(this);
-  };
-
-  ImageView.prototype.quality = function quality() {
-    var classes = this.attrs.classes || [];
-    if (classes.includes('low-quality')) return 'low';
-    if (classes.includes('medium-quality')) return 'medium';
-    if (classes.includes('high-quality')) return 'high';
-    return this.article.attrs.quality;
-  };
-
-  ImageView.prototype.thumbSource = function thumbSource() {
-    return 'data:image/jpeg;base64,' + this.attrs.media.base64_thumb;
-  };
-
-  ImageView.prototype.defaultTagName = function defaultTagName() {
-    return 'figure';
-  };
+      return backgroundImageTemplate({
+        tagName: this.tagName(),
+        cpID: this.attrs.id,
+        classes: this.classes(),
+        url: url,
+        position: position,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+        padding: this.aspectRatio * 1000 / 10,
+        children: this.childrenHTML(),
+        javascript: this.article.attrs.javascript
+      });
+    }
+  }, {
+    key: 'figureHTML',
+    value: function figureHTML() {
+      return figureTemplate({
+        cpID: this.attrs.id,
+        classes: this.classes(),
+        sourceURL: this.sourceURL,
+        thumbURL: this.thumbSource(),
+        padding: this.aspectRatio * 1000 / 10,
+        children: this.childrenHTML(),
+        javascript: this.article.attrs.javascript
+      });
+    }
+  }, {
+    key: 'cropHTML',
+    value: function cropHTML() {
+      return cropTemplate({
+        cpID: this.attrs.id,
+        classes: this.classes(),
+        sourceURL: this.sourceURL,
+        thumbURL: this.thumbSource(),
+        padding: this.aspectRatio * 1000 / 10,
+        children: this.childrenHTML(),
+        javascript: this.article.attrs.javascript
+      });
+    }
+  }, {
+    key: 'classes',
+    value: function classes() {
+      if (this.article.attrs.javascript) return _get(ImageView.prototype.__proto__ || Object.getPrototypeOf(ImageView.prototype), 'classes', this).call(this) + ' loading';else return _get(ImageView.prototype.__proto__ || Object.getPrototypeOf(ImageView.prototype), 'classes', this).call(this);
+    }
+  }, {
+    key: 'tagName',
+    value: function tagName() {
+      if (this.attrs.classes && this.attrs.classes[0] === 'img') return 'img';else return _get(ImageView.prototype.__proto__ || Object.getPrototypeOf(ImageView.prototype), 'tagName', this).call(this);
+    }
+  }, {
+    key: 'quality',
+    value: function quality() {
+      var classes = this.attrs.classes || [];
+      if (classes.includes('low-quality')) return 'low';
+      if (classes.includes('medium-quality')) return 'medium';
+      if (classes.includes('high-quality')) return 'high';
+      return this.article.attrs.quality;
+    }
+  }, {
+    key: 'thumbSource',
+    value: function thumbSource() {
+      return 'data:image/jpeg;base64,' + this.attrs.media.base64_thumb;
+    }
+  }, {
+    key: 'defaultTagName',
+    value: function defaultTagName() {
+      return 'figure';
+    }
+  }]);
 
   return ImageView;
 }(_view2.default);
@@ -11874,7 +11962,13 @@ exports.default = ImageView;
 },{"../utility":53,"./view":63,"handlebars":33}],61:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
 var _handlebars = require('handlebars');
 
@@ -11904,7 +11998,7 @@ var Index = function (_View) {
   function Index(attrs) {
     _classCallCheck(this, Index);
 
-    var _this = _possibleConstructorReturn(this, _View.call(this, attrs));
+    var _this = _possibleConstructorReturn(this, (Index.__proto__ || Object.getPrototypeOf(Index)).call(this, attrs));
 
     _this.children = _this.attrs.articles.map(function (c) {
       return new _article_embed2.default({ article: c });
@@ -11912,23 +12006,26 @@ var Index = function (_View) {
     return _this;
   }
 
-  Index.prototype.html = function html() {
-    var _this2 = this;
+  _createClass(Index, [{
+    key: 'html',
+    value: function html() {
+      var _this2 = this;
 
-    // not ideal.. this mirrors for creating all the content
-    this.children.map(function (c) {
-      c.article = _this2.article;
-      c.parent = _this2;
-    });
+      // not ideal.. this mirrors for creating all the content
+      this.children.map(function (c) {
+        c.article = _this2.article;
+        c.parent = _this2;
+      });
 
-    this.entryTemplate = this.article.templates.find(function (t) {
-      return t.descriptor === _this2.attrs.template;
-    });
+      this.entryTemplate = this.article.templates.find(function (t) {
+        return t.descriptor === _this2.attrs.template;
+      });
 
-    if (!this.entryTemplate) this.entryTemplate = { descriptor: 'template.default', entryTemplate: entryTemplate };
+      if (!this.entryTemplate) this.entryTemplate = { descriptor: 'template.default', entryTemplate: entryTemplate };
 
-    return _View.prototype.html.call(this);
-  };
+      return _get(Index.prototype.__proto__ || Object.getPrototypeOf(Index.prototype), 'html', this).call(this);
+    }
+  }]);
 
   return Index;
 }(_view2.default);
@@ -11938,7 +12035,13 @@ exports.default = Index;
 },{"./article_embed":55,"./view":63,"handlebars":33}],62:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
 var _handlebars = require('handlebars');
 
@@ -11975,63 +12078,71 @@ var VideoView = function (_View) {
   function VideoView(attrs) {
     _classCallCheck(this, VideoView);
 
-    var _this = _possibleConstructorReturn(this, _View.call(this, attrs));
+    var _this = _possibleConstructorReturn(this, (VideoView.__proto__ || Object.getPrototypeOf(VideoView)).call(this, attrs));
 
     _this.aspectRatio = _this.attrs.media.original_height / _this.attrs.media.original_width;
     return _this;
   }
 
-  VideoView.prototype.html = function html() {
-    this.source = (0, _utility.findSource)(this.attrs.media.srcset, this.quality());
+  _createClass(VideoView, [{
+    key: 'html',
+    value: function html() {
+      this.source = (0, _utility.findSource)(this.attrs.media.srcset, this.quality());
 
-    var sourceURL = this.article.attrs.content_origin + this.source.url;
-    var posterURL = this.article.attrs.content_origin + this.source.poster;
+      var sourceURL = this.article.attrs.content_origin + this.source.url;
+      var posterURL = this.article.attrs.content_origin + this.source.poster;
 
-    var autoplay = this.attrs.autoplay && !this.article.attrs.javascript;
-    var controls = this.attrs.controls && (this.tagName() === 'video' || !this.article.attrs.javascript);
+      var autoplay = this.attrs.autoplay && !this.article.attrs.javascript;
+      var controls = this.attrs.controls && (this.tagName() === 'video' || !this.article.attrs.javascript);
 
-    var attributes = {
-      cpID: this.attrs.id,
-      classes: this.classes(),
-      sourceURL: sourceURL,
-      posterURL: posterURL,
-      padding: this.aspectRatio * 1000 / 10,
-      thumbURL: this.thumbSource(),
-      loop: this.attrs.loop,
-      autoplay: autoplay,
-      controls: controls,
-      javascript: this.article.attrs.javascript,
-      children: this.childrenHTML()
-    };
+      var attributes = {
+        cpID: this.attrs.id,
+        classes: this.classes(),
+        sourceURL: sourceURL,
+        posterURL: posterURL,
+        padding: this.aspectRatio * 1000 / 10,
+        thumbURL: this.thumbSource(),
+        loop: this.attrs.loop,
+        autoplay: autoplay,
+        controls: controls,
+        javascript: this.article.attrs.javascript,
+        children: this.childrenHTML()
+      };
 
-    if (this.tagName() === 'video') return simpleTemplate(attributes);
-    // crop requires JS
-    else if (this.attrs.crop && this.article.attrs.javascript) return cropTemplate(attributes);else return figureTemplate(attributes);
-  };
-
-  VideoView.prototype.quality = function quality() {
-    var classes = this.attrs.classes || [];
-    if (classes.includes('low-quality')) return 'low';
-    if (classes.includes('medium-quality')) return 'medium';
-    if (classes.includes('high-quality')) return 'high';
-    return this.article.attrs.quality;
-  };
-
-  VideoView.prototype.classes = function classes() {
-    if (this.article.attrs.javascript) return _View.prototype.classes.call(this) + ' loading';else return _View.prototype.classes.call(this);
-  };
-
-  VideoView.prototype.tagName = function tagName() {
-    if (this.classes && this.classes[0] === 'video') return 'video';else return _View.prototype.tagName.call(this);
-  };
-
-  VideoView.prototype.thumbSource = function thumbSource() {
-    return 'data:image/jpeg;base64,' + this.attrs.media.base64_thumb;
-  };
-
-  VideoView.prototype.defaultTagName = function defaultTagName() {
-    return 'figure';
-  };
+      if (this.tagName() === 'video') return simpleTemplate(attributes);
+      // crop requires JS
+      else if (this.attrs.crop && this.article.attrs.javascript) return cropTemplate(attributes);else return figureTemplate(attributes);
+    }
+  }, {
+    key: 'quality',
+    value: function quality() {
+      var classes = this.attrs.classes || [];
+      if (classes.includes('low-quality')) return 'low';
+      if (classes.includes('medium-quality')) return 'medium';
+      if (classes.includes('high-quality')) return 'high';
+      return this.article.attrs.quality;
+    }
+  }, {
+    key: 'classes',
+    value: function classes() {
+      if (this.article.attrs.javascript) return _get(VideoView.prototype.__proto__ || Object.getPrototypeOf(VideoView.prototype), 'classes', this).call(this) + ' loading';else return _get(VideoView.prototype.__proto__ || Object.getPrototypeOf(VideoView.prototype), 'classes', this).call(this);
+    }
+  }, {
+    key: 'tagName',
+    value: function tagName() {
+      if (this.classes && this.classes[0] === 'video') return 'video';else return _get(VideoView.prototype.__proto__ || Object.getPrototypeOf(VideoView.prototype), 'tagName', this).call(this);
+    }
+  }, {
+    key: 'thumbSource',
+    value: function thumbSource() {
+      return 'data:image/jpeg;base64,' + this.attrs.media.base64_thumb;
+    }
+  }, {
+    key: 'defaultTagName',
+    value: function defaultTagName() {
+      return 'figure';
+    }
+  }]);
 
   return VideoView;
 }(_view2.default);
@@ -12041,8 +12152,12 @@ exports.default = VideoView;
 },{"../utility":53,"./view":63,"handlebars":33}],63:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.tags = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _handlebars = require('handlebars');
 
@@ -12079,7 +12194,7 @@ var View = function (_Super) {
 
     _classCallCheck(this, View);
 
-    var _this = _possibleConstructorReturn(this, _Super.call(this));
+    var _this = _possibleConstructorReturn(this, (View.__proto__ || Object.getPrototypeOf(View)).call(this));
 
     _this.set(attrs);
     _this.parent = undefined;
@@ -12087,52 +12202,75 @@ var View = function (_Super) {
     return _this;
   }
 
-  View.prototype.set = function set(attrs) {
-    this.attrs = attrs;
-    this.attrs.classes = this.attrs.classes || [];
-  };
+  _createClass(View, [{
+    key: 'set',
+    value: function set(attrs) {
+      this.attrs = attrs;
+      this.attrs.classes = this.attrs.classes || [];
+    }
+  }, {
+    key: 'remove',
+    value: function remove() {
+      var _this2 = this;
 
-  View.prototype.html = function html() {
-    return this.template({
-      attrs: this.attrs,
-      isOverlay: this.isOverlay(),
-      cpID: this.article.attrs.client || this.isOverlay() ? this.attrs.id : '',
-      children: this.childrenHTML(),
-      javascript: (this.article || this).attrs.javascript,
-      classes: this.classes(),
-      tagName: this.tagName()
-    });
-  };
+      this.article.views = this.article.views.filter(function (v) {
+        return v !== _this2;
+      });
+      this.parent.children = this.parent.children.filter(function (v) {
+        return v !== _this2;
+      });
+      // this.children.map(c => c.remove());
+    }
+  }, {
+    key: 'html',
+    value: function html() {
+      return this.template({
+        attrs: this.attrs,
+        isOverlay: this.isOverlay(),
+        cpID: this.article.attrs.client || this.isOverlay() ? this.attrs.id : '',
+        children: this.childrenHTML(),
+        javascript: (this.article || this).attrs.javascript,
+        classes: this.classes(),
+        tagName: this.tagName()
+      });
+    }
+  }, {
+    key: 'tagName',
+    value: function tagName() {
+      var classes = this.attrs.classes || [];
+      var tag = (classes[0] || '').toLowerCase();
+      return tags.includes(tag) ? classes[0] : this.defaultTagName();
+    }
+  }, {
+    key: 'defaultTagName',
+    value: function defaultTagName() {
+      return 'div';
+    }
+  }, {
+    key: 'classes',
+    value: function classes() {
+      if (this.tagName() === this.attrs.classes[0]) return this.attrs.classes.slice(1).join(' ');else return (this.attrs.classes || []).join(' ');
+    }
+  }, {
+    key: 'childrenHTML',
+    value: function childrenHTML() {
+      if (!this.children) return '';
 
-  View.prototype.tagName = function tagName() {
-    var classes = this.attrs.classes || [];
-    var tag = (classes[0] || '').toLowerCase();
-    return tags.includes(tag) ? classes[0] : this.defaultTagName();
-  };
-
-  View.prototype.defaultTagName = function defaultTagName() {
-    return 'div';
-  };
-
-  View.prototype.classes = function classes() {
-    if (this.tagName() === this.attrs.classes[0]) return this.attrs.classes.slice(1).join(' ');else return (this.attrs.classes || []).join(' ');
-  };
-
-  View.prototype.childrenHTML = function childrenHTML() {
-    if (!this.children) return '';
-
-    return this.children.map(function (c) {
-      if (c.html) return c.html();
-    }).join('');
-  };
-
-  View.prototype.path = function path() {
-    if (this.parent) return this.parent.path().concat(this);else return [this];
-  };
-
-  View.prototype.isOverlay = function isOverlay() {
-    return this.parent && ['Image', 'Video'].includes(this.parent.attrs.type) && this.parent.tagName() === 'figure';
-  };
+      return this.children.map(function (c) {
+        if (c.html) return c.html();
+      }).join('');
+    }
+  }, {
+    key: 'path',
+    value: function path() {
+      if (this.parent) return this.parent.path().concat(this);else return [this];
+    }
+  }, {
+    key: 'isOverlay',
+    value: function isOverlay() {
+      return this.parent && ['Image', 'Video'].includes(this.parent.attrs.type) && this.parent.tagName() === 'figure';
+    }
+  }]);
 
   return View;
 }(Super);
@@ -12145,10 +12283,14 @@ View.prototype.template = template;
 },{"events":"events","handlebars":33}],"client_renderer":[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.ClientRenderer = exports.ready = exports.default = undefined;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _events = require('events');
 
@@ -12226,7 +12368,7 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
     _classCallCheck(this, ClientRenderer);
 
     // singleton
-    var _this = _possibleConstructorReturn(this, _EventEmitter.call(this));
+    var _this = _possibleConstructorReturn(this, (ClientRenderer.__proto__ || Object.getPrototypeOf(ClientRenderer)).call(this));
 
     if (instance) return _ret = instance, _possibleConstructorReturn(_this, _ret);
     exports.default = instance = _this;
@@ -12237,245 +12379,255 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
     return _this;
   }
 
-  ClientRenderer.prototype.message = function message(e) {
-    this.trigger(e.data.event, e.data.args);
-  };
+  _createClass(ClientRenderer, [{
+    key: 'message',
+    value: function message(e) {
+      this.trigger(e.data.event, e.data.args);
+    }
+  }, {
+    key: 'set',
+    value: function set(data) {
+      var _this2 = this;
 
-  ClientRenderer.prototype.set = function set(data) {
-    var _this2 = this;
+      // console.log(data);
+      data.javascript = true;
+      data.client = true;
+      data.content_origin = location.origin;
+      data.inline_assets = [];
 
-    // console.log(data);
-    data.javascript = true;
-    data.client = true;
-    data.content_origin = location.origin;
-    data.inline_assets = [];
+      this.attrs = data;
+      this.articleView = new _article4.default(data);
+      this.bind(articleViewEvents, this.articleView);
 
-    this.attrs = data;
-    this.articleView = new _article4.default(data);
-    this.bind(articleViewEvents, this.articleView);
-
-    return (_article2.default.hasState('dev-server') ? _development_server2.default.connect() : Promise.resolve()).then(function () {
-      return _this2.attachAssets();
-    }).then(function () {
-      return _dom2.default.body().prepend(_this2.articleView.html());
-    }).then(function () {
-      return _resolve(_this2);
-    });
-  };
-
-  // The problem is Handlebars doesn't say which partial was missing. We must
-  // check if they've all loaded. Load them if not. Or error if they've all
-  // been loaded since any number of things could go wrong.
-
-
-  ClientRenderer.prototype.assetMissing = function assetMissing(view, error) {
-    var _this3 = this;
-
-    var builtIn = 'br date play audio share fullscreen email reddit twitter facebook play_icon audio_icon fullscreen_icon share_icon email_icon reddit_icon twitter_icon facebook_icon'.split(/ /);
-
-    // There could be any number of errors for this. The partials cannot be
-    // nested so if we've downloaded all of the partials, log the error.
-    var toFetch = view.partials().filter(function (name) {
-      return !builtIn.includes(name) && !_this3.fetchedAssets.includes(name) && !_this3.fetchedAssets.includes(name + '.hbs');
-    });
-
-    Promise.all(toFetch.map(function (path) {
-
-      if (!/\.(svg|hbs|es6)/.test(path)) path += '.hbs';
-
-      _this3.fetchedAssets.push(path);
-
-      var url = void 0;
-      var repo = path.match(RegExp('(.*?)([./]|$)'))[1];
-
-      if (_development_server2.default.fileList[repo]) {
-        url = 'https://localhost:8000/' + path;
-        log.info('fetching from development: ' + path);
-      } else url = env.contentOrigin + '/' + path;
-
-      return fetch(url).then(function (response) {
-        if (response.ok) return response.text();else {
-          var _ret2 = function () {
-            var data = {
-              type: 'Not Found',
-              message: 'Could not load asset',
-              assetPath: path,
-              viewId: view.attrs.id
-            };
-            _article2.default.send('assetError', data);
-            var message = 'Failed to load ' + path;
-            console.error(message);
-            setTimeout(function () {
-              return _this3.replaceGrafText(view.attrs.id, message);
-            });
-            return {
-              v: message
-            };
-          }();
-
-          if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
-        }
-      }).then(function (text) {
-        return _this3.articleView.addPartialFromAsset(path, text);
+      return (_article2.default.hasState('dev-server') ? _development_server2.default.connect() : Promise.resolve()).then(function () {
+        return _this2.attachAssets();
       }).then(function () {
-        return _this3.reRenderViewsWithPartial(path);
+        return _dom2.default.body().prepend(_this2.articleView.html());
+      }).then(function () {
+        return _resolve(_this2);
       });
-    })).catch(function (err) {
-      return console.error(err);
-    });
-  };
+    }
 
-  ClientRenderer.prototype.attachAssets = function attachAssets() {
+    // The problem is Handlebars doesn't say which partial was missing. We must
+    // check if they've all loaded. Load them if not. Or error if they've all
+    // been loaded since any number of things could go wrong.
 
-    if (_article2.default.attrs.style) (0, _dom2.default)('head').append('<style>' + _article2.default.attrs.style + '</style>');
+  }, {
+    key: 'assetMissing',
+    value: function assetMissing(view, error) {
+      var _this3 = this;
 
-    var tags = _article2.default.attrs.assets.reduce(function (tags, base_path) {
+      var builtIn = 'br date play audio share fullscreen email reddit twitter facebook play_icon audio_icon fullscreen_icon share_icon email_icon reddit_icon twitter_icon facebook_icon'.split(/ /);
 
-      // serve from development
-      var repo = base_path.match(/^(.*?)([-./]|$)/)[1];
+      // There could be any number of errors for this. The partials cannot be
+      // nested so if we've downloaded all of the partials, log the error.
+      var toFetch = view.partials().filter(function (name) {
+        return !builtIn.includes(name) && !_this3.fetchedAssets.includes(name) && !_this3.fetchedAssets.includes(name + '.hbs');
+      });
 
-      if (_development_server2.default.fileList[repo]) {
-        var url = 'https://localhost:8000/';
-        // add JS and/or CSS depending on if they exist in offerings
-        if (_development_server2.default.fileList[repo].includes(base_path + '.js')) {
-          tags.push(makeScriptTag(url + base_path + '.js'));
-          log.info('fetching from development: ' + base_path + '.js');
-        }
-        if (_development_server2.default.fileList[repo].includes(base_path + '.css')) {
-          tags.push(_dom2.default.create('<link rel=stylesheet href="' + url + base_path + '.css">'));
-          log.info('fetching from development: ' + base_path + '.css');
-        }
-        return tags;
-      }
+      Promise.all(toFetch.map(function (path) {
 
-      // serve normally
-      _article2.default.attrs.asset_data.map(function (data) {
+        if (!/\.(svg|hbs|es6)/.test(path)) path += '.hbs';
+
+        _this3.fetchedAssets.push(path);
+
         var url = void 0;
-        if (env.development) url = env.contentOrigin + '/' + data.asset_path;else url = env.contentOrigin + '/' + data.digest_path;
-        if (data.asset_path == base_path + '.js') tags.push(makeScriptTag(url));else if (data.asset_path == base_path + '.css') tags.push(_dom2.default.create('<link rel=stylesheet href="' + url + '">'));
+        var repo = path.match(RegExp('(.*?)([./]|$)'))[1];
+
+        if (_development_server2.default.fileList[repo]) {
+          url = 'https://localhost:8000/' + path;
+          log.info('fetching from development: ' + path);
+        } else url = env.contentOrigin + '/' + path;
+
+        return fetch(url).then(function (response) {
+          if (response.ok) return response.text();else {
+            var _ret2 = function () {
+              var data = {
+                type: 'Not Found',
+                message: 'Could not load asset',
+                assetPath: path,
+                viewId: view.attrs.id
+              };
+              _article2.default.send('assetError', data);
+              var message = 'Failed to load ' + path;
+              console.error(message);
+              setTimeout(function () {
+                return _this3.replaceGrafText(view.attrs.id, message);
+              });
+              return {
+                v: message
+              };
+            }();
+
+            if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+          }
+        }).then(function (text) {
+          return _this3.articleView.addPartialFromAsset(path, text);
+        }).then(function () {
+          return _this3.reRenderViewsWithPartial(path);
+        });
+      })).catch(function (err) {
+        return console.error(err);
       });
-
-      return tags;
-    }, []);
-
-    if (_article2.default.attrs.compressed_style) {
-      tags.push(_dom2.default.create('<link rel=stylesheet href="' + _article2.default.attrs.compressed_style + '">'));
     }
+  }, {
+    key: 'attachAssets',
+    value: function attachAssets() {
 
-    return Promise.all(tags.map(function (el) {
-      _dom2.default.append(document.head, el);
-      return new Promise(function (resolve, reject) {
-        el.onload = resolve;
-        setTimeout(resolve, 3000);
-      });
-    }));
-  };
+      if (_article2.default.attrs.style) (0, _dom2.default)('head').append('<style>' + _article2.default.attrs.style + '</style>');
 
-  // events from devServer
+      var tags = _article2.default.attrs.assets.reduce(function (tags, base_path) {
 
+        // serve from development
+        var repo = base_path.match(/^(.*?)([-./]|$)/)[1];
 
-  ClientRenderer.prototype.updateAsset = function updateAsset(path) {
-
-    var altPath = void 0;
-    if (path.slice(-4) === '.hbs') altPath = path.slice(0, -4);
-
-    // inline asset
-    if (this.articleView.handlebars.partials[path] || this.articleView.handlebars.partials[altPath]) {
-
-      delete this.articleView.handlebars.partials[altPath];
-      delete this.articleView.handlebars.partials[path];
-
-      // Remove from fetchedAssets so it will fetch again even if it errored 
-      // last time.
-      this.fetchedAssets = this.fetchedAssets.filter(function (a) {
-        return a !== path && a !== altPath;
-      });
-
-      this.reRenderViewsWithPartial(path);
-    }
-    // JS update checks if it's in this frame then reloads
-    if (path.match(/js$/)) {
-      var selector = 'script[src^="https://localhost:8000/' + path + '"]';
-      // external asset
-      if (_dom2.default.first(document, selector)) location.reload();
-    }
-    // CSS update does a hot reload
-    else if (path.match(/css$/)) {
-        var _selector = 'link[href^="https://localhost:8000/' + path + '"]';
-        var tag = _dom2.default.first(document, _selector);
-
-        if (tag) {
-          log.info('update: ', path);
-
-          // onload doesn't work the second time so must replace the tag
-          tag.remove();
-          var href = 'https://localhost:8000/' + path + '?' + Date.now();
-          var el = _dom2.default.create('<link rel=stylesheet href="' + href + '">');
-          el.onload = function () {
-            return _article2.default.resize();
-          };
-          _dom2.default.append(document.head, el);
+        if (_development_server2.default.fileList[repo]) {
+          var url = 'https://localhost:8000/';
+          // add JS and/or CSS depending on if they exist in offerings
+          if (_development_server2.default.fileList[repo].includes(base_path + '.js')) {
+            tags.push(makeScriptTag(url + base_path + '.js'));
+            log.info('fetching from development: ' + base_path + '.js');
+          }
+          if (_development_server2.default.fileList[repo].includes(base_path + '.css')) {
+            tags.push(_dom2.default.create('<link rel=stylesheet href="' + url + base_path + '.css">'));
+            log.info('fetching from development: ' + base_path + '.css');
+          }
+          return tags;
         }
+
+        // serve normally
+        _article2.default.attrs.asset_data.map(function (data) {
+          var url = void 0;
+          if (env.development) url = env.contentOrigin + '/' + data.asset_path;else url = env.contentOrigin + '/' + data.digest_path;
+          if (data.asset_path == base_path + '.js') tags.push(makeScriptTag(url));else if (data.asset_path == base_path + '.css') tags.push(_dom2.default.create('<link rel=stylesheet href="' + url + '">'));
+        });
+
+        return tags;
+      }, []);
+
+      if (_article2.default.attrs.compressed_style) {
+        tags.push(_dom2.default.create('<link rel=stylesheet href="' + _article2.default.attrs.compressed_style + '">'));
       }
-  };
 
-  ClientRenderer.prototype.reRenderViewsWithPartial = function reRenderViewsWithPartial(path) {
+      return Promise.all(tags.map(function (el) {
+        _dom2.default.append(document.head, el);
+        return new Promise(function (resolve, reject) {
+          el.onload = resolve;
+          setTimeout(resolve, 3000);
+        });
+      }));
+    }
 
-    var altPath = void 0;
-    if (path.slice(-4) === '.hbs') altPath = path.slice(0, -4);
+    // events from devServer
 
-    this.articleView.views.forEach(function (view) {
-      if (view.attrs.type === 'Graf' && view.partials().some(function (p) {
-        return p === path || p === altPath;
-      })) {
-        _article2.default.replace(view);
+  }, {
+    key: 'updateAsset',
+    value: function updateAsset(path) {
+
+      var altPath = void 0;
+      if (path.slice(-4) === '.hbs') altPath = path.slice(0, -4);
+
+      // inline asset
+      if (this.articleView.handlebars.partials[path] || this.articleView.handlebars.partials[altPath]) {
+
+        delete this.articleView.handlebars.partials[altPath];
+        delete this.articleView.handlebars.partials[path];
+
+        // Remove from fetchedAssets so it will fetch again even if it errored 
+        // last time.
+        this.fetchedAssets = this.fetchedAssets.filter(function (a) {
+          return a !== path && a !== altPath;
+        });
+
+        this.reRenderViewsWithPartial(path);
       }
-    });
-  };
+      // JS update checks if it's in this frame then reloads
+      if (path.match(/js$/)) {
+        var selector = 'script[src^="https://localhost:8000/' + path + '"]';
+        // external asset
+        if (_dom2.default.first(document, selector)) location.reload();
+      }
+      // CSS update does a hot reload
+      else if (path.match(/css$/)) {
+          var _selector = 'link[href^="https://localhost:8000/' + path + '"]';
+          var tag = _dom2.default.first(document, _selector);
 
-  // LIVE PREVIEW
+          if (tag) {
+            log.info('update: ', path);
 
-  ClientRenderer.prototype.change = function change(data) {
-    // console.log('change',data);
-    var view = this.articleView.update(data);
-    _article2.default.replace(view);
-  };
+            // onload doesn't work the second time so must replace the tag
+            tag.remove();
+            var href = 'https://localhost:8000/' + path + '?' + Date.now();
+            var el = _dom2.default.create('<link rel=stylesheet href="' + href + '">');
+            el.onload = function () {
+              return _article2.default.resize();
+            };
+            _dom2.default.append(document.head, el);
+          }
+        }
+    }
+  }, {
+    key: 'reRenderViewsWithPartial',
+    value: function reRenderViewsWithPartial(path) {
 
-  ClientRenderer.prototype.add = function add(data) {
-    console.log('add', data);
-    var view = this.articleView.add(data, data.index);
-    _article2.default.replace(view);
-  };
+      var altPath = void 0;
+      if (path.slice(-4) === '.hbs') altPath = path.slice(0, -4);
 
-  ClientRenderer.prototype.add = function add(view) {
-    var container = _dom2.default.first('[x-cp-id="' + view.parent_id + '"]');
-    console.log(container);
-    if (data.index > 0) _dom2.default.insertAfter(container.children[data.index - 1], view.html());else _dom2.default.prepend(container, view.html());
-  };
+      this.articleView.views.forEach(function (view) {
+        if (view.attrs.type === 'Graf' && view.partials().some(function (p) {
+          return p === path || p === altPath;
+        })) {
+          _article2.default.replace(view);
+        }
+      });
+    }
 
-  ClientRenderer.prototype.remove = function remove(data) {
-    // console.log('remove',data);
-    this.articleView.remove(data.id);
-    _article2.default.remove(data.id);
-  };
+    // LIVE PREVIEW
 
-  // used to show asset status/errors in a Graf
+  }, {
+    key: 'change',
+    value: function change(data) {
+      // console.log('change',data);
+      var view = this.articleView.update(data);
+      _article2.default.replace(view);
+    }
+  }, {
+    key: 'add',
+    value: function add(data) {
+      // console.log('add', data);
+      var view = this.articleView.add(data, data.index);
+      _article2.default.add(view, data.index);
+    }
+  }, {
+    key: 'remove',
+    value: function remove(data) {
+      // console.log('remove',data);
+      var view = this.articleView.remove(data.id);
+      _article2.default.remove(view);
+    }
 
+    // used to show asset status/errors in a Graf
 
-  ClientRenderer.prototype.replaceGrafText = function replaceGrafText(id, text) {
-    if (_dom2.default.first('[x-cp-id="' + id + '"]')) _dom2.default.first('[x-cp-id="' + id + '"]').textContent = text;
-  };
+  }, {
+    key: 'replaceGrafText',
+    value: function replaceGrafText(id, text) {
+      if (_dom2.default.first('[x-cp-id="' + id + '"]')) _dom2.default.first('[x-cp-id="' + id + '"]').textContent = text;
+    }
 
-  // EDITOR SCROLL SYNC
+    // EDITOR SCROLL SYNC
 
-  ClientRenderer.prototype.setScroll = function setScroll(pct) {
-    _article2.default.scroll(_article2.default.scrollMax() * pct);
-  };
-
-  ClientRenderer.prototype.setStyle = function setStyle(style) {
-    _dom2.default.first(document, 'head style').innerHTML = style;
-    _article2.default.resize();
-  };
+  }, {
+    key: 'setScroll',
+    value: function setScroll(pct) {
+      _article2.default.scroll(_article2.default.scrollMax() * pct);
+    }
+  }, {
+    key: 'setStyle',
+    value: function setStyle(style) {
+      _dom2.default.first(document, 'head style').innerHTML = style;
+      _article2.default.resize();
+    }
+  }]);
 
   return ClientRenderer;
 }((0, _events2.default)());

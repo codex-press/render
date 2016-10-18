@@ -262,26 +262,16 @@ export class ClientRenderer extends EventEmitter() {
 
 
   add(data) {
-    console.log('add', data);
+    // console.log('add', data);
     let view = this.articleView.add(data, data.index);
-    article.replace(view);
-  }
-
-
-  add(view) {
-    let container = dom.first(`[x-cp-id="${view.parent_id}"]`)
-    console.log(container);
-    if (data.index > 0)
-      dom.insertAfter(container.children[data.index - 1], view.html());
-    else
-      dom.prepend(container, view.html());
+    article.add(view, data.index);
   }
 
 
   remove(data) {
     // console.log('remove',data);
-    this.articleView.remove(data.id);
-    article.remove(data.id);
+    let view = this.articleView.remove(data.id);
+    article.remove(view);
   }
 
 

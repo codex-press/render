@@ -11384,7 +11384,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var template = _handlebars2.default.compile('\n  <{{  tagName  }} class="{{  classes  }}"\n    {{#if cpID  }}x-cp-id={{  cpID  }}{{/if }}>\n    {{{  content  }}}\n  </{{  tagName  }}>\n');
+var template = _handlebars2.default.compile('\n  <{{  tagName  }} class="{{  classes  }}"\n    {{#if id }} id={{  id  }}{{/if ~}}\n    {{#if cpID  }}x-cp-id={{  cpID  }}{{/if }}>\n    {{{  content  }}}\n  </{{  tagName  }}>\n');
 
 var defaultTemplate = _handlebars2.default.compile('\n  <h3><a href="{{  url  }}"> {{  title  }} </a></h3>\n  <p class=description>{{  description  }}</p>\n');
 
@@ -11459,6 +11459,7 @@ var ArticleEmbed = function (_View) {
       var html = void 0;
       try {
         html = template({
+          id: this.id(),
           cpID: this.article.attrs.client ? this.attrs.id : '',
           classes: 'article ' + this.classes(),
           tagName: this.tagName(),
@@ -11504,7 +11505,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var template = _handlebars2.default.compile('\n<div x-cp-audio x-cp-id={{  id  }} class="{{  classes  }}">\n  <audio\n    {{#if javascript }}preload=none{{/if }}\n    src="{{sourceUrl}}"\n    type="audio/mp3">\n  </audio>\n</div>\n');
+var template = _handlebars2.default.compile('\n<div x-cp-audio x-cp-id={{  id  }} class="{{  classes  }}">\n  <audio {{#if id }} id={{  id  }}{{/if ~}}\n    {{#if javascript }}preload=none{{/if }}\n    src="{{sourceUrl}}"\n    type="audio/mp3">\n  </audio>\n</div>\n');
 
 var Audio = function (_View) {
   _inherits(Audio, _View);
@@ -11527,6 +11528,7 @@ var Audio = function (_View) {
         attrs: this.attrs,
         javascript: this.article.attrs.javascript,
         classes: this.classes(),
+        id: this.id(),
         tagName: this.tagName() || 'div'
       });
     }
@@ -11593,7 +11595,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var template = '\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes}} class="{{  classes  }}"{{/if}}>\n  {{{  content  }}}\n</{{  tagName  }}>\n';
+var template = '\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n  {{#if id }} id={{  id  }}{{/if ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes}} class="{{  classes  }}"{{/if}}>\n  {{{  content  }}}\n</{{  tagName  }}>\n';
 
 // Single mustache { turns to {{> so that it renders a partial, however 
 // it can be escaped like \{
@@ -11665,6 +11667,7 @@ var Graf = function (_View) {
       return this.article.handlebars.compile(template)({
         content: content,
         isOverlay: this.isOverlay(),
+        id: this.id(),
         cpID: this.article.attrs.client || this.isOverlay() ? this.attrs.id : '',
         classes: this.classes(),
         tagName: this.tagName()
@@ -11736,7 +11739,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 // import hljs from 'highlight.js';
 
 
-var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes}} class="{{  classes  }}"{{/if}}>\n    {{{  content  }}}\n</{{ tagName  }}>\n');
+var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n  {{#if id }} id={{  id  }}{{/if ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes}} class="{{  classes  }}"{{/if}}>\n    {{{  content  }}}\n</{{ tagName  }}>\n');
 
 var HTMLBlock = function (_View) {
   _inherits(HTMLBlock, _View);
@@ -11766,6 +11769,7 @@ var HTMLBlock = function (_View) {
       return template({
         content: content,
         isOverlay: this.isOverlay(),
+        id: this.id(),
         cpID: this.article.attrs.client ? this.attrs.id : '',
         classes: this.classes(),
         tagName: this.tagName() || 'div'
@@ -11807,19 +11811,19 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var simpleTemplate = _handlebars2.default.compile('\n  <img x-cp-image x-cp-id={{  cpID  }} draggable=false\n    {{#if javascript }}\n      src="{{  thumbURL  }}"\n    {{ else }}\n      src="{{  sourceURL  }}"\n    {{/if }}\n    style="max-width: {{  maxWidth  }}px"\n    class="{{  classes  }}">\n');
+var simpleTemplate = _handlebars2.default.compile('\n  <img x-cp-image x-cp-id={{  cpID  }} draggable=false\n    {{#if id }} id={{  id  }}{{/if }}\n    {{#if javascript }}\n      src="{{  thumbURL  }}"\n    {{ else }}\n      src="{{  sourceURL  }}"\n    {{/if }}\n    style="max-width: {{  maxWidth  }}px"\n    class="{{  classes  }}">\n');
 
 // cropping but just by center point. overlays are absolutely positioned in
 // CSS
-var backgroundImageTemplate = _handlebars2.default.compile('\n  <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}\n    class="{{  classes  }}"\n    style="\n      background-image: url({{ url }});\n      {{  position  }};\n      max-width: {{  maxWidth }}px;\n      max-height: {{ maxHeight }}px;">\n\n    {{{  children  }}}\n\n    <div class=shim style="padding-top: {{  padding  }}%;"></div>\n\n  </{{tagName}}>\n');
+var backgroundImageTemplate = _handlebars2.default.compile('\n  <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}\n    {{#if id }} id={{  id  }}{{/if }}\n    class="{{  classes  }}"\n    style="\n      background-image: url({{ url }});\n      {{  position  }};\n      max-width: {{  maxWidth }}px;\n      max-height: {{ maxHeight }}px;">\n\n    {{{  children  }}}\n\n    <div class=shim style="padding-top: {{  padding  }}%;"></div>\n\n  </{{tagName}}>\n');
 
 // no cropping here. But with Javascript, it will constrain width if it's
 // too big for the container (like for the max-height 100vh). JS positions
 // overlays on top and perhaps will move the ones below to the side.
-var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n      {{{  children  }}}\n\n    {{else}}\n\n      <img src="{{  sourceURL  }}" draggable=false> \n      {{{  children  }}}\n\n    {{/if}}\n\n  </figure>\n');
+var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure \n    {{#if id }} id={{  id  }}{{/if }}\n    x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n      {{{  children  }}}\n\n    {{else}}\n\n      <img src="{{  sourceURL  }}" draggable=false> \n      {{{  children  }}}\n\n    {{/if}}\n\n  </figure>\n');
 
 // JS only: cropping and nice overlays on top
-var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop-box></div>\n      <div class=crop>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n    </div>\n\n    {{{  children  }}}\n\n  </figure>\n');
+var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure \n    {{#if id }} id={{  id  }}{{/if }}\n    x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop-box></div>\n      <div class=crop>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n    </div>\n\n    {{{  children  }}}\n\n  </figure>\n');
 
 var ImageView = function (_View) {
   _inherits(ImageView, _View);
@@ -11855,6 +11859,7 @@ var ImageView = function (_View) {
 
       return simpleTemplate({
         cpID: this.attrs.id,
+        id: this.id(),
         classes: this.classes(),
         maxWidth: maxWidth,
         sourceURL: this.sourceURL,
@@ -11887,6 +11892,7 @@ var ImageView = function (_View) {
       return backgroundImageTemplate({
         tagName: this.tagName(),
         cpID: this.attrs.id,
+        id: this.id(),
         classes: this.classes(),
         url: url,
         position: position,
@@ -11902,6 +11908,7 @@ var ImageView = function (_View) {
     value: function figureHTML() {
       return figureTemplate({
         cpID: this.attrs.id,
+        id: this.id(),
         classes: this.classes(),
         sourceURL: this.sourceURL,
         thumbURL: this.thumbSource(),
@@ -11915,6 +11922,7 @@ var ImageView = function (_View) {
     value: function cropHTML() {
       return cropTemplate({
         cpID: this.attrs.id,
+        id: this.id(),
         classes: this.classes(),
         sourceURL: this.sourceURL,
         thumbURL: this.thumbSource(),
@@ -12061,7 +12069,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var attributes = '\n  {{#unless javascript}}\n    poster="{{  posterURL  }}" src="{{sourceURL}}"\n  {{/unless}}\n  {{#if javascript}} preload=none {{else}} preload=auto {{/if}}\n  {{#if loop }}  loop  {{/if}}\n  {{#if autoplay }}  autoplay  {{/if }}\n  {{#if controls }}  controls  {{/if }}\n';
+var attributes = '\n  {{#if id }} id={{  id  }}{{/if }}\n  {{#unless javascript}}\n    poster="{{  posterURL  }}" src="{{sourceURL}}"\n  {{/unless}}\n  {{#if javascript}} preload=none {{else}} preload=auto {{/if}}\n  {{#if loop }}  loop  {{/if}}\n  {{#if autoplay }}  autoplay  {{/if }}\n  {{#if controls }}  controls  {{/if }}\n';
 
 // when specified with tag <video>
 var simpleTemplate = _handlebars2.default.compile('\n  <video x-cp-video x-cp-id={{  cpID  }}\n    class="{{  classes  }}"\n    ' + attributes + '>\n  </video>\n');
@@ -12097,6 +12105,7 @@ var VideoView = function (_View) {
 
       var attributes = {
         cpID: this.attrs.id,
+        id: this.id(),
         classes: this.classes(),
         sourceURL: sourceURL,
         posterURL: posterURL,
@@ -12177,7 +12186,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var tags = exports.tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table th tr td pre figure figcaption'.split(' ');
 
-var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes }} class="{{  classes  }}"{{/if }}>\n  {{{  children  }}}\n</{{  tagName  }}>\n');
+var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n  {{#if id }} id={{  id  }}{{/if ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes }} class="{{  classes  }}"{{/if }}>\n  {{{  children  }}}\n</{{  tagName  }}>\n');
 
 // FIRST TIME WE NEEDED TO DO SERVER CHECK
 // creeep begins
@@ -12227,6 +12236,7 @@ var View = function (_Super) {
       return this.template({
         attrs: this.attrs,
         isOverlay: this.isOverlay(),
+        id: this.id(),
         cpID: this.article.attrs.client || this.isOverlay() ? this.attrs.id : '',
         children: this.childrenHTML(),
         javascript: (this.article || this).attrs.javascript,
@@ -12242,6 +12252,15 @@ var View = function (_Super) {
       return tags.includes(tag) ? classes[0] : this.defaultTagName();
     }
   }, {
+    key: 'id',
+    value: function id() {
+      var id = (this.attrs.classes || []).find(function (c) {
+        return (/^#/.test(c)
+        );
+      });
+      if (id) return id.slice(1);
+    }
+  }, {
     key: 'defaultTagName',
     value: function defaultTagName() {
       return 'div';
@@ -12249,7 +12268,16 @@ var View = function (_Super) {
   }, {
     key: 'classes',
     value: function classes() {
-      if (this.tagName() === this.attrs.classes[0]) return this.attrs.classes.slice(1).join(' ');else return (this.attrs.classes || []).join(' ');
+
+      // exclude ID
+      var classes = (this.attrs.classes || []).filter(function (c) {
+        return !/^#/.test(c);
+      });
+
+      // remove tag name
+      if (this.tagName() === this.attrs.classes[0]) classes.shift();
+
+      return classes.join(' ');
     }
   }, {
     key: 'childrenHTML',

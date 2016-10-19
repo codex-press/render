@@ -6,6 +6,7 @@ export let tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div 
 let template = Handlebars.compile(`
 <{{  tagName  ~}}
   {{#if isOverlay}} x-cp-overlay{{/if ~}}
+  {{#if id }} id={{  id  }}{{/if ~}}
   {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}
   {{#if classes }} class="{{  classes  }}"{{/if }}>
   {{{  children  }}}
@@ -47,6 +48,7 @@ export default class View extends Super {
     return this.template({
       attrs: this.attrs,
       isOverlay: this.isOverlay(),
+      id: this.id(),
       cpID: this.article.attrs.client || this.isOverlay() ? this.attrs.id : '',
       children: this.childrenHTML(),
       javascript: (this.article || this).attrs.javascript,
@@ -63,16 +65,28 @@ export default class View extends Super {
   }
 
 
+  id() {
+    let id = (this.attrs.classes || []).find(c => /^#/.test(c));
+    if (id)
+      return id.slice(1)
+  }
+
+
   defaultTagName() {
     return 'div';
   }
 
 
   classes() {
+
+    // exclude ID
+    let classes = (this.attrs.classes || []).filter(c => !/^#/.test(c));
+
+    // remove tag name
     if (this.tagName() === this.attrs.classes[0])
-      return this.attrs.classes.slice(1).join(' ');
-    else
-      return (this.attrs.classes || []).join(' ');
+      classes.shift();
+
+    return classes.join(' ');
   }
 
 

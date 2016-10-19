@@ -6,6 +6,7 @@ import {findSource} from '../utility';
 
 let simpleTemplate = Handlebars.compile(`
   <img x-cp-image x-cp-id={{  cpID  }} draggable=false
+    {{#if id }} id={{  id  }}{{/if }}
     {{#if javascript }}
       src="{{  thumbURL  }}"
     {{ else }}
@@ -20,6 +21,7 @@ let simpleTemplate = Handlebars.compile(`
 // CSS
 let backgroundImageTemplate = Handlebars.compile(`
   <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}
+    {{#if id }} id={{  id  }}{{/if }}
     class="{{  classes  }}"
     style="
       background-image: url({{ url }});
@@ -39,7 +41,9 @@ let backgroundImageTemplate = Handlebars.compile(`
 // too big for the container (like for the max-height 100vh). JS positions
 // overlays on top and perhaps will move the ones below to the side.
 let figureTemplate = Handlebars.compile(`
-  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">
+  <figure x-cp-image x-cp-figure 
+    {{#if id }} id={{  id  }}{{/if }}
+    x-cp-id={{  cpID  }} class="{{  classes  }}">
 
     {{#if javascript}}
 
@@ -63,7 +67,9 @@ let figureTemplate = Handlebars.compile(`
 
 // JS only: cropping and nice overlays on top
 let cropTemplate = Handlebars.compile(`
-  <figure x-cp-image x-cp-figure x-cp-id={{  cpID  }} class="{{  classes  }}">
+  <figure x-cp-image x-cp-figure 
+    {{#if id }} id={{  id  }}{{/if }}
+    x-cp-id={{  cpID  }} class="{{  classes  }}">
 
     <div class=frame>
       <div class=shim style="padding-top: {{  padding  }}%;"></div>
@@ -119,6 +125,7 @@ export default class ImageView extends View {
 
     return simpleTemplate({
       cpID: this.attrs.id,
+      id: this.id(),
       classes: this.classes(),
       maxWidth,
       sourceURL: this.sourceURL,
@@ -152,6 +159,7 @@ export default class ImageView extends View {
     return backgroundImageTemplate({
       tagName: this.tagName(),
       cpID: this.attrs.id,
+      id: this.id(),
       classes: this.classes(),
       url,
       position,
@@ -167,6 +175,7 @@ export default class ImageView extends View {
   figureHTML() {
     return figureTemplate({
       cpID: this.attrs.id,
+      id: this.id(),
       classes: this.classes(),
       sourceURL: this.sourceURL,
       thumbURL: this.thumbSource(),
@@ -180,6 +189,7 @@ export default class ImageView extends View {
   cropHTML() {
     return cropTemplate({
       cpID: this.attrs.id,
+      id: this.id(),
       classes: this.classes(),
       sourceURL: this.sourceURL,
       thumbURL: this.thumbSource(),

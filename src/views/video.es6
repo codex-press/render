@@ -4,6 +4,7 @@ import View from './view';
 import {findSource} from '../utility';
 
 let attributes = `
+  {{#if id }} id={{  id  }}{{/if }}
   {{#unless javascript}}
     poster="{{  posterURL  }}" src="{{sourceURL}}"
   {{/unless}}
@@ -95,6 +96,7 @@ export default class VideoView extends View {
 
     let attributes = {
       cpID: this.attrs.id,
+      id: this.id(),
       classes: this.classes(),
       sourceURL,
       posterURL,

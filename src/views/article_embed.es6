@@ -6,6 +6,7 @@ import {unscopeLinks} from '../utility';
 
 let template = Handlebars.compile(`
   <{{  tagName  }} class="{{  classes  }}"
+    {{#if id }} id={{  id  }}{{/if ~}}
     {{#if cpID  }}x-cp-id={{  cpID  }}{{/if }}>
     {{{  content  }}}
   </{{  tagName  }}>
@@ -93,6 +94,7 @@ export default class ArticleEmbed extends View {
     let html;
     try {
       html = template({
+        id: this.id(),
         cpID: this.article.attrs.client ? this.attrs.id : '',
         classes: 'article ' + this.classes(),
         tagName: this.tagName(),

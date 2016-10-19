@@ -4,6 +4,7 @@ import {unscopeLinks} from '../utility';
 let template = (`
 <{{  tagName  ~}}
   {{#if isOverlay}} x-cp-overlay{{/if ~}}
+  {{#if id }} id={{  id  }}{{/if ~}}
   {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}
   {{#if classes}} class="{{  classes  }}"{{/if}}>
   {{{  content  }}}
@@ -84,6 +85,7 @@ export default class Graf extends View {
     return this.article.handlebars.compile(template)({
       content,
       isOverlay: this.isOverlay(),
+      id: this.id(),
       cpID: this.article.attrs.client || this.isOverlay() ? this.attrs.id : '',
       classes: this.classes(),
       tagName: this.tagName(),

@@ -5,7 +5,7 @@ import {findSource} from '../utility';
 
 let template = Handlebars.compile(`
 <div x-cp-audio x-cp-id={{  id  }} class="{{  classes  }}">
-  <audio
+  <audio {{#if id }} id={{  id  }}{{/if ~}}
     {{#if javascript }}preload=none{{/if }}
     src="{{sourceUrl}}"
     type="audio/mp3">
@@ -34,6 +34,7 @@ export default class Audio extends View {
       attrs: this.attrs,
       javascript: this.article.attrs.javascript,
       classes: this.classes(),
+      id: this.id(),
       tagName: this.tagName() || 'div',
     });
   }

@@ -112,6 +112,13 @@ export default class Graf extends View {
 
 
   defaultTagName() {
+
+    // empty except for inline asset means it just gets <div> (<p> causes
+    // many problems since other block elements inside are out of spec and
+    // will move after when it renders)
+    if (this.attrs.body.replace(/\{{1}.*?\}{1}/g,'').trim().length === 0)
+      return 'div';
+    
     switch(this.parent.tagName()) {
       case 'figure': return 'figcaption';
       case 'table' : return 'tr';

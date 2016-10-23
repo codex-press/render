@@ -11547,6 +11547,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _view = require('./view');
 
 var _view2 = _interopRequireDefault(_view);
@@ -11567,6 +11569,24 @@ var Block = function (_View) {
 
     return _possibleConstructorReturn(this, (Block.__proto__ || Object.getPrototypeOf(Block)).apply(this, arguments));
   }
+
+  _createClass(Block, [{
+    key: 'defaultTagName',
+    value: function defaultTagName() {
+      switch (this.parent.tagName()) {
+        case 'table':
+          return 'tr';
+        case 'tr':
+          return 'td';
+        case 'ul':
+          return 'li';
+        case 'ol':
+          return 'li';
+        default:
+          return 'div';
+      }
+    }
+  }]);
 
   return Block;
 }(_view2.default);
@@ -11693,11 +11713,20 @@ var Graf = function (_View) {
   }, {
     key: 'defaultTagName',
     value: function defaultTagName() {
-      if (this.path().some(function (c) {
-        return ['Image', 'Video'].includes(c.attrs.type);
-      })) return 'div';
-
-      return 'p';
+      switch (this.parent.tagName()) {
+        case 'figure':
+          return 'figcaption';
+        case 'table':
+          return 'tr';
+        case 'tr':
+          return 'td';
+        case 'ul':
+          return 'li';
+        case 'ol':
+          return 'li';
+        default:
+          return 'p';
+      }
     }
   }]);
 

@@ -112,10 +112,14 @@ export default class Graf extends View {
 
 
   defaultTagName() {
-    if (this.path().some(c => ['Image','Video'].includes(c.attrs.type)))
-      return 'div';
-
-    return 'p';
+    switch(this.parent.tagName()) {
+      case 'figure': return 'figcaption';
+      case 'table' : return 'tr';
+      case 'tr'    : return 'td';
+      case 'ul'    : return 'li';
+      case 'ol'    : return 'li';
+      default      : return 'p';
+    }
   }
 
 }

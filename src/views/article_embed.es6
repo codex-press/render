@@ -80,11 +80,11 @@ export default class ArticleEmbed extends View {
     }
 
     let contentTemplate = this.article.templates.find(t => {
-      console.log(t.descriptor, this.attrs.template, t.descriptor === this.attrs.template);
+      //console.log(t.descriptor, this.attrs.template, t.descriptor === this.attrs.template);
       return t.descriptor === this.attrs.template
     });
 
-    console.log(this.attrs.template, this.article.templates[0].descriptor);
+    //console.log(this.attrs.template, this.article.templates[0].descriptor);
 
     if (contentTemplate)
       contentTemplate = contentTemplate.compiled

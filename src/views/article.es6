@@ -49,6 +49,7 @@ export default class ArticleView extends View {
     if (!this.templateAttrs.share_message)
       this.templateAttrs.share_message = this.attrs.title;
 
+    this.attrs.content = this.attrs.content || [];
     let templates = this.attrs.content.filter(c => (
       c.type === 'HTMLBlock' &&
       c.classes &&

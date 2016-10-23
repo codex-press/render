@@ -11151,6 +11151,7 @@ var ArticleView = function (_View) {
 
     if (!_this.templateAttrs.share_message) _this.templateAttrs.share_message = _this.attrs.title;
 
+    _this.attrs.content = _this.attrs.content || [];
     var templates = _this.attrs.content.filter(function (c) {
       return c.type === 'HTMLBlock' && c.classes && c.classes[0] === 'template';
     });
@@ -11448,11 +11449,11 @@ var ArticleEmbed = function (_View) {
       }
 
       var contentTemplate = this.article.templates.find(function (t) {
-        console.log(t.descriptor, _this2.attrs.template, t.descriptor === _this2.attrs.template);
+        //console.log(t.descriptor, this.attrs.template, t.descriptor === this.attrs.template);
         return t.descriptor === _this2.attrs.template;
       });
 
-      console.log(this.attrs.template, this.article.templates[0].descriptor);
+      //console.log(this.attrs.template, this.article.templates[0].descriptor);
 
       if (contentTemplate) contentTemplate = contentTemplate.compiled;else contentTemplate = defaultTemplate;
 

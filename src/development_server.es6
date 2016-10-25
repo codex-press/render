@@ -104,7 +104,7 @@ class DevelopmentServer extends EventEmitter() {
 
           let head;
           if (data.error.filename)
-            head = `${data.error.type} Error: ${data.filename}`;
+            head = `${data.error.type} Error: ${data.error.filename}`;
           else
             head = `${data.error.type} Error`;
 

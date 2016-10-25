@@ -10761,7 +10761,7 @@ var DevelopmentServer = function (_EventEmitter) {
           } else if (data.error) {
 
             var head = void 0;
-            if (data.filename) head = data.error.type + ' Error: ' + data.filename;else head = data.error.type + ' Error';
+            if (data.error.filename) head = data.error.type + ' Error: ' + data.filename;else head = data.error.type + ' Error';
 
             var body = data.error.message;
             if (data.error.line) body += '\nline: ' + data.error.line;

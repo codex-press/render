@@ -118,10 +118,9 @@ export default class Graf extends View {
     // will move after when it renders)
     if (this.attrs.body.replace(/\{{1}.*?\}{1}/g,'').trim().length === 0)
       return 'div';
-    
+
     switch(this.parent.tagName()) {
       case 'figure': return 'figcaption';
-      case 'table' : return 'tr';
       case 'tr'    : return 'td';
       case 'ul'    : return 'li';
       case 'ol'    : return 'li';

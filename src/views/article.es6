@@ -187,7 +187,7 @@ export default class ArticleView extends View {
     // add to the parent's children array
     view.parent.children.splice(index, 0, view);
 
-    console.log(view);
+    //console.log(view);
     return view;
   }
 

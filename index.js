@@ -11295,7 +11295,7 @@ var ArticleView = function (_View) {
       // add to the parent's children array
       view.parent.children.splice(index, 0, view);
 
-      console.log(view);
+      //console.log(view);
       return view;
     }
   }]);
@@ -11576,6 +11576,10 @@ var Block = function (_View) {
       switch (this.parent.tagName()) {
         case 'table':
           return 'tr';
+        case 'thead':
+          return 'tr';
+        case 'tbody':
+          return 'tr';
         case 'tr':
           return 'td';
         case 'ul':
@@ -11722,8 +11726,6 @@ var Graf = function (_View) {
       switch (this.parent.tagName()) {
         case 'figure':
           return 'figcaption';
-        case 'table':
-          return 'tr';
         case 'tr':
           return 'td';
         case 'ul':
@@ -12220,7 +12222,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var tags = exports.tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table th tr td pre figure figcaption'.split(' ');
+var tags = exports.tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table tbody thead th tr td pre figure figcaption'.split(' ');
 
 var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n  {{#if id }} id={{  id  }}{{/if ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes }} class="{{  classes  }}"{{/if }}>\n  {{{  children  }}}\n</{{  tagName  }}>\n');
 

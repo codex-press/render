@@ -62,6 +62,8 @@ export class ClientRenderer extends EventEmitter() {
     this.articleView = new ArticleView(data);
     this.bind(articleViewEvents, this.articleView);
 
+    dom(document.documentElement).data({url: this.attrs.url});
+
     return (
       (article.hasState('dev-server') ? devServer.connect() : Promise.resolve())
       .then(() => this.attachAssets())

@@ -12465,6 +12465,8 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
       this.articleView = new _article4.default(data);
       this.bind(articleViewEvents, this.articleView);
 
+      (0, _dom2.default)(document.documentElement).data({ url: this.attrs.url });
+
       return (_article2.default.hasState('dev-server') ? _development_server2.default.connect() : Promise.resolve()).then(function () {
         return _this2.attachAssets();
       }).then(function () {

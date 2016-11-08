@@ -12,7 +12,7 @@ export default function factory() {
 
     br:         '<br>',
 
-    date:       '<time datetime="{{publication_date}}">{{ formatDate publication_date "longDate" }}</time>',
+    date:       '<time class=pubdate datetime="{{publication_date}}">{{ formatDate publication_date "longDate" }}</time>',
 
     play:       `<span class="cp-play-button">${icons.play}</span>`,
     audio:      `<span class="cp-audio-button">${icons.audio}</span>`,

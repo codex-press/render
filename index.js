@@ -10865,7 +10865,7 @@ function factory() {
 
     br: '<br>',
 
-    date: '<time datetime="{{publication_date}}">{{ formatDate publication_date "longDate" }}</time>',
+    date: '<time class=pubdate datetime="{{publication_date}}">{{ formatDate publication_date "longDate" }}</time>',
 
     play: '<span class="cp-play-button">' + _icons2.default.play + '</span>',
     audio: '<span class="cp-audio-button">' + _icons2.default.audio + '</span>',
@@ -12567,7 +12567,7 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
         _article2.default.attrs.asset_data.map(function (data) {
           var url = void 0;
           if (env.development) url = env.contentOrigin + '/' + data.asset_path;else url = env.contentOrigin + '/' + data.digest_path;
-          if (data.asset_path == base_path + '.js') tags.push(makeScriptTag(url));else if (data.asset_path == base_path + '.css') tags.push(_dom2.default.create('<link rel=stylesheet href="' + url + '">'));
+          if (data.asset_path == base_path + '.js') tags.push(makeScriptTag(url));else if (data.asset_path == base_path + '.css') tags.push(_dom2.default.create('<link crossorigin rel=stylesheet href="' + url + '">'));
         });
 
         return tags;

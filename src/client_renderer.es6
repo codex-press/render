@@ -166,7 +166,7 @@ export class ClientRenderer extends EventEmitter() {
         if (data.asset_path == base_path + '.js')
           tags.push(makeScriptTag(url));
         else if (data.asset_path == base_path + '.css')
-          tags.push(dom.create(`<link rel=stylesheet href="${url}">`));
+          tags.push(dom.create(`<link crossorigin rel=stylesheet href="${url}">`));
       });
 
       return tags;

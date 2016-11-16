@@ -11021,10 +11021,15 @@ var findSource = exports.findSource = function findSource(srcset, quality) {
 };
 
 var unscopeLinks = exports.unscopeLinks = function unscopeLinks(html, pathPrefix) {
-  return html.replace(/<a[^>]* href="?([^" >]*?)[" >]/g, function (string, url) {
+  var hrefRE = /<a[^>]* href="?([^" >]*?)[" >]/g;
+  var newHTML = html.replace(hrefRE, function (string, url) {
     // if it's an absolute path, fix the path
     if (/^\//.test(url)) return string.replace(url, unscopedPath(pathPrefix, url));else return string;
   });
+
+  // must add rel=noopener so that when you hit command to open in a new
+  // window it works. totally weird
+  return newHTML.replace(/<a /g, '<a rel=noopener ');
 };
 
 // Scoped Path

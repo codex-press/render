@@ -26,6 +26,8 @@ let articleViewEvents = {
   assetMissing : 'assetMissing',
 };
 
+// Globals are handy for development and in console. Do not use in your code
+window.cp = {article, dom, env};
 
 let _resolve;
 export let ready = new Promise(r => _resolve = r);
@@ -149,7 +151,7 @@ export class ClientRenderer extends EventEmitter() {
         }
         if (devServer.fileList[repo].includes(base_path + '.css')) {
           tags.push(dom.create(
-            `<link rel=stylesheet href="${url}${base_path}.css">`
+            `<link crossorigin rel=stylesheet href="${url}${base_path}.css">`
           ));
           log.info(`fetching from development: ${base_path}.css`);
         }
@@ -174,7 +176,7 @@ export class ClientRenderer extends EventEmitter() {
 
     if (article.attrs.compressed_style) {
       tags.push(dom.create(
-        `<link rel=stylesheet href="${article.attrs.compressed_style}">`
+        `<link crossorigin rel=stylesheet href="${article.attrs.compressed_style}">`
       ));
     }
 

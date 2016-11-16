@@ -12420,6 +12420,9 @@ var articleViewEvents = {
   assetMissing: 'assetMissing'
 };
 
+// Globals are handy for development and in console. Do not use in your code
+window.cp = { article: _article2.default, dom: _dom2.default, env: env };
+
 var _resolve = void 0;
 var ready = exports.ready = new Promise(function (r) {
   return _resolve = r;
@@ -12557,7 +12560,7 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
             log.info('fetching from development: ' + base_path + '.js');
           }
           if (_development_server2.default.fileList[repo].includes(base_path + '.css')) {
-            tags.push(_dom2.default.create('<link rel=stylesheet href="' + url + base_path + '.css">'));
+            tags.push(_dom2.default.create('<link crossorigin rel=stylesheet href="' + url + base_path + '.css">'));
             log.info('fetching from development: ' + base_path + '.css');
           }
           return tags;
@@ -12574,7 +12577,7 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
       }, []);
 
       if (_article2.default.attrs.compressed_style) {
-        tags.push(_dom2.default.create('<link rel=stylesheet href="' + _article2.default.attrs.compressed_style + '">'));
+        tags.push(_dom2.default.create('<link crossorigin rel=stylesheet href="' + _article2.default.attrs.compressed_style + '">'));
       }
 
       return Promise.all(tags.map(function (el) {

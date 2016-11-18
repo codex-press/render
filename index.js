@@ -10808,12 +10808,12 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = {
-  "audio": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon audio\"><path d=\"M19.6 7.1c4.8 2.9 5.4 14.1 0 16.7-.9.4-.1 1.7.8 1.3 6.5-3.2 5.8-15.8 0-19.3-.9-.4-1.6.9-.8 1.3z\" class=\"on\"/><path d=\"M22.6 2.6c7.9 4.4 7.9 21.3 0 25.7-.8.5-.1 1.8.8 1.3 8.9-5 8.9-23.3 0-28.3-.9-.4-1.6.9-.8 1.3z\" class=\"on\"/><path d=\"M17.5 11.5c2 1.6 2.7 6.3.2 7.8-.8.5-.1 1.8.8 1.3 3.3-2 3-8 .2-10.2-.9-.5-2 .5-1.2 1.1z\" class=\"on\"/><path d=\"M26.7 18.6c.1.1.1.2 0 .3L25 20.6c-.1.1-.2.1-.3 0L22.1 18l-2.6 2.6c-.1.1-.2.1-.3 0l-1.7-1.7c-.1-.1-.1-.2 0-.3L20 16l-2.6-2.6c-.1-.1-.1-.2 0-.3l1.7-1.7c.1-.1.2-.1.3 0L22 14l2.6-2.6c.1-.1.2-.1.3 0l1.7 1.7c.1.1.1.2 0 .3L24.1 16l2.6 2.6z\" class=\"off\"/><path d=\"M14.3 6c-.3 0-.4.1-.7.3L8 12H3.2c-.3 0-.6 0-.9.3-.2.1-.3.4-.3.7v7c0 .3.1.6.3.7s.4.3.7.3h4.8l5.7 5.7c.3.1.4.3.7.3.3 0 .6-.1.7-.3.1-.1.3-.4.3-.7V7c0-.3-.1-.6-.3-.7 0-.2-.3-.3-.6-.3z\"/></svg>",
+  "audio": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon audio\"><path d=\"M19.6 7.1c4.8 2.9 5.4 14.1 0 16.7-.9.4-.1 1.7.8 1.3 6.5-3.2 5.8-15.8 0-19.3-.9-.4-1.6.9-.8 1.3z\" class=\"on\"/><path d=\"M22.6 2.6c7.9 4.4 7.9 21.3 0 25.7-.8.5-.1 1.8.8 1.3 8.9-5 8.9-23.3 0-28.3-.9-.4-1.6.9-.8 1.3z\" class=\"on\"/><path d=\"M17.5 11.5c2 1.6 2.7 6.3.2 7.8-.8.5-.1 1.8.8 1.3 3.3-2 3-8 .2-10.2-.9-.5-2 .5-1.2 1.1z\" class=\"on\"/><path d=\"M20.4 20.6h-.3c-.4 0-.8-.4-.8-.8V12c0-.4.4-.8.8-.8h.3c.4 0 .8.4.8.8v7.8c0 .5-.4.8-.8.8z\" class=\"pause\"/><path d=\"M24.4 20.6h-.3c-.4 0-.8-.4-.8-.8V12c0-.4.4-.8.8-.8h.3c.4 0 .8.4.8.8v7.8c0 .5-.4.8-.8.8z\" class=\"pause\"/><path d=\"M19 19.3l-.2-.2c-.3-.3-.3-.8 0-1.1l5.5-5.5c.3-.3.8-.3 1.1 0l.2.2c.3.3.3.8 0 1.1l-5.5 5.5c-.3.3-.8.3-1.1 0z\" class=\"off\"/><path d=\"M18.8 12.6l.2-.2c.3-.3.8-.3 1.1 0l5.5 5.5c.3.3.3.8 0 1.1l-.2.2c-.3.3-.8.3-1.1 0l-5.5-5.5c-.3-.3-.3-.8 0-1.1z\" class=\"off\"/><path d=\"M14.3 6c-.3 0-.4.1-.7.3L8 12H3.2c-.3 0-.6 0-.9.3-.2.1-.3.4-.3.7v7c0 .3.1.6.3.7s.4.3.7.3h4.8l5.7 5.7c.3.1.4.3.7.3.3 0 .6-.1.7-.3.1-.1.3-.4.3-.7V7c0-.3-.1-.6-.3-.7 0-.2-.3-.3-.6-.3z\"/></svg>",
   "email": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon email\"><path d=\"M28.1 24.1V12.7c-.3.4-.7.7-1 1-2.8 2-8.7 6.5-9.3 6.8-.6.3-1 .4-1.6.4-.4 0-1-.1-1.6-.4-.6-.3-6.5-4.7-9.3-6.8-.4-.3-.7-.7-1-1v11.4c0 .1 0 .3.1.3 0 .1.1.1.3.1h23c.1 0 .3 0 .3-.1-.1 0 .1-.2.1-.3zm0-15.6v-.6l-.1-.3-.1-.1H4.5c-.1 0-.3 0-.3.1-.1.2-.1.2-.1.3 0 1.7.7 3.1 2.2 4.2 2.1 1.6 8.3 6.8 9.6 6.8.3 0 .4 0 .7-.1.3-.1.4-.3.7-.4.3-.1 6.2-4.7 8.1-6.2.7-.4 1.2-1 1.8-1.7.7-.8.9-1.5.9-2zm1.9-.6v16.2c0 .7-.3 1.3-.7 1.7-.4.4-1 .7-1.8.7h-23c-.7 0-1.3-.3-1.8-.7-.4-.4-.7-1-.7-1.7V7.9c0-.7.3-1.3.7-1.7s1-.7 1.8-.7h23c.7 0 1.3.3 1.8.7.4.4.7 1.1.7 1.7z\"/></svg>",
   "facebook": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon facebook\"><path d=\"M23.5 2.2v4.4h-2.7c-1 0-1.7.2-2 .6-.3.4-.5 1-.5 1.8v3.2h5.1l-.7 5h-4.4V30H13V17.2H8.5v-5h4.4V8.6c0-2.1.6-3.7 1.8-4.9S17.5 2 19.5 2c1.7 0 3.1.1 4 .2z\"/></svg>",
-  "fullscreen": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon fullscreen\"><path d=\"M2 20.5l3.2 3.2 7-7c.2-.2.4-.2.6 0l2.5 2.5c.2.2.2.4 0 .6l-7 7 3.2 3.2c.2.2.1.7-.3.7l-9.8.3c-.2 0-.4-.2-.4-.4l.3-9.8c0-.4.4-.5.7-.3z\" class=\"on\"/><path d=\"M20.8 1.3l9.8-.3c.2 0 .4.2.4.4l-.3 9.8c0 .4-.4.5-.7.3l-3.2-3.2-7 7c-.2.2-.4.2-.6 0l-2.5-2.5c-.2-.2-.2-.4 0-.6l7-7L20.5 2c-.2-.3-.1-.7.3-.7z\" class=\"on\"/><path d=\"M17.5 5l3.2 3.2 7-7c.2-.2.4-.2.6 0l2.5 2.5c.2.3.2.5 0 .7l-7 7 3.2 3.2c.2.2.1.7-.3.7l-9.7.2c-.2 0-.4-.2-.4-.4l.3-9.8c0-.4.4-.5.6-.3z\" class=\"off\"/><path d=\"M5.2 16.7l9.8-.3c.2 0 .4.2.4.4l-.3 9.8c0 .4-.4.5-.7.3l-3.2-3.2-7 7c-.2.2-.4.2-.6 0l-2.5-2.5c-.1-.2-.1-.5 0-.6l7-7-3.2-3.2c-.2-.2-.1-.7.3-.7z\" class=\"off\"/></svg>",
+  "fullscreen": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon fullscreen\"><path d=\"M2 20.5l3.2 3.2 7-7c.2-.2.4-.2.6 0l2.5 2.5c.2.2.2.4 0 .6l-7 7 3.2 3.2c.2.2.1.7-.3.7l-9.8.3c-.2 0-.4-.2-.4-.4l.3-9.8c0-.4.4-.5.7-.3z\" class=\"expand\"/><path d=\"M20.8 1.3l9.8-.3c.2 0 .4.2.4.4l-.3 9.8c0 .4-.4.5-.7.3l-3.2-3.2-7 7c-.2.2-.4.2-.6 0l-2.5-2.5c-.2-.2-.2-.4 0-.6l7-7L20.5 2c-.2-.3-.1-.7.3-.7z\" class=\"expand\"/><path d=\"M17.5 5l3.2 3.2 7-7c.2-.2.4-.2.6 0l2.5 2.5c.2.3.2.5 0 .7l-7 7 3.2 3.2c.2.2.1.7-.3.7l-9.7.2c-.2 0-.4-.2-.4-.4l.3-9.8c0-.4.4-.5.6-.3z\" class=\"collapse\"/><path d=\"M5.2 16.7l9.8-.3c.2 0 .4.2.4.4l-.3 9.8c0 .4-.4.5-.7.3l-3.2-3.2-7 7c-.2.2-.4.2-.6 0l-2.5-2.5c-.1-.2-.1-.5 0-.6l7-7-3.2-3.2c-.2-.2-.1-.7.3-.7z\" class=\"collapse\"/></svg>",
   "play": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon play\"><path d=\"M11.8 31H7.4c-.4 0-.8-.4-.8-.8V1.8c0-.4.3-.8.8-.8h4.4c.4 0 .8.4.8.8v28.4c0 .4-.4.8-.8.8z\" class=\"pause\"/><path d=\"M24.6 31h-4.4c-.4 0-.8-.4-.8-.8V1.8c0-.4.4-.8.8-.8h4.4c.4 0 .8.4.8.8v28.4c0 .4-.3.8-.8.8z\" class=\"pause\"/><path d=\"M5 16.1V2.5c0-.6.7-1 1.2-.7L18 8.6l11.8 6.8c.5.3.5 1.1 0 1.4L18 23.6 6.2 30.4c-.5.3-1.2 0-1.2-.7V16.1z\" class=\"play\"/></svg>",
-  "reddit": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon reddit\"><path d=\"M29.9 16c0 .6-.2 1.1-.5 1.6s-.7.9-1.2 1.1c.1.5.2 1 .2 1.5 0 1.6-.6 3.1-1.7 4.4s-2.6 2.4-4.5 3.2-4 1.2-6.2 1.2-4.3-.4-6.2-1.2-3.5-1.8-4.6-3.2-1.7-2.8-1.7-4.4c0-.5.1-1 .2-1.4-.5-.3-1-.6-1.3-1.1-.3-.5-.5-1-.5-1.6 0-.8.3-1.6.9-2.2S4.1 13 5 13c.9 0 1.6.3 2.3 1 2.3-1.6 5-2.4 8-2.5l1.8-8c0-.1.1-.2.2-.3s.4-.2.5-.2l5.8 1.2c.2-.4.5-.7.8-.9s.8-.3 1.3-.3c.6 0 1.2.2 1.7.7s.7 1 .7 1.6-.2 1.2-.7 1.6c-.5.5-1 .7-1.7.7s-1.2-.2-1.7-.7c-.5-.4-.7-1-.7-1.6l-5.2-1.1-1.6 7.3c3.1.1 5.8.9 8.1 2.5.6-.6 1.3-.9 2.2-.9.9 0 1.6.3 2.2.9s.9 1.2.9 2zM8.5 19.1c0 .6.2 1.2.7 1.6.5.5 1 .7 1.6.7s1.2-.2 1.7-.7c.5-.5.7-1 .7-1.6 0-.6-.2-1.2-.7-1.6-.5-.4-1-.7-1.7-.7-.6 0-1.2.2-1.6.7-.5.4-.7.9-.7 1.6zm12.6 5.4c.1-.1.2-.2.2-.4s-.1-.3-.2-.4c-.1-.1-.2-.2-.4-.2s-.3.1-.4.2c-.4.4-1.1.7-1.9 1-.8.2-1.7.3-2.5.3s-1.7-.1-2.5-.3c-.8-.2-1.5-.5-1.9-1-.1-.1-.3-.2-.4-.2s-.3.1-.4.2c-.1.1-.2.2-.2.4s.1.3.2.4c.4.4 1.1.8 1.9 1 .8.3 1.4.4 1.9.5.5 0 1 .1 1.4.1s.9 0 1.4-.1c.5 0 1.1-.2 1.9-.5.9-.2 1.5-.5 1.9-1zm0-3.1c.6 0 1.2-.2 1.6-.7.5-.5.7-1 .7-1.6 0-.6-.2-1.2-.7-1.6s-1-.7-1.6-.7c-.6 0-1.2.2-1.7.7-.5.4-.7 1-.7 1.6 0 .6.2 1.2.7 1.6.5.4 1 .7 1.7.7z\"/></svg>",
+  "reddit": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon reddit\"><path d=\"M29.9 16c0 .6-.2 1.1-.5 1.6s-.7.9-1.2 1.1c.1.5.2 1 .2 1.5 0 1.6-.6 3.1-1.7 4.4s-2.6 2.4-4.5 3.2-4 1.2-6.2 1.2-4.3-.4-6.2-1.2-3.5-1.8-4.6-3.2-1.7-2.8-1.7-4.4c0-.5.1-1 .2-1.4-.5-.3-1-.6-1.3-1.1-.3-.5-.5-1-.5-1.6 0-.8.3-1.6.9-2.2S4.1 13 5 13c.9 0 1.6.3 2.3 1 2.3-1.6 5-2.4 8-2.5l1.8-8c0-.1.1-.2.2-.3s.4-.2.5-.2l5.8 1.2c.2-.4.5-.7.8-.9s.8-.3 1.3-.3c.6 0 1.2.2 1.7.7s.7 1 .7 1.6-.2 1.2-.7 1.6c-.5.5-1 .7-1.7.7s-1.2-.2-1.7-.7c-.5-.4-.7-1-.7-1.6l-5.2-1.1-1.6 7.3c3.1.1 5.8.9 8.1 2.5.6-.6 1.3-.9 2.2-.9.9 0 1.6.3 2.2.9s.9 1.2.9 2zM8.5 19.1c0 .6.2 1.2.7 1.6.5.5 1 .7 1.6.7s1.2-.2 1.7-.7c.5-.5.7-1 .7-1.6 0-.6-.2-1.2-.7-1.6-.5-.4-1-.7-1.7-.7-.6 0-1.2.2-1.6.7-.5.4-.7.9-.7 1.6zm12.6 5.4c.1-.1.2-.2.2-.4s-.1-.3-.2-.4c-.1-.1-.2-.2-.4-.2s-.3.1-.4.2c-.4.4-1.1.7-1.9 1-.8.2-1.7.3-2.5.3s-1.7-.1-2.5-.3c-.8-.2-1.5-.5-1.9-1-.1-.1-.2-.2-.4-.2s-.3.1-.4.2c-.1.1-.2.2-.2.4s.1.3.2.4c.4.4 1.1.8 1.9 1 .8.3 1.4.4 1.9.5.5 0 1 .1 1.4.1s.9 0 1.4-.1c.5 0 1.1-.2 1.9-.5.9-.2 1.5-.5 1.9-1zm0-3.1c.6 0 1.2-.2 1.6-.7.5-.5.7-1 .7-1.6 0-.6-.2-1.2-.7-1.6s-1-.7-1.6-.7c-.6 0-1.2.2-1.7.7-.5.4-.7 1-.7 1.6 0 .6.2 1.2.7 1.6.5.4 1 .7 1.7.7z\"/></svg>",
   "share": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon share\"><circle cx=\"5\" cy=\"11\" r=\"3.5\"/><circle cx=\"25.5\" cy=\"6.5\" r=\"5\"/><circle cx=\"16.1\" cy=\"16.1\" r=\"2.6\"/><circle cx=\"25.3\" cy=\"25.3\" r=\"5.2\"/><path fill=\"none\" stroke-width=\"1.5\" stroke-miterlimit=\"10\" d=\"M4 11l12 5.1\"/><path fill=\"none\" stroke-width=\"1.5\" stroke-miterlimit=\"10\" d=\"M25.5 25.5l-9-9.9 9-9.1\"/></svg>",
   "twitter": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon twitter\"><path d=\"M30 7.7c-.8 1.2-1.8 2.2-2.9 3v.8c0 1.6-.2 3.1-.7 4.7s-1.1 3-2.1 4.5-2 2.7-3.3 3.8c-1.3 1.1-2.8 2-4.6 2.6-1.8.7-3.7 1-5.7 1-3.2 0-6.1-.9-8.8-2.6.4 0 .9.1 1.4.1 2.7 0 5-.8 7.1-2.5-1.2 0-2.4-.4-3.3-1.2s-1.7-1.7-2-2.9c.4.1.8.1 1.1.1.5 0 1-.1 1.5-.2-1.3-.3-2.4-.9-3.3-2s-1.3-2.3-1.3-3.7v-.1c.8.5 1.7.7 2.6.7-.8-.5-1.4-1.2-1.9-2.1-.4-.8-.6-1.7-.6-2.7 0-1.1.3-2 .8-2.9 1.4 1.8 3.2 3.2 5.2 4.3s4.3 1.7 6.6 1.8c-.1-.5-.1-.9-.1-1.3 0-1.6.6-3 1.7-4.1s2.4-1.8 4-1.8c1.7 0 3.1.6 4.2 1.8 1.3-.3 2.5-.7 3.6-1.4-.4 1.4-1.3 2.4-2.5 3.2 1.1-.1 2.2-.4 3.3-.9z\"/></svg>"
 };
@@ -11503,6 +11503,10 @@ var _view2 = _interopRequireDefault(_view);
 
 var _utility = require('../utility');
 
+var _icons = require('../icons');
+
+var _icons2 = _interopRequireDefault(_icons);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -11511,7 +11515,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var template = _handlebars2.default.compile('\n<div x-cp-audio x-cp-id={{  id  }} class="{{  classes  }}">\n  <audio {{#if id }} id={{  id  }}{{/if ~}}\n    {{#if javascript }}preload=none{{/if }}\n    src="{{sourceUrl}}"\n    type="audio/mp3">\n  </audio>\n</div>\n');
+var template = _handlebars2.default.compile('\n<div x-cp-audio x-cp-id={{  attrs.id  ~}}\n  {{#if id }} id={{  id  }}{{/if ~}} \n  {{#if classes }} class="{{  classes  }}" {{/if }}>\n  ' + _icons2.default.audio + '\n  <audio {{#if javascript }}preload=none{{/if }}\n    src="{{ sourceUrl  }}" type="audio/mp3">\n  </audio>\n</div>\n');
 
 var Audio = function (_View) {
   _inherits(Audio, _View);
@@ -11529,13 +11533,11 @@ var Audio = function (_View) {
 
       var sourceUrl = this.article.attrs.content_origin + this.source.url;
 
-      return this.template({
+      return template({
         sourceUrl: sourceUrl,
         attrs: this.attrs,
-        javascript: this.article.attrs.javascript,
         classes: this.classes(),
-        id: this.id(),
-        tagName: this.tagName() || 'div'
+        id: this.id()
       });
     }
   }]);
@@ -11545,7 +11547,7 @@ var Audio = function (_View) {
 
 exports.default = Audio;
 
-},{"../utility":53,"./view":63,"handlebars":33}],57:[function(require,module,exports){
+},{"../icons":50,"../utility":53,"./view":63,"handlebars":33}],57:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {

@@ -12043,7 +12043,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var entryTemplate = _handlebars2.default.compile('\n  <p><a href="{{url}}">{{{title}}}</a></p>\n');
+var defaultEntryTemplate = _handlebars2.default.compile('\n  <p><a href="{{url}}">{{{title}}}</a></p>\n');
 
 var Index = function (_View) {
   _inherits(Index, _View);
@@ -12074,7 +12074,12 @@ var Index = function (_View) {
         return t.descriptor === _this2.attrs.template;
       });
 
-      if (!this.entryTemplate) this.entryTemplate = { descriptor: 'template.default', entryTemplate: entryTemplate };
+      if (!this.entryTemplate) {
+        this.entryTemplate = {
+          descriptor: 'template.default',
+          compiled: defaultEntryTemplate
+        };
+      }
 
       return _get(Index.prototype.__proto__ || Object.getPrototypeOf(Index.prototype), 'html', this).call(this);
     }

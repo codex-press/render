@@ -3,7 +3,7 @@ import Handlebars from 'handlebars';
 import View        from './view';
 import ArticleEmbed from './article_embed';
 
-let entryTemplate = Handlebars.compile(`
+let defaultEntryTemplate = Handlebars.compile(`
   <p><a href="{{url}}">{{{title}}}</a></p>
 `);
 
@@ -29,8 +29,12 @@ export default class Index extends View {
       t.descriptor === this.attrs.template
     );
 
-    if (!this.entryTemplate)
-      this.entryTemplate = {descriptor: 'template.default', entryTemplate};
+    if (!this.entryTemplate) {
+      this.entryTemplate = {
+        descriptor: 'template.default',
+        compiled: defaultEntryTemplate
+      };
+    }
 
     return super.html();
   }

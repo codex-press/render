@@ -139,9 +139,9 @@ export class ClientRenderer extends EventEmitter() {
 
     let tags = article.attrs.assets.reduce((tags, base_path) => {
 
-      // serve from development
       let repo = base_path.match(/^(.*?)([-./]|$)/)[1];
 
+      // serve from development
       if (devServer.fileList[repo]) {
         let url = 'https://localhost:8000/';
         // add JS and/or CSS depending on if they exist in offerings
@@ -155,21 +155,22 @@ export class ClientRenderer extends EventEmitter() {
           ));
           log.info(`fetching from development: ${base_path}.css`);
         }
-        return tags;
       }
 
       // serve normally
-      article.attrs.asset_data.map(data => {
-        let url;
-        if (env.development)
-          url = env.contentOrigin + '/' + data.asset_path;
-        else
-          url = env.contentOrigin + '/' + data.digest_path;
-        if (data.asset_path == base_path + '.js')
-          tags.push(makeScriptTag(url));
-        else if (data.asset_path == base_path + '.css')
-          tags.push(dom.create(`<link crossorigin rel=stylesheet href="${url}">`));
-      });
+      else {
+        article.attrs.asset_data.map(data => {
+          let url;
+          if (env.development)
+            url = env.contentOrigin + '/' + data.asset_path;
+          else
+            url = env.contentOrigin + '/' + data.digest_path;
+          if (data.asset_path == base_path + '.js')
+            tags.push(makeScriptTag(url));
+          else if (data.asset_path == base_path + '.css')
+            tags.push(dom.create(`<link crossorigin rel=stylesheet href="${url}">`));
+        });
+      }
 
       return tags;
     },[]);
@@ -230,11 +231,10 @@ export class ClientRenderer extends EventEmitter() {
         log.info('update: ', path);
 
         // onload doesn't work the second time so must replace the tag
-        tag.remove();
         let href = `https://localhost:8000/${path}?` + Date.now();
         let el = dom.create(`<link rel=stylesheet href="${href}">`)
         el.onload = () => article.resize();
-        dom.append(document.head, el);
+        dom(tag).insertAfter(el).remove();
       }
     }
 

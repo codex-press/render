@@ -12561,9 +12561,9 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
 
       var tags = _article2.default.attrs.assets.reduce(function (tags, base_path) {
 
-        // serve from development
         var repo = base_path.match(/^(.*?)([-./]|$)/)[1];
 
+        // serve from development
         if (_development_server2.default.fileList[repo]) {
           var url = 'https://localhost:8000/';
           // add JS and/or CSS depending on if they exist in offerings
@@ -12575,15 +12575,16 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
             tags.push(_dom2.default.create('<link crossorigin rel=stylesheet href="' + url + base_path + '.css">'));
             log.info('fetching from development: ' + base_path + '.css');
           }
-          return tags;
         }
 
         // serve normally
-        _article2.default.attrs.asset_data.map(function (data) {
-          var url = void 0;
-          if (env.development) url = env.contentOrigin + '/' + data.asset_path;else url = env.contentOrigin + '/' + data.digest_path;
-          if (data.asset_path == base_path + '.js') tags.push(makeScriptTag(url));else if (data.asset_path == base_path + '.css') tags.push(_dom2.default.create('<link crossorigin rel=stylesheet href="' + url + '">'));
-        });
+        else {
+            _article2.default.attrs.asset_data.map(function (data) {
+              var url = void 0;
+              if (env.development) url = env.contentOrigin + '/' + data.asset_path;else url = env.contentOrigin + '/' + data.digest_path;
+              if (data.asset_path == base_path + '.js') tags.push(makeScriptTag(url));else if (data.asset_path == base_path + '.css') tags.push(_dom2.default.create('<link crossorigin rel=stylesheet href="' + url + '">'));
+            });
+          }
 
         return tags;
       }, []);
@@ -12639,13 +12640,12 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
             log.info('update: ', path);
 
             // onload doesn't work the second time so must replace the tag
-            tag.remove();
             var href = 'https://localhost:8000/' + path + '?' + Date.now();
             var el = _dom2.default.create('<link rel=stylesheet href="' + href + '">');
             el.onload = function () {
               return _article2.default.resize();
             };
-            _dom2.default.append(document.head, el);
+            (0, _dom2.default)(tag).insertAfter(el).remove();
           }
         }
     }

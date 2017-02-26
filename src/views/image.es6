@@ -1,11 +1,12 @@
 import Handlebars from 'handlebars';
 
 import View from './view';
-import {findSource} from '../utility';
 
 
 let simpleTemplate = Handlebars.compile(`
-  <img x-cp-image x-cp-id={{  cpID  }} draggable=false
+  <img 
+    {{#if javascript }} x-cp-image x-cp-id={{  cpID  }} {{/if }}
+    draggable=false
     {{#if id }} id={{  id  }}{{/if }}
     {{#if javascript }}
       src="{{  thumbURL  }}"
@@ -14,7 +15,7 @@ let simpleTemplate = Handlebars.compile(`
     {{/if }}
     style="max-width: {{  maxWidth  }}px"
     class="{{  classes  }}">
-`);
+`.replace(/\n/g, ''));
 
 
 // cropping but just by center point. overlays are absolutely positioned in
@@ -34,7 +35,7 @@ let backgroundImageTemplate = Handlebars.compile(`
     <div class=shim style="padding-top: {{  padding  }}%;"></div>
 
   </{{tagName}}>
-`);
+`.replace(/\n/g, ''));
 
 
 // no cropping here. But with Javascript, it will constrain width if it's
@@ -49,8 +50,7 @@ let figureTemplate = Handlebars.compile(`
 
       <div class=frame>
         <div class=shim style="padding-top: {{  padding  }}%;"></div>
-        <img class=thumb src="{{  thumbURL  }}" draggable=false> 
-        <img class=full draggable=false> 
+        <img src="{{  thumbURL  }}" draggable=false> 
       </div>
       {{{  children  }}}
 
@@ -62,7 +62,7 @@ let figureTemplate = Handlebars.compile(`
     {{/if}}
 
   </figure>
-`);
+`.replace(/\n/g, ''));
 
 
 // JS only: cropping and nice overlays on top
@@ -75,15 +75,14 @@ let cropTemplate = Handlebars.compile(`
       <div class=shim style="padding-top: {{  padding  }}%;"></div>
       <div class=crop-box></div>
       <div class=crop>
-        <img class=thumb src="{{  thumbURL  }}" draggable=false> 
-        <img class=full draggable=false> 
+        <img src="{{  thumbURL  }}" draggable=false> 
       </div>
     </div>
 
     {{{  children  }}}
 
   </figure>
-`);
+`.replace(/\n/g, ''));
 
 
 export default class ImageView extends View {
@@ -98,7 +97,7 @@ export default class ImageView extends View {
 
 
   html() {
-    this.source = findSource(this.attrs.media.srcset, this.quality());
+    this.source = this.attrs.media.srcset.slice().reverse().find(s => s.width <= 1000);
     this.sourceURL = this.article.attrs.content_origin + this.source.url;
 
     // setting <img> just gives you an image and you're on your own
@@ -117,7 +116,9 @@ export default class ImageView extends View {
 
   simpleHTML() {
 
-    let highestSource = findSource(this.attrs.media.srcset, 'high');
+    let highestSource = this.attrs.media.srcset.slice().reverse()[0];
+    console.log({highestSource});
+    console.log(this.attrs.media.srcset);
     let maxWidth = Math.round(1.2 * Math.min(
       highestSource.width,
       this.attrs.media.original_width
@@ -129,7 +130,7 @@ export default class ImageView extends View {
       classes: this.classes(),
       maxWidth,
       sourceURL: this.sourceURL,
-      thumbURL: this.thumbSource(),
+      thumbURL: this.attrs.media.base64_thumb,
       javascript: this.article.attrs.javascript,
     });
   }
@@ -146,13 +147,13 @@ export default class ImageView extends View {
       position = ` background-position: ${round(x)}% ${round(y)}%`;
     }
 
-    let highestSource = findSource(this.attrs.media.srcset, 'high');
+    let highestSource = this.attrs.media.srcset.slice().reverse()[0];
     let maxWidth = 1.2 * highestSource.width;
     let maxHeight = 1.2 * highestSource.height;
 
     let url;
     if (this.article.attrs.javascript)
-      url = this.thumbSource();
+      url = this.attrs.media.base64_thumb;
     else
       url = this.sourceURL;
 
@@ -178,7 +179,7 @@ export default class ImageView extends View {
       id: this.id(),
       classes: this.classes(),
       sourceURL: this.sourceURL,
-      thumbURL: this.thumbSource(),
+      thumbURL: this.attrs.media.base64_thumb,
       padding: (this.aspectRatio * 1000) / 10,
       children: this.childrenHTML(),
       javascript: this.article.attrs.javascript,
@@ -192,7 +193,7 @@ export default class ImageView extends View {
       id: this.id(),
       classes: this.classes(),
       sourceURL: this.sourceURL,
-      thumbURL: this.thumbSource(),
+      thumbURL: this.attrs.media.base64_thumb,
       padding: (this.aspectRatio * 1000) / 10,
       children: this.childrenHTML(),
       javascript: this.article.attrs.javascript,
@@ -213,20 +214,6 @@ export default class ImageView extends View {
       return 'img';
     else
       return super.tagName();
-  }
-
-
-  quality() {
-    var classes = (this.attrs.classes || []);
-    if (classes.includes('low-quality')) return 'low';
-    if (classes.includes('medium-quality')) return 'medium';
-    if (classes.includes('high-quality')) return 'high';
-    return this.article.attrs.quality;
-  }
-
-
-  thumbSource() {
-    return 'data:image/jpeg;base64,' + this.attrs.media.base64_thumb;
   }
 
 

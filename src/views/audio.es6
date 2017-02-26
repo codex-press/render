@@ -1,7 +1,6 @@
 import Handlebars from 'handlebars';
 
 import View         from './view';
-import {findSource} from '../utility';
 import icons from '../icons';
 
 let template = Handlebars.compile(`
@@ -24,10 +23,7 @@ export default class Audio extends View {
 
  
   html() {
-    this.source = findSource(
-      this.attrs.media.srcset,
-      this.article.attrs.quality
-    );
+    this.source = this.attrs.media.srcset.slice().reverse()[0];
 
     let sourceUrl = this.article.attrs.content_origin + this.source.url;
 

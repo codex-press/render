@@ -1,18 +1,4 @@
 
-// find appropriate high, medium or low
-export const findSource = function findSource(srcset, quality) {
-
-  // not a high enough quality exists
-  if (!srcset[quality] && quality === 'high')
-    quality = 'medium';
-
-  if (!srcset[quality] && quality === 'medium')
-    quality = 'low';
-
-  return srcset[quality];
-}
-
-
 export const unscopeLinks = function unscopeLinks(html, pathPrefix) {
   let hrefRE = /<a[^>]* href="?([^" >]*?)[" >]/g;
   let newHTML = html.replace(hrefRE, (string, url) => {

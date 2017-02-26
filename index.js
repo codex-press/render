@@ -10808,14 +10808,18 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = {
-  "audio": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon audio\"><path d=\"M19.6 7.1c4.8 2.9 5.4 14.1 0 16.7-.9.4-.1 1.7.8 1.3 6.5-3.2 5.8-15.8 0-19.3-.9-.4-1.6.9-.8 1.3z\" class=\"on\"/><path d=\"M22.6 2.6c7.9 4.4 7.9 21.3 0 25.7-.8.5-.1 1.8.8 1.3 8.9-5 8.9-23.3 0-28.3-.9-.4-1.6.9-.8 1.3z\" class=\"on\"/><path d=\"M17.5 11.5c2 1.6 2.7 6.3.2 7.8-.8.5-.1 1.8.8 1.3 3.3-2 3-8 .2-10.2-.9-.5-2 .5-1.2 1.1z\" class=\"on\"/><path d=\"M20.4 20.6h-.3c-.4 0-.8-.4-.8-.8V12c0-.4.4-.8.8-.8h.3c.4 0 .8.4.8.8v7.8c0 .5-.4.8-.8.8z\" class=\"pause\"/><path d=\"M24.4 20.6h-.3c-.4 0-.8-.4-.8-.8V12c0-.4.4-.8.8-.8h.3c.4 0 .8.4.8.8v7.8c0 .5-.4.8-.8.8z\" class=\"pause\"/><path d=\"M19 19.3l-.2-.2c-.3-.3-.3-.8 0-1.1l5.5-5.5c.3-.3.8-.3 1.1 0l.2.2c.3.3.3.8 0 1.1l-5.5 5.5c-.3.3-.8.3-1.1 0z\" class=\"off\"/><path d=\"M18.8 12.6l.2-.2c.3-.3.8-.3 1.1 0l5.5 5.5c.3.3.3.8 0 1.1l-.2.2c-.3.3-.8.3-1.1 0l-5.5-5.5c-.3-.3-.3-.8 0-1.1z\" class=\"off\"/><path d=\"M14.3 6c-.3 0-.4.1-.7.3L8 12H3.2c-.3 0-.6 0-.9.3-.2.1-.3.4-.3.7v7c0 .3.1.6.3.7s.4.3.7.3h4.8l5.7 5.7c.3.1.4.3.7.3.3 0 .6-.1.7-.3.1-.1.3-.4.3-.7V7c0-.3-.1-.6-.3-.7 0-.2-.3-.3-.6-.3z\"/></svg>",
-  "email": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon email\"><path d=\"M28.1 24.1V12.7c-.3.4-.7.7-1 1-2.8 2-8.7 6.5-9.3 6.8-.6.3-1 .4-1.6.4-.4 0-1-.1-1.6-.4-.6-.3-6.5-4.7-9.3-6.8-.4-.3-.7-.7-1-1v11.4c0 .1 0 .3.1.3 0 .1.1.1.3.1h23c.1 0 .3 0 .3-.1-.1 0 .1-.2.1-.3zm0-15.6v-.6l-.1-.3-.1-.1H4.5c-.1 0-.3 0-.3.1-.1.2-.1.2-.1.3 0 1.7.7 3.1 2.2 4.2 2.1 1.6 8.3 6.8 9.6 6.8.3 0 .4 0 .7-.1.3-.1.4-.3.7-.4.3-.1 6.2-4.7 8.1-6.2.7-.4 1.2-1 1.8-1.7.7-.8.9-1.5.9-2zm1.9-.6v16.2c0 .7-.3 1.3-.7 1.7-.4.4-1 .7-1.8.7h-23c-.7 0-1.3-.3-1.8-.7-.4-.4-.7-1-.7-1.7V7.9c0-.7.3-1.3.7-1.7s1-.7 1.8-.7h23c.7 0 1.3.3 1.8.7.4.4.7 1.1.7 1.7z\"/></svg>",
-  "facebook": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon facebook\"><path d=\"M23.5 2.2v4.4h-2.7c-1 0-1.7.2-2 .6-.3.4-.5 1-.5 1.8v3.2h5.1l-.7 5h-4.4V30H13V17.2H8.5v-5h4.4V8.6c0-2.1.6-3.7 1.8-4.9S17.5 2 19.5 2c1.7 0 3.1.1 4 .2z\"/></svg>",
-  "fullscreen": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon fullscreen\"><path d=\"M2 20.5l3.2 3.2 7-7c.2-.2.4-.2.6 0l2.5 2.5c.2.2.2.4 0 .6l-7 7 3.2 3.2c.2.2.1.7-.3.7l-9.8.3c-.2 0-.4-.2-.4-.4l.3-9.8c0-.4.4-.5.7-.3z\" class=\"expand\"/><path d=\"M20.8 1.3l9.8-.3c.2 0 .4.2.4.4l-.3 9.8c0 .4-.4.5-.7.3l-3.2-3.2-7 7c-.2.2-.4.2-.6 0l-2.5-2.5c-.2-.2-.2-.4 0-.6l7-7L20.5 2c-.2-.3-.1-.7.3-.7z\" class=\"expand\"/><path d=\"M17.5 5l3.2 3.2 7-7c.2-.2.4-.2.6 0l2.5 2.5c.2.3.2.5 0 .7l-7 7 3.2 3.2c.2.2.1.7-.3.7l-9.7.2c-.2 0-.4-.2-.4-.4l.3-9.8c0-.4.4-.5.6-.3z\" class=\"collapse\"/><path d=\"M5.2 16.7l9.8-.3c.2 0 .4.2.4.4l-.3 9.8c0 .4-.4.5-.7.3l-3.2-3.2-7 7c-.2.2-.4.2-.6 0l-2.5-2.5c-.1-.2-.1-.5 0-.6l7-7-3.2-3.2c-.2-.2-.1-.7.3-.7z\" class=\"collapse\"/></svg>",
-  "play": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon play\"><path d=\"M11.8 31H7.4c-.4 0-.8-.4-.8-.8V1.8c0-.4.3-.8.8-.8h4.4c.4 0 .8.4.8.8v28.4c0 .4-.4.8-.8.8z\" class=\"pause\"/><path d=\"M24.6 31h-4.4c-.4 0-.8-.4-.8-.8V1.8c0-.4.4-.8.8-.8h4.4c.4 0 .8.4.8.8v28.4c0 .4-.3.8-.8.8z\" class=\"pause\"/><path d=\"M5 16.1V2.5c0-.6.7-1 1.2-.7L18 8.6l11.8 6.8c.5.3.5 1.1 0 1.4L18 23.6 6.2 30.4c-.5.3-1.2 0-1.2-.7V16.1z\" class=\"play\"/></svg>",
-  "reddit": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon reddit\"><path d=\"M29.9 16c0 .6-.2 1.1-.5 1.6s-.7.9-1.2 1.1c.1.5.2 1 .2 1.5 0 1.6-.6 3.1-1.7 4.4s-2.6 2.4-4.5 3.2-4 1.2-6.2 1.2-4.3-.4-6.2-1.2-3.5-1.8-4.6-3.2-1.7-2.8-1.7-4.4c0-.5.1-1 .2-1.4-.5-.3-1-.6-1.3-1.1-.3-.5-.5-1-.5-1.6 0-.8.3-1.6.9-2.2S4.1 13 5 13c.9 0 1.6.3 2.3 1 2.3-1.6 5-2.4 8-2.5l1.8-8c0-.1.1-.2.2-.3s.4-.2.5-.2l5.8 1.2c.2-.4.5-.7.8-.9s.8-.3 1.3-.3c.6 0 1.2.2 1.7.7s.7 1 .7 1.6-.2 1.2-.7 1.6c-.5.5-1 .7-1.7.7s-1.2-.2-1.7-.7c-.5-.4-.7-1-.7-1.6l-5.2-1.1-1.6 7.3c3.1.1 5.8.9 8.1 2.5.6-.6 1.3-.9 2.2-.9.9 0 1.6.3 2.2.9s.9 1.2.9 2zM8.5 19.1c0 .6.2 1.2.7 1.6.5.5 1 .7 1.6.7s1.2-.2 1.7-.7c.5-.5.7-1 .7-1.6 0-.6-.2-1.2-.7-1.6-.5-.4-1-.7-1.7-.7-.6 0-1.2.2-1.6.7-.5.4-.7.9-.7 1.6zm12.6 5.4c.1-.1.2-.2.2-.4s-.1-.3-.2-.4c-.1-.1-.2-.2-.4-.2s-.3.1-.4.2c-.4.4-1.1.7-1.9 1-.8.2-1.7.3-2.5.3s-1.7-.1-2.5-.3c-.8-.2-1.5-.5-1.9-1-.1-.1-.2-.2-.4-.2s-.3.1-.4.2c-.1.1-.2.2-.2.4s.1.3.2.4c.4.4 1.1.8 1.9 1 .8.3 1.4.4 1.9.5.5 0 1 .1 1.4.1s.9 0 1.4-.1c.5 0 1.1-.2 1.9-.5.9-.2 1.5-.5 1.9-1zm0-3.1c.6 0 1.2-.2 1.6-.7.5-.5.7-1 .7-1.6 0-.6-.2-1.2-.7-1.6s-1-.7-1.6-.7c-.6 0-1.2.2-1.7.7-.5.4-.7 1-.7 1.6 0 .6.2 1.2.7 1.6.5.4 1 .7 1.7.7z\"/></svg>",
-  "share": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon share\"><circle cx=\"5\" cy=\"11\" r=\"3.5\"/><circle cx=\"25.5\" cy=\"6.5\" r=\"5\"/><circle cx=\"16.1\" cy=\"16.1\" r=\"2.6\"/><circle cx=\"25.3\" cy=\"25.3\" r=\"5.2\"/><path fill=\"none\" stroke-width=\"1.5\" stroke-miterlimit=\"10\" d=\"M4 11l12 5.1\"/><path fill=\"none\" stroke-width=\"1.5\" stroke-miterlimit=\"10\" d=\"M25.5 25.5l-9-9.9 9-9.1\"/></svg>",
-  "twitter": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon twitter\"><path d=\"M30 7.7c-.8 1.2-1.8 2.2-2.9 3v.8c0 1.6-.2 3.1-.7 4.7s-1.1 3-2.1 4.5-2 2.7-3.3 3.8c-1.3 1.1-2.8 2-4.6 2.6-1.8.7-3.7 1-5.7 1-3.2 0-6.1-.9-8.8-2.6.4 0 .9.1 1.4.1 2.7 0 5-.8 7.1-2.5-1.2 0-2.4-.4-3.3-1.2s-1.7-1.7-2-2.9c.4.1.8.1 1.1.1.5 0 1-.1 1.5-.2-1.3-.3-2.4-.9-3.3-2s-1.3-2.3-1.3-3.7v-.1c.8.5 1.7.7 2.6.7-.8-.5-1.4-1.2-1.9-2.1-.4-.8-.6-1.7-.6-2.7 0-1.1.3-2 .8-2.9 1.4 1.8 3.2 3.2 5.2 4.3s4.3 1.7 6.6 1.8c-.1-.5-.1-.9-.1-1.3 0-1.6.6-3 1.7-4.1s2.4-1.8 4-1.8c1.7 0 3.1.6 4.2 1.8 1.3-.3 2.5-.7 3.6-1.4-.4 1.4-1.3 2.4-2.5 3.2 1.1-.1 2.2-.4 3.3-.9z\"/></svg>"
+  "audio": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon audio\"><path d=\"M19.62 7.15c4.85 2.89 5.43 14.06 0 16.7-.87.42-.11 1.72.76 1.3 6.49-3.16 5.81-15.83 0-19.3a.75.75 0 0 0-.76 1.3z\" class=\"on\"/><path d=\"M22.62 2.65c7.93 4.39 7.91 21.31 0 25.7-.84.47-.09 1.76.76 1.3 8.94-5 8.94-23.34 0-28.3-.85-.47-1.6.83-.76 1.3z\" class=\"on\"/><path d=\"M17.47 11.53c2 1.6 2.7 6.3.15 7.82a.75.75 0 0 0 .76 1.3c3.32-2 3-8 .15-10.18-.75-.59-1.82.47-1.06 1.06z\" class=\"on\"/><rect x=\"21.24\" y=\"11.16\" width=\"1.88\" height=\"9.38\" rx=\".8\" ry=\".8\" transform=\"rotate(45 22.176 15.846)\" class=\"off\"/><rect x=\"21.24\" y=\"11.16\" width=\"1.88\" height=\"9.38\" rx=\".8\" ry=\".8\" transform=\"rotate(135 22.18 15.848)\" class=\"off\"/><path d=\"M14.34 6c-.29 0-.44.15-.74.29L8 12H3.18a1.09 1.09 0 0 0-.88.29A1.11 1.11 0 0 0 2 13v7a1.11 1.11 0 0 0 .29.73A1.13 1.13 0 0 0 3 21h4.85l5.75 5.71c.29.15.44.29.74.29a1.13 1.13 0 0 0 .74-.29 1.11 1.11 0 0 0 .29-.73V7a1.11 1.11 0 0 0-.29-.73 1.13 1.13 0 0 0-.74-.27z\"/></svg>",
+  "captions": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon captions\"><rect x=\"1.78\" y=\"7.41\" width=\"28.43\" height=\"17.18\" rx=\".91\" ry=\".91\"/><path d=\"M11.48 18.48h9.83\"/><path d=\"M22.85 18.48h3.13\"/><path d=\"M5.55 18.48h4.53\"/><path d=\"M7.65 21.17h9.83\"/><path d=\"M18.97 21.17h4.91\"/></svg>",
+  "email": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon email\"><path d=\"M28.07 24.1V12.69a6.69 6.69 0 0 1-1 1c-2.81 2-8.74 6.48-9.33 6.77a3.51 3.51 0 0 1-1.63.42 4 4 0 0 1-1.63-.42c-.59-.28-6.52-4.65-9.33-6.77a6.69 6.69 0 0 1-1-1V24.1c0 .14 0 .28.15.28s.15.14.3.14h23c.15 0 .3 0 .3-.14a.31.31 0 0 0 .17-.28zm0-15.64V7.9l-.15-.28-.15-.14H4.52c-.15 0-.3 0-.3.14s-.15.14-.15.28a5.12 5.12 0 0 0 2.23 4.22c2.07 1.55 8.3 6.77 9.63 6.77a1.39 1.39 0 0 0 .74-.14c.3-.14.44-.28.74-.42s6.22-4.65 8.15-6.2a6.6 6.6 0 0 0 1.78-1.69 3 3 0 0 0 .73-1.98zM30 7.9v16.2a2.28 2.28 0 0 1-.74 1.69 2.52 2.52 0 0 1-1.78.7h-23a2.52 2.52 0 0 1-1.78-.7A2.28 2.28 0 0 1 2 24.1V7.9a2.28 2.28 0 0 1 .74-1.7 2.52 2.52 0 0 1 1.78-.7h23A2.47 2.47 0 0 1 30 7.9z\"/></svg>",
+  "facebook": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon facebook\"><path d=\"M23.5 2.2v4.44h-2.73a2.6 2.6 0 0 0-2 .61 2.73 2.73 0 0 0-.52 1.82v3.18h5.09l-.68 5h-4.42V30h-5.31V17.23H8.5v-5h4.43V8.58a6.4 6.4 0 0 1 1.81-4.85A6.67 6.67 0 0 1 19.54 2a29.62 29.62 0 0 1 3.96.2z\"/></svg>",
+  "fullscreen": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon fullscreen\"><path d=\"M2 20.5l3.2 3.2 7-7a.4.4 0 0 1 .57 0l2.54 2.54a.4.4 0 0 1 0 .57l-7 7L11.5 30a.4.4 0 0 1-.27.68L1.41 31a.4.4 0 0 1-.41-.41l.3-9.82a.4.4 0 0 1 .7-.27z\" class=\"expand\"/><path d=\"M20.77 1.3l9.82-.3a.4.4 0 0 1 .41.41l-.3 9.82a.4.4 0 0 1-.68.27l-3.2-3.2-7 7a.4.4 0 0 1-.57 0l-2.54-2.54a.4.4 0 0 1 0-.57l7-7L20.5 2a.4.4 0 0 1 .27-.7z\" class=\"expand\"/><path d=\"M17.54 5l3.2 3.2 7-7a.4.4 0 0 1 .57 0l2.54 2.54a.4.4 0 0 1 0 .57l-7 7 3.2 3.2a.4.4 0 0 1-.27.68l-9.82.3a.4.4 0 0 1-.41-.41l.3-9.82a.4.4 0 0 1 .69-.26z\" class=\"collapse\"/><path d=\"M5.18 16.73l9.82-.3a.4.4 0 0 1 .41.41l-.3 9.82a.4.4 0 0 1-.68.27l-3.2-3.2-7 7a.4.4 0 0 1-.57 0l-2.51-2.59a.4.4 0 0 1 0-.57l7-7-3.2-3.2a.4.4 0 0 1 .23-.64z\" class=\"collapse\"/></svg>",
+  "pause": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon pause\"><rect x=\"6.57\" y=\"1\" width=\"6\" height=\"30\" rx=\".8\" ry=\".8\" class=\"pause\"/><rect x=\"19.43\" y=\"1\" width=\"6\" height=\"30\" rx=\".8\" ry=\".8\" class=\"pause\"/></svg>",
+  "play_pause": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon play-pause\"><rect x=\"6.57\" y=\"1\" width=\"6\" height=\"30\" rx=\".8\" ry=\".8\" class=\"pause\"/><rect x=\"19.43\" y=\"1\" width=\"6\" height=\"30\" rx=\".8\" ry=\".8\" class=\"pause\"/><path d=\"M5 16.14V2.52a.8.8 0 0 1 1.2-.69L18 8.63l11.82 6.81a.8.8 0 0 1 0 1.39L18 23.64l-11.8 6.8a.8.8 0 0 1-1.2-.7z\" class=\"play\"/></svg>",
+  "play": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon play\"><path d=\"M3.4 16.14V2.52a.8.8 0 0 1 1.2-.69l11.78 6.8 11.82 6.82a.8.8 0 0 1 0 1.39l-11.8 6.8-11.8 6.8a.8.8 0 0 1-1.2-.69z\" class=\"play\"/></svg>",
+  "quality": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon quality\"><rect x=\"1.85\" y=\"19.63\" width=\"4.18\" height=\"11.16\" rx=\"1.36\" ry=\"1.36\" class=\"bar-1\"/><rect x=\"9.89\" y=\"15.41\" width=\"4.18\" height=\"15.37\" rx=\"1.36\" ry=\"1.36\" class=\"bar-2\"/><rect x=\"17.93\" y=\"9.34\" width=\"4.18\" height=\"21.45\" rx=\"1.36\" ry=\"1.36\" class=\"bar-3\"/><rect x=\"25.98\" y=\"2.4\" width=\"4.18\" height=\"28.39\" rx=\"1.36\" ry=\"1.36\" class=\"bar-4\"/></svg>",
+  "reddit": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon reddit\"><path d=\"M29.95 16a3 3 0 0 1-.46 1.62 3 3 0 0 1-1.24 1.11 5.73 5.73 0 0 1 .19 1.48 6.81 6.81 0 0 1-1.66 4.41 11.22 11.22 0 0 1-4.54 3.2A16.36 16.36 0 0 1 16 29a16.3 16.3 0 0 1-6.24-1.18 11.22 11.22 0 0 1-4.53-3.2 6.81 6.81 0 0 1-1.66-4.41 6.22 6.22 0 0 1 .17-1.44 3.11 3.11 0 0 1-1.28-1.13 3 3 0 0 1 .42-3.8 3 3 0 0 1 2.2-.9 3 3 0 0 1 2.27 1 14.78 14.78 0 0 1 8-2.49l1.81-8a.55.55 0 0 1 .64-.4l5.77 1.24a2.21 2.21 0 0 1 .84-.91 2.38 2.38 0 0 1 2.89.32 2.18 2.18 0 0 1 .7 1.59 2.2 2.2 0 0 1-.69 1.63 2.37 2.37 0 0 1-3.3 0 2.19 2.19 0 0 1-.68-1.62l-5.21-1.13-1.62 7.25a14.91 14.91 0 0 1 8.11 2.46 3.14 3.14 0 0 1 4.44 0 2.93 2.93 0 0 1 .9 2.12zM8.48 19.06a2.21 2.21 0 0 0 .68 1.63 2.25 2.25 0 0 0 1.65.68 2.28 2.28 0 0 0 1.66-.68 2.2 2.2 0 0 0 .69-1.63 2.18 2.18 0 0 0-.69-1.62 2.29 2.29 0 0 0-1.66-.67 2.26 2.26 0 0 0-1.64.68 2.18 2.18 0 0 0-.69 1.61zm12.66 5.46a.55.55 0 0 0 0-.8.53.53 0 0 0-.39-.15.59.59 0 0 0-.41.15 3.93 3.93 0 0 1-1.89 1 10.32 10.32 0 0 1-5 0 3.93 3.93 0 0 1-1.89-1 .59.59 0 0 0-.41-.15.53.53 0 0 0-.39.15.5.5 0 0 0-.17.39.55.55 0 0 0 .17.41 4.65 4.65 0 0 0 1.85 1 9.36 9.36 0 0 0 1.91.45q.73.07 1.42.07t1.43-.04a9.36 9.36 0 0 0 1.91-.45 4.65 4.65 0 0 0 1.85-1.04zm0-3.15a2.25 2.25 0 0 0 1.65-.68 2.21 2.21 0 0 0 .68-1.63 2.18 2.18 0 0 0-.69-1.61 2.26 2.26 0 0 0-1.64-.68 2.29 2.29 0 0 0-1.66.67 2.18 2.18 0 0 0-.69 1.62 2.2 2.2 0 0 0 .69 1.63 2.28 2.28 0 0 0 1.61.67z\"/></svg>",
+  "share": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon share\"><circle cx=\"5.03\" cy=\"10.97\" r=\"3.53\"/><circle cx=\"25.47\" cy=\"6.53\" r=\"5.03\"/><circle cx=\"16.07\" cy=\"16.07\" r=\"2.57\"/><circle cx=\"25.3\" cy=\"25.3\" r=\"5.2\"/><path d=\"M4 11l12 5.14\"/><path d=\"M25.5 25.5l-9-9.86 9-9.14\"/></svg>",
+  "twitter": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\" class=\"cp-icon twitter\"><path d=\"M30 7.73a12.1 12.1 0 0 1-2.88 3v.75a16.66 16.66 0 0 1-.68 4.66 16.94 16.94 0 0 1-2.05 4.47 17.49 17.49 0 0 1-3.28 3.78A14.55 14.55 0 0 1 16.59 27a16.61 16.61 0 0 1-5.74 1A15.81 15.81 0 0 1 2 25.39a12.15 12.15 0 0 0 1.39.07A11.16 11.16 0 0 0 10.55 23a5.55 5.55 0 0 1-3.34-1.16 5.68 5.68 0 0 1-2-2.87 7.19 7.19 0 0 0 1.08.09 5.87 5.87 0 0 0 1.51-.2 5.79 5.79 0 0 1-4.6-5.7v-.07a5.64 5.64 0 0 0 2.59.74 5.77 5.77 0 0 1-1.87-2.07A5.88 5.88 0 0 1 4 6.06a16.3 16.3 0 0 0 5.23 4.29 15.85 15.85 0 0 0 6.6 1.79 6.52 6.52 0 0 1-.14-1.33 5.63 5.63 0 0 1 1.68-4.11 5.71 5.71 0 0 1 8.25.13 11.18 11.18 0 0 0 3.64-1.4 5.62 5.62 0 0 1-2.52 3.2 11.33 11.33 0 0 0 3.26-.9z\"/></svg>"
 };
 
 },{}],51:[function(require,module,exports){
@@ -10867,7 +10871,7 @@ function factory() {
 
     date: '<time class=pubdate datetime="{{publication_date}}">{{ formatDate publication_date "longDate" }}</time>',
 
-    play: '<span class="cp-play-button">' + _icons2.default.play + '</span>',
+    play: '<span class="cp-play-button">' + _icons2.default.play_pause + '</span>',
     audio: '<span class="cp-audio-button">' + _icons2.default.audio + '</span>',
     share: '<span class="cp-share-button">' + _icons2.default.share + '</span>',
     fullscreen: '<span class="cp-fullscreen-button">' + _icons2.default.fullscreen + '</span>',
@@ -10908,21 +10912,20 @@ function factory() {
   handlebars.registerHelper('cover', function () {
     var options = arguments[arguments.length - 1];
 
-    var size = 'low';
-    if (arguments.length > 1) size = arguments[0];
-
     // there is no cover image
     var cover = options.data.root.cover;
     if (!cover) {
       if (options.fn) return '<div class=cover>' + options.fn(this) + '</div>';else return '';
     }
 
-    var source = u.findSource(cover.media.srcset, size);
+    var source = cover.media.srcset.slice().reverse().find(function (s) {
+      return s.type != 'vide' && s.width <= 500;
+    });
 
     var cpID = cover.id;
 
     var url = void 0;
-    if (options.data.root.javascript) url = 'data:image/jpeg;base64,' + cover.media.base64_thumb;else if (cover.type === 'Video') url = options.data.root.content_origin + source.poster;else url = options.data.root.content_origin + source.url;
+    if (options.data.root.javascript) url = cover.media.base64_thumb;else url = options.data.root.content_origin + source.url;
 
     var aspectRatio = source.height / source.width;
     var padding = Math.round(aspectRatio * 1000) / 10;
@@ -10934,8 +10937,7 @@ function factory() {
       position = ' background-position: ' + x + '% ' + y + '%';
     }
 
-    var highestSource = u.findSource(cover.media.srcset, 'high');
-    var maxWidth = Math.round(1.2 * Math.min(highestSource.width, cover.media.original_width));
+    var maxWidth = Math.round(1.2 * cover.media.original_width);
     maxWidth = 'max-width: ' + maxWidth + 'px';
 
     if (options.fn) {
@@ -11008,17 +11010,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
-// find appropriate high, medium or low
-var findSource = exports.findSource = function findSource(srcset, quality) {
-
-  // not a high enough quality exists
-  if (!srcset[quality] && quality === 'high') quality = 'medium';
-
-  if (!srcset[quality] && quality === 'medium') quality = 'low';
-
-  return srcset[quality];
-};
 
 var unscopeLinks = exports.unscopeLinks = function unscopeLinks(html, pathPrefix) {
   var hrefRE = /<a[^>]* href="?([^" >]*?)[" >]/g;
@@ -11501,8 +11492,6 @@ var _view = require('./view');
 
 var _view2 = _interopRequireDefault(_view);
 
-var _utility = require('../utility');
-
 var _icons = require('../icons');
 
 var _icons2 = _interopRequireDefault(_icons);
@@ -11529,7 +11518,7 @@ var Audio = function (_View) {
   _createClass(Audio, [{
     key: 'html',
     value: function html() {
-      this.source = (0, _utility.findSource)(this.attrs.media.srcset, this.article.attrs.quality);
+      this.source = this.attrs.media.srcset.slice().reverse()[0];
 
       var sourceUrl = this.article.attrs.content_origin + this.source.url;
 
@@ -11547,7 +11536,7 @@ var Audio = function (_View) {
 
 exports.default = Audio;
 
-},{"../icons":50,"../utility":53,"./view":63,"handlebars":33}],57:[function(require,module,exports){
+},{"../icons":50,"./view":63,"handlebars":33}],57:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -11846,8 +11835,6 @@ var _view = require('./view');
 
 var _view2 = _interopRequireDefault(_view);
 
-var _utility = require('../utility');
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -11856,19 +11843,19 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var simpleTemplate = _handlebars2.default.compile('\n  <img x-cp-image x-cp-id={{  cpID  }} draggable=false\n    {{#if id }} id={{  id  }}{{/if }}\n    {{#if javascript }}\n      src="{{  thumbURL  }}"\n    {{ else }}\n      src="{{  sourceURL  }}"\n    {{/if }}\n    style="max-width: {{  maxWidth  }}px"\n    class="{{  classes  }}">\n');
+var simpleTemplate = _handlebars2.default.compile('\n  <img \n    {{#if javascript }} x-cp-image x-cp-id={{  cpID  }} {{/if }}\n    draggable=false\n    {{#if id }} id={{  id  }}{{/if }}\n    {{#if javascript }}\n      src="{{  thumbURL  }}"\n    {{ else }}\n      src="{{  sourceURL  }}"\n    {{/if }}\n    style="max-width: {{  maxWidth  }}px"\n    class="{{  classes  }}">\n'.replace(/\n/g, ''));
 
 // cropping but just by center point. overlays are absolutely positioned in
 // CSS
-var backgroundImageTemplate = _handlebars2.default.compile('\n  <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}\n    {{#if id }} id={{  id  }}{{/if }}\n    class="{{  classes  }}"\n    style="\n      background-image: url({{ url }});\n      {{  position  }};\n      max-width: {{  maxWidth }}px;\n      max-height: {{ maxHeight }}px;">\n\n    {{{  children  }}}\n\n    <div class=shim style="padding-top: {{  padding  }}%;"></div>\n\n  </{{tagName}}>\n');
+var backgroundImageTemplate = _handlebars2.default.compile('\n  <{{tagName}} x-cp-background-image x-cp-id={{  cpID  }}\n    {{#if id }} id={{  id  }}{{/if }}\n    class="{{  classes  }}"\n    style="\n      background-image: url({{ url }});\n      {{  position  }};\n      max-width: {{  maxWidth }}px;\n      max-height: {{ maxHeight }}px;">\n\n    {{{  children  }}}\n\n    <div class=shim style="padding-top: {{  padding  }}%;"></div>\n\n  </{{tagName}}>\n'.replace(/\n/g, ''));
 
 // no cropping here. But with Javascript, it will constrain width if it's
 // too big for the container (like for the max-height 100vh). JS positions
 // overlays on top and perhaps will move the ones below to the side.
-var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure \n    {{#if id }} id={{  id  }}{{/if }}\n    x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n      {{{  children  }}}\n\n    {{else}}\n\n      <img src="{{  sourceURL  }}" draggable=false> \n      {{{  children  }}}\n\n    {{/if}}\n\n  </figure>\n');
+var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure \n    {{#if id }} id={{  id  }}{{/if }}\n    x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <img src="{{  thumbURL  }}" draggable=false> \n      </div>\n      {{{  children  }}}\n\n    {{else}}\n\n      <img src="{{  sourceURL  }}" draggable=false> \n      {{{  children  }}}\n\n    {{/if}}\n\n  </figure>\n'.replace(/\n/g, ''));
 
 // JS only: cropping and nice overlays on top
-var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure \n    {{#if id }} id={{  id  }}{{/if }}\n    x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop-box></div>\n      <div class=crop>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=full draggable=false> \n      </div>\n    </div>\n\n    {{{  children  }}}\n\n  </figure>\n');
+var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-image x-cp-figure \n    {{#if id }} id={{  id  }}{{/if }}\n    x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop-box></div>\n      <div class=crop>\n        <img src="{{  thumbURL  }}" draggable=false> \n      </div>\n    </div>\n\n    {{{  children  }}}\n\n  </figure>\n'.replace(/\n/g, ''));
 
 var ImageView = function (_View) {
   _inherits(ImageView, _View);
@@ -11885,7 +11872,9 @@ var ImageView = function (_View) {
   _createClass(ImageView, [{
     key: 'html',
     value: function html() {
-      this.source = (0, _utility.findSource)(this.attrs.media.srcset, this.quality());
+      this.source = this.attrs.media.srcset.slice().reverse().find(function (s) {
+        return s.width <= 1000;
+      });
       this.sourceURL = this.article.attrs.content_origin + this.source.url;
 
       // setting <img> just gives you an image and you're on your own
@@ -11899,7 +11888,9 @@ var ImageView = function (_View) {
     key: 'simpleHTML',
     value: function simpleHTML() {
 
-      var highestSource = (0, _utility.findSource)(this.attrs.media.srcset, 'high');
+      var highestSource = this.attrs.media.srcset.slice().reverse()[0];
+      console.log({ highestSource: highestSource });
+      console.log(this.attrs.media.srcset);
       var maxWidth = Math.round(1.2 * Math.min(highestSource.width, this.attrs.media.original_width));
 
       return simpleTemplate({
@@ -11908,7 +11899,7 @@ var ImageView = function (_View) {
         classes: this.classes(),
         maxWidth: maxWidth,
         sourceURL: this.sourceURL,
-        thumbURL: this.thumbSource(),
+        thumbURL: this.attrs.media.base64_thumb,
         javascript: this.article.attrs.javascript
       });
     }
@@ -11927,12 +11918,12 @@ var ImageView = function (_View) {
         position = ' background-position: ' + round(x) + '% ' + round(y) + '%';
       }
 
-      var highestSource = (0, _utility.findSource)(this.attrs.media.srcset, 'high');
+      var highestSource = this.attrs.media.srcset.slice().reverse()[0];
       var maxWidth = 1.2 * highestSource.width;
       var maxHeight = 1.2 * highestSource.height;
 
       var url = void 0;
-      if (this.article.attrs.javascript) url = this.thumbSource();else url = this.sourceURL;
+      if (this.article.attrs.javascript) url = this.attrs.media.base64_thumb;else url = this.sourceURL;
 
       return backgroundImageTemplate({
         tagName: this.tagName(),
@@ -11956,7 +11947,7 @@ var ImageView = function (_View) {
         id: this.id(),
         classes: this.classes(),
         sourceURL: this.sourceURL,
-        thumbURL: this.thumbSource(),
+        thumbURL: this.attrs.media.base64_thumb,
         padding: this.aspectRatio * 1000 / 10,
         children: this.childrenHTML(),
         javascript: this.article.attrs.javascript
@@ -11970,7 +11961,7 @@ var ImageView = function (_View) {
         id: this.id(),
         classes: this.classes(),
         sourceURL: this.sourceURL,
-        thumbURL: this.thumbSource(),
+        thumbURL: this.attrs.media.base64_thumb,
         padding: this.aspectRatio * 1000 / 10,
         children: this.childrenHTML(),
         javascript: this.article.attrs.javascript
@@ -11987,20 +11978,6 @@ var ImageView = function (_View) {
       if (this.attrs.classes && this.attrs.classes[0] === 'img') return 'img';else return _get(ImageView.prototype.__proto__ || Object.getPrototypeOf(ImageView.prototype), 'tagName', this).call(this);
     }
   }, {
-    key: 'quality',
-    value: function quality() {
-      var classes = this.attrs.classes || [];
-      if (classes.includes('low-quality')) return 'low';
-      if (classes.includes('medium-quality')) return 'medium';
-      if (classes.includes('high-quality')) return 'high';
-      return this.article.attrs.quality;
-    }
-  }, {
-    key: 'thumbSource',
-    value: function thumbSource() {
-      return 'data:image/jpeg;base64,' + this.attrs.media.base64_thumb;
-    }
-  }, {
     key: 'defaultTagName',
     value: function defaultTagName() {
       return 'figure';
@@ -12012,7 +11989,7 @@ var ImageView = function (_View) {
 
 exports.default = ImageView;
 
-},{"../utility":53,"./view":63,"handlebars":33}],61:[function(require,module,exports){
+},{"./view":63,"handlebars":33}],61:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -12109,8 +12086,6 @@ var _view = require('./view');
 
 var _view2 = _interopRequireDefault(_view);
 
-var _utility = require('../utility');
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -12119,16 +12094,16 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var attributes = '\n  {{#if id }} id={{  id  }}{{/if }}\n  {{#unless javascript}}\n    poster="{{  posterURL  }}" src="{{sourceURL}}"\n  {{/unless}}\n  {{#if javascript}} preload=none {{else}} preload=auto {{/if}}\n  {{#if loop }}  loop  {{/if}}\n  {{#if autoplay }}  autoplay  {{/if }}\n  {{#if controls }}  controls  {{/if }}\n';
+var attributes = '\n  {{#if id }} id={{  id  }}{{/if }}\n  draggable=false\n  {{#unless javascript}}\n    poster="{{  posterURL  }}" src="{{sourceURL}}"\n  {{/unless}}\n  {{#if javascript}} preload=none {{else}} preload=auto {{/if}}\n  {{#if loop }}  loop  {{/if}}\n  {{#if autoplay }}  autoplay  {{/if }}\n  {{#if controls }}  controls  {{/if }}\n';
 
 // when specified with tag <video>
-var simpleTemplate = _handlebars2.default.compile('\n  <video x-cp-video x-cp-id={{  cpID  }}\n    class="{{  classes  }}"\n    ' + attributes + '>\n  </video>\n');
+var simpleTemplate = _handlebars2.default.compile('\n  <video x-cp-video x-cp-id={{  cpID  }}\n    class="{{  classes  }}"\n    ' + attributes + '>{{{  fallback  }}}</video>\n');
 
 // no crop
-var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <video ' + attributes + '></video>\n        <img class=thumb src="{{  thumbURL  }}" draggable=false> \n        <img class=poster draggable=false> \n      </div>\n\n      {{{  children  }}}\n\n    {{else}}\n\n      <video ' + attributes + '></video>\n      {{{  children  }}}\n\n    {{/if}}\n\n\n  </figure>\n');
+var figureTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{  classes  }}">\n\n    {{#if javascript}}\n\n      <div class=frame>\n        <div class=shim style="padding-top: {{  padding  }}%;"></div>\n        <video ' + attributes + '></video>\n        <img class=poster src="{{  thumbURL  }}" draggable=false> \n      </div>\n\n      {{{  children  }}}\n\n    {{else}}\n\n      <video ' + attributes + '>{{{  fallback  }}}</video> \n      {{{  children  }}}\n\n    {{/if}}\n\n\n  </figure>\n');
 
 // with cropping, JS only
-var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{classes}}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop>\n        <video ' + attributes + '></video>\n        <img class=thumb src="{{thumbURL}}" draggable=false> \n        <img class=poster draggable=false> \n      </div>\n\n      {{{  children  }}}\n    </div>\n\n  </figure>\n');
+var cropTemplate = _handlebars2.default.compile('\n  <figure x-cp-figure x-cp-video x-cp-id={{  cpID  }} class="{{classes}}">\n\n    <div class=frame>\n      <div class=shim style="padding-top: {{  padding  }}%;"></div>\n      <div class=crop>\n        <video ' + attributes + '></video>\n        <img class=poster src="{{ thumbURL }}" draggable=false> \n      </div>\n\n      {{{  children  }}}\n    </div>\n\n  </figure>\n');
 
 var VideoView = function (_View) {
   _inherits(VideoView, _View);
@@ -12145,10 +12120,14 @@ var VideoView = function (_View) {
   _createClass(VideoView, [{
     key: 'html',
     value: function html() {
-      this.source = (0, _utility.findSource)(this.attrs.media.srcset, this.quality());
 
-      var sourceURL = this.article.attrs.content_origin + this.source.url;
-      var posterURL = this.article.attrs.content_origin + this.source.poster;
+      var sourceURL = this.article.attrs.content_origin + this.attrs.media.srcset.filter(function (s) {
+        return s.type === 'video';
+      }).reverse()[0].url;
+
+      var posterURL = this.article.attrs.content_origin + this.attrs.media.srcset.filter(function (s) {
+        return s.type === 'image';
+      }).reverse()[0].url;
 
       var autoplay = this.attrs.autoplay && !this.article.attrs.javascript;
       var controls = this.attrs.controls && (this.tagName() === 'video' || !this.article.attrs.javascript);
@@ -12160,12 +12139,13 @@ var VideoView = function (_View) {
         sourceURL: sourceURL,
         posterURL: posterURL,
         padding: this.aspectRatio * 1000 / 10,
-        thumbURL: this.thumbSource(),
+        thumbURL: this.attrs.media.base64_thumb,
         loop: this.attrs.loop,
         autoplay: autoplay,
         controls: controls,
         javascript: this.article.attrs.javascript,
-        children: this.childrenHTML()
+        children: this.childrenHTML(),
+        fallback: '<p>You\'re browser does not support HTML5 video. You may <a href="' + sourceURL + '">download</a> this video instead.<p>'
       };
 
       if (this.tagName() === 'video') return simpleTemplate(attributes);
@@ -12192,11 +12172,6 @@ var VideoView = function (_View) {
       if (this.classes && this.classes[0] === 'video') return 'video';else return _get(VideoView.prototype.__proto__ || Object.getPrototypeOf(VideoView.prototype), 'tagName', this).call(this);
     }
   }, {
-    key: 'thumbSource',
-    value: function thumbSource() {
-      return 'data:image/jpeg;base64,' + this.attrs.media.base64_thumb;
-    }
-  }, {
     key: 'defaultTagName',
     value: function defaultTagName() {
       return 'figure';
@@ -12208,7 +12183,7 @@ var VideoView = function (_View) {
 
 exports.default = VideoView;
 
-},{"../utility":53,"./view":63,"handlebars":33}],63:[function(require,module,exports){
+},{"./view":63,"handlebars":33}],63:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -12234,7 +12209,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var tags = exports.tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table tbody thead th tr td pre figure figcaption'.split(' ');
+var tags = exports.tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table tbody thead th tr td pre figure figcaption video'.split(' ');
 
 var template = _handlebars2.default.compile('\n<{{  tagName  ~}}\n  {{#if isOverlay}} x-cp-overlay{{/if ~}}\n  {{#if id }} id={{  id  }}{{/if ~}}\n  {{#if cpID }} x-cp-id={{  cpID  }}{{/if ~}}\n  {{#if classes }} class="{{  classes  }}"{{/if }}>\n  {{{  children  }}}\n</{{  tagName  }}>\n');
 

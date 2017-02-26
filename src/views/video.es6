@@ -1,10 +1,10 @@
 import Handlebars from 'handlebars';
 
 import View from './view';
-import {findSource} from '../utility';
 
 let attributes = `
   {{#if id }} id={{  id  }}{{/if }}
+  draggable=false
   {{#unless javascript}}
     poster="{{  posterURL  }}" src="{{sourceURL}}"
   {{/unless}}
@@ -19,8 +19,7 @@ let attributes = `
 let simpleTemplate = Handlebars.compile(`
   <video x-cp-video x-cp-id={{  cpID  }}
     class="{{  classes  }}"
-    ${attributes}>
-  </video>
+    ${attributes}>{{{  fallback  }}}</video>
 `);
 
 
@@ -33,15 +32,14 @@ let figureTemplate = Handlebars.compile(`
       <div class=frame>
         <div class=shim style="padding-top: {{  padding  }}%;"></div>
         <video ${attributes}></video>
-        <img class=thumb src="{{  thumbURL  }}" draggable=false> 
-        <img class=poster draggable=false> 
+        <img class=poster src="{{  thumbURL  }}" draggable=false> 
       </div>
 
       {{{  children  }}}
 
     {{else}}
 
-      <video ${attributes}></video>
+      <video ${attributes}>{{{  fallback  }}}</video> 
       {{{  children  }}}
 
     {{/if}}
@@ -59,8 +57,7 @@ let cropTemplate = Handlebars.compile(`
       <div class=shim style="padding-top: {{  padding  }}%;"></div>
       <div class=crop>
         <video ${attributes}></video>
-        <img class=thumb src="{{thumbURL}}" draggable=false> 
-        <img class=poster draggable=false> 
+        <img class=poster src="{{ thumbURL }}" draggable=false> 
       </div>
 
       {{{  children  }}}
@@ -84,10 +81,16 @@ export default class VideoView extends View {
 
 
   html() {
-    this.source = findSource(this.attrs.media.srcset, this.quality());
 
-    let sourceURL = this.article.attrs.content_origin + this.source.url;
-    let posterURL = this.article.attrs.content_origin + this.source.poster;
+    let sourceURL = (
+      this.article.attrs.content_origin +
+      this.attrs.media.srcset.filter(s => s.type === 'video').reverse()[0].url
+    );
+
+    let posterURL = (
+      this.article.attrs.content_origin +
+      this.attrs.media.srcset.filter(s => s.type === 'image').reverse()[0].url
+    );
 
     let autoplay = this.attrs.autoplay && !this.article.attrs.javascript;
     let controls = this.attrs.controls && (
@@ -101,12 +104,13 @@ export default class VideoView extends View {
       sourceURL,
       posterURL,
       padding: (this.aspectRatio * 1000) / 10,
-      thumbURL: this.thumbSource(),
+      thumbURL: this.attrs.media.base64_thumb,
       loop: this.attrs.loop,
       autoplay,
       controls,
       javascript: this.article.attrs.javascript,
       children: this.childrenHTML(),
+      fallback: `<p>You're browser does not support HTML5 video. You may <a href="${sourceURL}">download</a> this video instead.<p>`,
     };
 
     if (this.tagName() === 'video')
@@ -144,10 +148,6 @@ export default class VideoView extends View {
       return super.tagName();
   }
 
-
-  thumbSource() {
-    return 'data:image/jpeg;base64,' + this.attrs.media.base64_thumb;
-  }
 
   defaultTagName() {
     return 'figure';

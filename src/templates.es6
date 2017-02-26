@@ -14,7 +14,7 @@ export default function factory() {
 
     date:       '<time class=pubdate datetime="{{publication_date}}">{{ formatDate publication_date "longDate" }}</time>',
 
-    play:       `<span class="cp-play-button">${icons.play}</span>`,
+    play:       `<span class="cp-play-button">${icons.play_pause}</span>`,
     audio:      `<span class="cp-audio-button">${icons.audio}</span>`,
     share:      `<span class="cp-share-button">${icons.share}</span>`,
     fullscreen: `<span class="cp-fullscreen-button">${icons.fullscreen}</span>`,
@@ -59,10 +59,6 @@ export default function factory() {
   handlebars.registerHelper('cover', function() {
     let options = arguments[arguments.length - 1];
 
-    let size = 'low';
-    if (arguments.length > 1)
-       size = arguments[0];
-
     // there is no cover image
     let cover = options.data.root.cover;
     if (!cover) {
@@ -72,15 +68,13 @@ export default function factory() {
         return '';
     }
 
-    let source = u.findSource(cover.media.srcset, size);
+    let source = cover.media.srcset.slice().reverse().find(s => s.type != 'vide' && s.width <= 500);
 
     let cpID = cover.id;
 
     let url;
     if (options.data.root.javascript)
-      url = 'data:image/jpeg;base64,' + cover.media.base64_thumb;
-    else if (cover.type === 'Video')
-      url = options.data.root.content_origin + source.poster;
+      url = cover.media.base64_thumb;
     else
       url = options.data.root.content_origin + source.url;
 
@@ -94,11 +88,7 @@ export default function factory() {
       position = ` background-position: ${x}% ${y}%`;
     }
 
-    let highestSource = u.findSource(cover.media.srcset, 'high');
-    let maxWidth = Math.round(1.2 * Math.min(
-      highestSource.width,
-      cover.media.original_width
-    ));
+    let maxWidth = Math.round(1.2 * cover.media.original_width);
     maxWidth = `max-width: ${ maxWidth }px`;
 
     if (options.fn) {

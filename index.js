@@ -11889,8 +11889,6 @@ var ImageView = function (_View) {
     value: function simpleHTML() {
 
       var highestSource = this.attrs.media.srcset.slice().reverse()[0];
-      console.log({ highestSource: highestSource });
-      console.log(this.attrs.media.srcset);
       var maxWidth = Math.round(1.2 * Math.min(highestSource.width, this.attrs.media.original_width));
 
       return simpleTemplate({

@@ -11,7 +11,7 @@ let instance;
 export {instance as default};
 
 let callbacks = {
-  set           : 'set',
+  // set           : 'set',
 
   change        : 'change',
   add           : 'add',
@@ -54,7 +54,6 @@ export class ClientRenderer extends EventEmitter() {
 
 
   set(data) {
-    // console.log(data);
     data.javascript = true;
     data.client = true;
     data.content_origin = location.origin;

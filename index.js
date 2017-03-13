@@ -12390,7 +12390,7 @@ exports.default = instance;
 
 
 var callbacks = {
-  set: 'set',
+  // set           : 'set',
 
   change: 'change',
   add: 'add',
@@ -12443,7 +12443,6 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
     value: function set(data) {
       var _this2 = this;
 
-      // console.log(data);
       data.javascript = true;
       data.client = true;
       data.content_origin = location.origin;

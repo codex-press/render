@@ -4,7 +4,7 @@
       "index.js"
     ],
     "noParse" : [
-      "handlebars/lib/index.js"
+      "node_modules/handlebars/lib/index.js"
     ]
   },
   "scripts": {

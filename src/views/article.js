@@ -107,16 +107,16 @@ export default class ArticleView extends View {
 
 
   addPartialFromHTMLBlock(data) {
-    this.handlebars.registerPartial(data.classes.slice(1).join('.'), data.body);
+    this.handlebars.registerPartial(data.classes.slice(1).join('.'), data.body || '');
   }
 
 
   addPartialFromAsset(path, source) {
-    if (/\.es6$/.test(path))
+    if (/\.(es6|js)$/.test(path))
       source = renderJavascriptSource(source);
     if (/\.hbs/.test(path))
-      this.handlebars.registerPartial(path.slice(0,-4), source);
-    this.handlebars.registerPartial(path, source);
+      this.handlebars.registerPartial(path.slice(0,-4), source || '');
+    this.handlebars.registerPartial(path, source || '');
   }
 
 
@@ -197,7 +197,7 @@ export default class ArticleView extends View {
 
 function renderJavascriptSource(source) {
   let sections = [];
-  let commentRe = RegExp('^\s*//');
+  let commentRe = /(\/\*{2,}[^]*?\*\/)/g;
   let code, docs;
 
   code = docs = '';
@@ -207,14 +207,19 @@ function renderJavascriptSource(source) {
     code = docs = '';
   }
 
-  source.split('\n').map(line => {
-    if (commentRe.test(line)) {
-      if (code)
+  source.split(commentRe).map(part => {
+    if (commentRe.test(part)) {
+      if (code.trim())
         saveSection();
-      docs += line.replace(commentRe, '') + '\n';
+      part = part.replace(/^\s*\/\*{2}/, '').replace(/\*\/\s*$/, '');
+      part.split('\n').forEach(line => docs += line.replace(/^\s*?\* ?/,'') + '\n');
     }
     else {
-      code += line + '\n';
+      // trim blank lines from the start
+      part = part.replace(/^(\s*\n)*/g, '')
+      // trim all whitespace from the end
+      part = part.replace(/\s*$/g, '')
+      code = part + '\n';
     }
   });
 
@@ -240,7 +245,9 @@ function renderJavascriptSource(source) {
     return (`
       <section>
         <div class=comment>${markdowned}</div>
-        <pre class=language-javascript>${highlighted}</pre>
+        <div class=code>
+          <pre class=language-javascript>${highlighted}</pre>
+        </div>
       </section>`
     );
   }).join('');

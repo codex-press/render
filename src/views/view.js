@@ -1,5 +1,5 @@
 import Handlebars from 'handlebars';
-import EventEmitter from 'events';
+import EventEmitter from '/app/events.js';
 
 export let tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table tbody thead th tr td pre figure figcaption video'.split(' ');
 

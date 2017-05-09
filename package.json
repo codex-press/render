@@ -8,7 +8,7 @@
     ]
   },
   "scripts": {
-    "watch": "babel src -w -d ../server/render"
+    "start": "babel src -w -d ../server/render"
   },
   "babel": {
     "presets": [

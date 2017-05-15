@@ -1,5 +1,4 @@
 import Handlebars from 'handlebars';
-import EventEmitter from '/app/events.js';
 
 export let tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table tbody thead th tr td pre figure figcaption video'.split(' ');
 
@@ -19,7 +18,7 @@ let Super;
 if (typeof window === 'undefined')
   Super = class NotNodeEventEmitterSilly { }
 else
-  Super = EventEmitter();
+  Super = require('/app/events.js')();
 
 export default class View extends Super {
 

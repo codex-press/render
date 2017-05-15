@@ -8,19 +8,24 @@
     ]
   },
   "scripts": {
-    "start": "babel src -w -d ../server/render"
+    "start": "npm run watch & npm run watch-module",
+    "watch": "watchify src/index.js -d -r ./src/index:/render.js -x /app/dom.js -x /app/article.js -x /app/events.js -x /app/log.js -x /app/env.js -x /app/utility.js -o index.js",
+    "watch-module": "babel src -w -d ../server/render"
   },
   "babel": {
-    "presets": [
-      "es2015"
-    ]
+    "presets": [ "es2015" ]
+  },
+  "browserify": {
+    "transform": [ [ "babelify", { "presets": [ "es2015" ] } ] ]
   },
   "dependencies": {
     "babel-cli": "^6.10.1",
     "babel-preset-es2015": "^6.9.0",
+    "babelify": "^7.3.0",
     "dateformat": "^1.0.12",
     "handlebars": "^4.0.5",
     "marked": "^0.3.6",
-    "prismjs": "^1.5.1"
+    "prismjs": "^1.5.1",
+    "watchify": "^3.7.0"
   }
 }

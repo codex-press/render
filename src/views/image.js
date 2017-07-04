@@ -1,6 +1,6 @@
-import Handlebars from 'handlebars';
+import Handlebars from '../../lib/handlebars.js';
 
-import View from './view';
+import View from './view.js';
 
 
 let simpleTemplate = Handlebars.compile(`

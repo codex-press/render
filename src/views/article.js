@@ -1,18 +1,18 @@
-import prism from 'prismjs';
-import marked from 'marked';
+import prism from '../../lib/prism.js';
+import marked from '../../lib/marked.js';
 
-import handlebarsFactory from '../templates';
+import handlebarsFactory from '../templates.js';
 
-import View from './view';
+import View from './view.js';
 
-import Audio from './audio';
-import Block from './block';
-import Graf from './graf';
-import Image from './image';
-import Video from './video';
-import Index from './index';
-import HTMLBlock from './html_block';
-import ArticleEmbed from './article_embed';
+import Audio from './audio.js';
+import Block from './block.js';
+import Graf from './graf.js';
+import Image from './image.js';
+import Video from './video.js';
+import Index from './index.js';
+import HTMLBlock from './html-block.js';
+import ArticleEmbed from './article-embed.js';
 
 
 export default class ArticleView extends View {
@@ -112,11 +112,11 @@ export default class ArticleView extends View {
 
 
   addPartialFromAsset(path, source) {
-    if (/\.(es6|js)$/.test(path))
+    if (/\.js$/.test(path))
       source = renderJavascriptSource(source);
-    if (/\.hbs/.test(path))
-      this.handlebars.registerPartial(path.slice(0,-4), source || '');
-    this.handlebars.registerPartial(path, source || '');
+    if (/\.html$/.test(path))
+      this.handlebars.registerPartial(path.slice(1,-4), source || '');
+    this.handlebars.registerPartial(path.slice(1), source || '');
   }
 
 
@@ -227,7 +227,7 @@ function renderJavascriptSource(source) {
 
   let renderer = new marked.Renderer();
 
-  // let's you add class to the <pre> block
+  // code examples inside the markdown
   renderer.code = (code, language) => {
     code = prism.highlight(code, prism.languages.javascript);
     return `<pre class=language-javascript><code>${code}</code></pre>`;

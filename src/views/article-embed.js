@@ -1,8 +1,8 @@
-import Handlebars from 'handlebars';
+import Handlebars from '../../lib/handlebars.js';
 
-import View, {tags} from './view';
-import Index from './index';
-import {unscopeLinks} from '../utility';
+import View, {tags} from './view.js';
+import Index from './index.js';
+import {unscopeLinks} from '../utility.js';
 
 let template = Handlebars.compile(`
   <{{  tagName  }} class="{{  classes  }}"

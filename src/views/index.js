@@ -1,7 +1,6 @@
-import Handlebars from 'handlebars';
-
-import View        from './view';
-import ArticleEmbed from './article_embed';
+import Handlebars from '../../lib/handlebars.js';
+import View from './view.js';
+import ArticleEmbed from './article-embed.js';
 
 let defaultEntryTemplate = Handlebars.compile(`
   <p><a href="{{url}}">{{{title}}}</a></p>

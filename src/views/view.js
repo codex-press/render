@@ -1,4 +1,5 @@
-import Handlebars from 'handlebars';
+import Handlebars from '../../lib/handlebars.js';
+import EventEmitter from '../events.js';
 
 export let tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table tbody thead th tr td pre figure figcaption video'.split(' ');
 
@@ -12,15 +13,8 @@ let template = Handlebars.compile(`
 </{{  tagName  }}>
 `);
 
-// FIRST TIME WE NEEDED TO DO SERVER CHECK
-// creeep begins
-let Super;
-if (typeof window === 'undefined')
-  Super = class NotNodeEventEmitterSilly { }
-else
-  Super = require('/app/events.js')();
 
-export default class View extends Super {
+export default class View extends EventEmitter() {
 
   constructor(attrs = {}) {
     super();

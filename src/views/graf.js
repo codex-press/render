@@ -1,5 +1,5 @@
-import View           from './view';
-import {unscopeLinks} from '../utility';
+import View from './view.js';
+import {unscopeLinks} from '../utility.js';
 
 let template = (`
 <{{  tagName  ~}}

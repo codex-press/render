@@ -1,10 +1,8 @@
-import Handlebars from 'handlebars';
+import Handlebars from '../../lib/handlebars.js';
+import prism from '../../lib/prism.js';
 
-import View from './view';
-import {unscopeLinks} from '../utility';
-
-// import hljs from 'highlight.js';
-import prism from 'prismjs';
+import View from './view.js';
+import { unscopeLinks } from '../utility.js';
 
 
 let template = Handlebars.compile(`

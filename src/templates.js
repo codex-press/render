@@ -1,7 +1,7 @@
-import Handlebars from 'handlebars';
-import dateFormat from 'dateformat';
-import * as u from './utility';
-import icons from './icons';
+import Handlebars from '../lib/handlebars.js';
+import dateFormat from '../lib/dateformat.js';
+import * as u from './utility.js';
+import icons from './icons.js';
 
 
 export default function factory() {
@@ -12,7 +12,7 @@ export default function factory() {
 
     br:         '<br>',
 
-    date:       '<time class=pubdate datetime="{{publication_date}}">{{ formatDate publication_date "longDate" }}</time>',
+    date:       '<time class="publication-date" datetime="{{publication_date}}">{{ formatDate publication_date "longDate" }}</time>',
 
     play:       `<span class="cp-play-button">${icons.play_pause}</span>`,
     audio:      `<span class="cp-audio-button">${icons.audio}</span>`,
@@ -24,14 +24,14 @@ export default function factory() {
     twitter:     '{{{ twitter message }}}',
     facebook:    '{{{ facebook }}}',
 
-    play_icon:        icons.play,
-    audio_icon:       icons.audio,
-    fullscreen_icon:  icons.fullscreen,
-    share_icon:       icons.share,
-    email_icon:       icons.email,
-    reddit_icon:      icons.reddit,
-    twitter_icon:     icons.twitter,
-    facebook_icon:    icons.facebook,
+    'play-icon':        icons.play,
+    'audio-icon':       icons.audio,
+    'fullscreen-icon':  icons.fullscreen,
+    'share-icon':       icons.share,
+    'email-icon':       icons.email,
+    'reddit-icon':      icons.reddit,
+    'twitter-icon':     icons.twitter,
+    'facebook-icon':    icons.facebook,
 
   });
 

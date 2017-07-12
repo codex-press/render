@@ -10613,6 +10613,10 @@ process.off = noop;
 process.removeListener = noop;
 process.removeAllListeners = noop;
 process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
 
 process.binding = function (name) {
     throw new Error('process.binding is not supported');
@@ -11009,7 +11013,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var unscopeLinks = exports.unscopeLinks = function unscopeLinks(html, pathPrefix) {
   var hrefRE = /<a[^>]* href="?([^" >]*?)[" >]/g;
@@ -11117,7 +11121,7 @@ var ArticleView = function (_View) {
   _inherits(ArticleView, _View);
 
   function ArticleView() {
-    var attrs = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var attrs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, ArticleView);
 
@@ -11335,8 +11339,8 @@ function renderJavascriptSource(source) {
   };
 
   return sections.map(function (_ref) {
-    var code = _ref.code;
-    var docs = _ref.docs;
+    var code = _ref.code,
+        docs = _ref.docs;
 
 
     var highlighted = _prismjs2.default.highlight(code, _prismjs2.default.languages.javascript);
@@ -12143,7 +12147,7 @@ var VideoView = function (_View) {
         controls: controls,
         javascript: this.article.attrs.javascript,
         children: this.childrenHTML(),
-        fallback: '<p>You\'re browser does not support HTML5 video. You may <a href="' + sourceURL + '">download</a> this video instead.<p>'
+        fallback: '<p>You\'re browser does not support HTML5 video. You may <a href="' + sourceURL + '">download</a> this video instead.</p>'
       };
 
       if (this.tagName() === 'video') return simpleTemplate(attributes);
@@ -12222,7 +12226,7 @@ var View = function (_Super) {
   _inherits(View, _Super);
 
   function View() {
-    var attrs = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var attrs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, View);
 
@@ -12338,8 +12342,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.ClientRenderer = exports.ready = exports.default = undefined;
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -12496,25 +12498,19 @@ var ClientRenderer = exports.ClientRenderer = function (_EventEmitter) {
 
         return fetch(url).then(function (response) {
           if (response.ok) return response.text();else {
-            var _ret2 = function () {
-              var data = {
-                type: 'Not Found',
-                message: 'Could not load asset',
-                assetPath: path,
-                viewId: view.attrs.id
-              };
-              _article2.default.send('assetError', data);
-              var message = 'Failed to load ' + path;
-              console.error(message);
-              setTimeout(function () {
-                return _this3.replaceGrafText(view.attrs.id, message);
-              });
-              return {
-                v: message
-              };
-            }();
-
-            if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+            var data = {
+              type: 'Not Found',
+              message: 'Could not load asset',
+              assetPath: path,
+              viewId: view.attrs.id
+            };
+            _article2.default.send('assetError', data);
+            var message = 'Failed to load ' + path;
+            console.error(message);
+            setTimeout(function () {
+              return _this3.replaceGrafText(view.attrs.id, message);
+            });
+            return message;
           }
         }).then(function (text) {
           return _this3.articleView.addPartialFromAsset(path, text);

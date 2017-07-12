@@ -110,7 +110,7 @@ export default class VideoView extends View {
       controls,
       javascript: this.article.attrs.javascript,
       children: this.childrenHTML(),
-      fallback: `<p>You're browser does not support HTML5 video. You may <a href="${sourceURL}">download</a> this video instead.<p>`,
+      fallback: `<p>You're browser does not support HTML5 video. You may <a href="${sourceURL}">download</a> this video instead.</p>`,
     };
 
     if (this.tagName() === 'video')

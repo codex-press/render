@@ -73,7 +73,11 @@ export default class ArticleView extends View {
     htmlBlockPartials.map(this.addPartialFromHTMLBlock, this);
 
     this.attrs.inline_assets.map(a => {
-      this.addPartialFromAsset(a.asset_path, a.source)
+      // sigh... SVG asset uses 'min', HTML uses 'html' and JS uses 'source'
+      this.addPartialFromAsset(
+        a.path,
+        a.versions.min || a.versions.html || a.versions.source
+      )
     });
  
     // filter out templates and partials

@@ -124,15 +124,6 @@ export default class VideoView extends View {
   }
 
 
-  quality() {
-    var classes = (this.attrs.classes || []);
-    if (classes.includes('low-quality')) return 'low';
-    if (classes.includes('medium-quality')) return 'medium';
-    if (classes.includes('high-quality')) return 'high';
-    return this.article.attrs.quality;
-  }
-
-
   classes() {
     if (this.article.attrs.javascript)
       return super.classes() + ' loading';

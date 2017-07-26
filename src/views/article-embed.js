@@ -76,7 +76,12 @@ export default class ArticleEmbed extends View {
       let html;
       try { html = this.parent.entryTemplate.compiled(this.makeAttrs()); }
       catch (e) { html = `<div>${e.message}</div>`; }
-      return unscopeLinks(html, this.article.attrs.path_prefix);
+
+      return unscopeLinks(
+        html,
+        this.article.attrs.path_prefix,
+        this.article.attrs.top_origin
+      );
     }
 
     let contentTemplate = this.article.templates.find(t => {
@@ -105,7 +110,12 @@ export default class ArticleEmbed extends View {
       html = e.message;
     }
 
-    return unscopeLinks(html, this.article.attrs.path_prefix);
+    return unscopeLinks(
+      html,
+      this.article.attrs.path_prefix,
+      this.article.attrs.top_origin
+    );
+
   }
 
 }

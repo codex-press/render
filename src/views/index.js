@@ -18,6 +18,7 @@ export default class Index extends View {
 
 
   html() {
+
     // not ideal.. this mirrors for creating all the content
     this.children.map(c => {
       c.article = this.article;

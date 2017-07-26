@@ -1,5 +1,5 @@
 import View from './view.js';
-import {unscopeLinks} from '../utility.js';
+import { unscopeLinks } from '../utility.js';
 
 let template = (`
 <{{  tagName  ~}}
@@ -79,8 +79,13 @@ export default class Graf extends View {
 
 
   htmlFromContent(content) {
+
     // change links for virtual hosts
-    content = unscopeLinks(content, this.article.attrs.path_prefix);
+    content = unscopeLinks(
+      content,
+      this.article.attrs.path_prefix,
+      this.article.attrs.top_origin
+    );
 
     return this.article.handlebars.compile(template)({
       content,

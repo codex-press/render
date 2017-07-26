@@ -1,10 +1,8 @@
 import prism from '../../lib/prism.js';
 import marked from '../../lib/marked.js';
-
 import handlebarsFactory from '../templates.js';
 
 import View from './view.js';
-
 import Audio from './audio.js';
 import Block from './block.js';
 import Graf from './graf.js';
@@ -27,10 +25,6 @@ export default class ArticleView extends View {
     this.article = this;
 
     this.views = [];
-
-    // XXX could do UA testing here... so that fallback also has responsive
-    // images
-    this.attrs.quality = 'high';
 
     // kinda terrible to do this here
     this.templateAttrs = Object.assign(
@@ -75,8 +69,8 @@ export default class ArticleView extends View {
     this.attrs.inline_assets.map(a => {
       // sigh... SVG asset uses 'min', HTML uses 'html' and JS uses 'source'
       this.addPartialFromAsset(
-        a.path,
-        a.versions.min || a.versions.html || a.versions.source
+        a.path.slice(1),
+        a.versions.source || a.versions.min || a.versions.html
       )
     });
  
@@ -107,6 +101,14 @@ export default class ArticleView extends View {
       return list;
     },[]);
 
+    this.makeAssetList();
+  }
+
+
+  html() {
+    const header = `<header>${ this.attrs.header || '' }</header>`;
+    const footer = `<footer>${ this.attrs.footer || '' }</footer>`;
+    return header + super.html() + footer;
   }
 
 
@@ -116,11 +118,11 @@ export default class ArticleView extends View {
 
 
   addPartialFromAsset(path, source) {
-    if (/\.js$/.test(path))
+    if (path.endsWith('.js'))
       source = renderJavascriptSource(source);
-    if (/\.html$/.test(path))
-      this.handlebars.registerPartial(path.slice(1,-4), source || '');
-    this.handlebars.registerPartial(path.slice(1), source || '');
+    if (path.endsWith('.html'));
+      this.handlebars.registerPartial(path.slice(0,-5), source || '');
+    this.handlebars.registerPartial(path, source || '');
   }
 
 
@@ -195,8 +197,93 @@ export default class ArticleView extends View {
     return view;
   }
 
+
+  scripts() {
+    return this.resolvedAssets.reduce((scripts, [ path, matched ]) => (
+      scripts.concat(matched.filter(a => a.type === 'js'))
+    ), [])
+  }
+
+
+  stylesheets() {
+    return this.resolvedAssets.reduce((scripts, [ path, matched ]) => (
+      scripts.concat(matched.filter(a => a.type === 'css'))
+    ), [])
+  }
+
+
+  makeAssetList() {
+
+    const devRepos = this.attrs.development_repositories || {};
+
+    const findOneInDev = (repo, path) => {
+      if (repo.assets.includes(path)) {
+        let filename = repo.files.find(f => f.path === path).filename;
+        return {
+          path,
+          stage: 'development',
+          type: path.endsWith('.js') ? 'js' : 'css', 
+          source: repo.path + '/' + filename,
+          filename: repo.name + '/' + filename,
+        };
+      }
+    }
+
+    const findOneInData = path => {
+      let asset_data = this.attrs.asset_data.find(a => a.path === path);
+      if (asset_data) {
+        return {
+          path,
+          stage: 'production',
+          type: path.endsWith('.js') ? 'js' : 'css', 
+          source: githubLink(asset_data),
+        }
+      }
+    }
+
+    this.resolvedAssets = this.attrs.assets.map(basePath => {
+      let matched = [];
+
+      if (basePath[0] !== '/')
+        basePath = '/' + basePath;
+
+      let repoName = basePath.match(RegExp('/([^/]*)'))[1];
+
+      // add from development_repositories
+      if (devRepos[repoName]) {
+        let repo = devRepos[repoName];
+        if (/\.(js|css)$/.test(basePath)) {
+          matched = matched.concat(findOneInDev(repo, basePath) || []);
+        }
+        else {
+          matched = matched.concat(findOneInDev(repo, basePath + '.js') || []);
+          matched = matched.concat(findOneInDev(repo, basePath + '.css') || []);
+        }
+      }
+      // add from built assets in production
+      else {
+        if (/\.(js|css)$/.test(basePath)) {
+          matched = matched.concat(findOneInData(basePath) || []);
+        }
+        else {
+          matched = matched.concat(findOneInData(basePath + '.js') || []);
+          matched = matched.concat(findOneInData(basePath + '.css') || []);
+        }
+      }
+
+      return [basePath, matched];
+    });
+
+  }
+
+
+
 }
 
+
+function githubLink(data) {
+  return `https://github.com/${ data.remote }/blob/${ data.sha }/${ data.file_path }`;
+}
 
 
 function renderJavascriptSource(source) {
@@ -255,6 +342,7 @@ function renderJavascriptSource(source) {
       </section>`
     );
   }).join('');
+
 }
 
 

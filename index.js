@@ -2,7 +2,7 @@ import { article, dom, env } from '/app/index.js';
 import ClientRenderer from './src/client.js';
 
 // Globals are handy for development and in console. Do not use in your code
-window.cp = { article, dom, env };
+// window.cp = { article, dom, env };
 
 var renderer = new ClientRenderer();
 

@@ -94,8 +94,8 @@ export default class ClientRenderer extends EventEmitter() {
   attachAssets() {
     
     const assetsLoaded = [].concat(
-      this.articleView.scripts().map(a => CodexLoader.import(a.path)),
-      this.articleView.stylesheets().map(a => addStylesheet(a.path))
+      this.articleView.scripts().map(path => CodexLoader.import(path)),
+      this.articleView.stylesheets().map(path => addStylesheet(path))
     );
 
     // article style

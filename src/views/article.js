@@ -202,6 +202,7 @@ export default class ArticleView extends View {
     return this.resolvedAssets.reduce((scripts, [ path, matched ]) => (
       scripts.concat(matched.filter(a => a.type === 'js'))
     ), [])
+    .map(a => a.path);
   }
 
 
@@ -209,6 +210,7 @@ export default class ArticleView extends View {
     return this.resolvedAssets.reduce((scripts, [ path, matched ]) => (
       scripts.concat(matched.filter(a => a.type === 'css'))
     ), [])
+    .map(a => a.path);
   }
 
 

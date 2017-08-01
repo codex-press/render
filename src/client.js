@@ -47,7 +47,7 @@ export default class ClientRenderer extends EventEmitter() {
 
     // remove inline_assets that are in the dev repos. They will be loaded 
     // on demand like they are in live preview
-    data.inline_assets = (data.inline_assets | []).filter(a => {
+    data.inline_assets = (data.inline_assets || []).filter(a => {
       const repoName = a.path.match(/\/([^/]*)/)[1];
       return !data.development_repositories[repoName];
     })

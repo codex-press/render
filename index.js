@@ -4,7 +4,7 @@ import ClientRenderer from './src/client.js';
 const renderer = new ClientRenderer();
 
 dom.on(window, 'message', e => {
-  
+
   // console.log('renderer message', e.data);
 
   switch (e.data.event) {
@@ -37,9 +37,5 @@ dom.on(window, 'message', e => {
   }
 
 });
-
-// console.log('render ready');
-
-// window.top.postMessage({ event: 'ready' }, '*');
 
 

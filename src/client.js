@@ -66,7 +66,7 @@ export default class ClientRenderer extends EventEmitter() {
     // same with header and footer: remove if in the dev-server since we'll
     // load on the fly
     if (data.header_path) {
-      const repoName = data.header_path.match(/\/([^/]*)/)[1];
+      const repoName = data.domain.header.match(/\/([^/]*)/)[1];
       if (data.development_repositories[repoName]) {
         data.header = ''
         this.replaceHeader(data.header_path);
@@ -74,7 +74,7 @@ export default class ClientRenderer extends EventEmitter() {
     }
 
     if (data.footer_path) {
-      const repoName = data.footer_path.match(/\/([^/]*)/)[1];
+      const repoName = data.domain.footer.match(/\/([^/]*)/)[1];
       if (data.development_repositories[repoName]) {
         data.footer= ''
         this.replaceFooter(data.footer_path);
@@ -107,7 +107,8 @@ export default class ClientRenderer extends EventEmitter() {
     return Promise.race([
       Promise.all(assetsLoaded),
       new Promise(resolve => setTimeout(resolve, 3000))
-    ]);
+    ])
+    .catch(error => console.error(error))
   }
 
 
@@ -189,9 +190,9 @@ export default class ClientRenderer extends EventEmitter() {
         }
 
         // update header/footer
-        if (path === this.articleView.attrs.header_path)
+        if ('/' + path === this.articleView.attrs.header_path)
           this.replaceHeader();
-        if (path === this.articleView.attrs.footer_path)
+        if ('/' + path === this.articleView.attrs.footer_path)
           this.replaceFooter();
 
         return false; 
@@ -249,13 +250,13 @@ export default class ClientRenderer extends EventEmitter() {
 
 
   async replaceHeader() {
-    const html = await this.fetchAsset(this.attrs.header_path);
+    const html = await this.fetchAsset(this.attrs.domain.header);
     dom.first('body > header').innerHTML = html;
   }
 
 
   async replaceFooter() {
-    const html = await this.fetchAsset(this.attrs.footer_path);
+    const html = await this.fetchAsset(this.attrs.domain.footer);
     dom.first('body > footer').innerHTML = html
   }
 

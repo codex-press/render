@@ -61,7 +61,7 @@ export default class Graf extends View {
     }
     catch (error) {
       let message;
-      if (this.article.trigger) {
+      if (this.article.client) {
         this.article.trigger('assetMissing', this, error);
         message = 'Loading... ' + this.partials().join(' ');
       }

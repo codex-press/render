@@ -105,8 +105,10 @@ export default class ArticleView extends View {
   }
 
 
-  html() {
-    const header = `<header>${ this.attrs.header || '' }</header>`;
+  html({ includeHeader = true } = {}) {
+    const header = `<header>${
+      includeHeader ? (this.attrs.header || '') : ''
+    }</header>`;
     const footer = `<footer>${ this.attrs.footer || '' }</footer>`;
     return header + super.html() + footer;
   }
@@ -202,7 +204,8 @@ export default class ArticleView extends View {
     return this.resolvedAssets.reduce((scripts, [ path, matched ]) => (
       scripts.concat(matched.filter(a => a.type === 'js'))
     ), [])
-    .map(a => a.path);
+    .map(a => a.path)
+    .concat(this.attrs.header_script ? this.attrs.header_script : [])
   }
 
 
@@ -210,7 +213,8 @@ export default class ArticleView extends View {
     return this.resolvedAssets.reduce((scripts, [ path, matched ]) => (
       scripts.concat(matched.filter(a => a.type === 'css'))
     ), [])
-    .map(a => a.path);
+    .map(a => a.path)
+    .concat(this.attrs.header_stylesheet ? this.attrs.header_stylesheet : [])
   }
 
 

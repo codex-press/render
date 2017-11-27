@@ -21,7 +21,7 @@ export default class HTMLBlock extends View {
 
     let content = unscopeLinks(
       this.attrs.body,
-      this.article.attrs.path_prefix,
+      this.article.attrs.domain && this.article.attrs.domain.path,
       this.article.attrs.top_origin
     );
 

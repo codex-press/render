@@ -1,6 +1,7 @@
 import prism from '../../lib/prism.js';
 import marked from '../../lib/marked.js';
 import handlebarsFactory from '../templates.js';
+import { camelize } from '../utility.js';
 
 import View from './view.js';
 import Audio from './audio.js';
@@ -27,7 +28,7 @@ export default class ArticleView extends View {
     this.views = [];
 
     // kinda terrible to do this here
-    this.templateAttrs = Object.assign(
+    this.templateAttrs = camelize(Object.assign(
       {},
       {
         title: this.attrs.title,
@@ -36,12 +37,12 @@ export default class ArticleView extends View {
         facebook_app_id: this.attrs.facebook_app_id || '1092197300805177',
       },
       this.attrs.metadata,
-    );
+    ))
 
-    this.templateAttrs.content_origin = this.attrs.content_origin;
+    this.templateAttrs.contentOrigin = this.attrs.content_origin;
 
-    if (!this.templateAttrs.share_message)
-      this.templateAttrs.share_message = this.attrs.title;
+    if (!this.templateAttrs.shareMessage)
+      this.templateAttrs.shareMessage = this.attrs.title;
 
     this.attrs.content = this.attrs.content || [];
     let templates = this.attrs.content.filter(c => (

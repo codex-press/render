@@ -1,10 +1,11 @@
 
-export const unscopeLinks = function unscopeLinks(html, pathPrefix, origin) {
+export function unscopeLinks(html, pathPrefix, origin) {
+
   let hrefRE = /<a[^>]* href="?([^" >]*?)[" >]/g;
   let newHTML = html.replace(hrefRE, (string, url) => {
 
     // if it's an absolute path, fix the path
-    if (/^\//.test(url))
+    if (url.startsWith('/'))
       return string.replace(url, unscopedPath(pathPrefix, url, origin));
     // these are external links
     else
@@ -22,7 +23,7 @@ export const unscopeLinks = function unscopeLinks(html, pathPrefix, origin) {
 //   change from /xela to /nimble/xela (per origin domain)
 //   used to turn links suitable for fetching from server
 //   call with no args for current location
-export const scopedPath = function scopedPath(pathPrefix, path) {
+export function scopedPath(pathPrefix, path) {
   if (!path && typeof location !== undefined)
     path = location.pathname;
   path = pathPrefix + path;
@@ -37,16 +38,17 @@ export const scopedPath = function scopedPath(pathPrefix, path) {
 //   and /nimble to /
 //   and things like /alice to codex.press/alice
 //   it's used in the Grafs and Indexes etc to fix links
-export const unscopedPath = function unscopedPath(pathPrefix, path, origin) {
+export function unscopedPath(pathPrefix, path, origin) {
+
   if (!pathPrefix)
     return path;
-  var regex = new RegExp('^' + pathPrefix);
-  if (regex.test(path)) {
-    path = path.replace(regex,'');
-    return origin + (path ? path : '/');
+  else if (path.startsWith(pathPrefix)) {
+    path = path.slice(pathPrefix.length)
+    return origin + (path.length > 0 ? path : '/');
   }
   else
     return 'https://codex.press' + path;
+
 }
 
 
@@ -73,6 +75,36 @@ export function addScript(url, attrs = {}) {
     tag.onload = resolve;
     tag.onerror = reject;
   });
+}
+
+
+export function camelize(obj) {
+
+  const isScalar = (
+    !obj ||
+    typeof obj !== 'object' ||
+    '[object RegExp]' == Object.prototype.toString.call(obj) ||
+    '[object Date]' == Object.prototype.toString.call(obj)
+  )
+
+  if (isScalar)
+    return obj
+  else if (Array.isArray(obj))
+    return obj.map(camelize)
+  else
+    return Object.keys(obj).reduce((acc, key) => {
+      acc[ camelCase(key) ] = camelize(obj[key])
+      return acc
+    }, { })
+}
+
+
+export function camelCase(string) {
+  return string
+    .replace(/[_.-](\w|$)/g, (_, x) => x.toUpperCase())
+    .replace('Url','URL')
+    .replace('Id','ID')
+    .replace('Html','HTML')
 }
 
 

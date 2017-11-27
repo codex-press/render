@@ -116,7 +116,6 @@ export default class ClientRenderer extends EventEmitter() {
   // check if they've all loaded. Load them if not. Or error if they've all
   // been loaded since any number of things could go wrong.
   assetMissing(view, error) {
-    // console.log('assetMissing', view, error);
 
     let builtIn = 'br date play audio share fullscreen email reddit twitter facebook play_icon audio_icon fullscreen_icon share_icon email_icon reddit_icon twitter_icon facebook_icon'.split(/ /);
 

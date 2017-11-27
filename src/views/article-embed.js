@@ -2,7 +2,7 @@ import Handlebars from '../../lib/handlebars.js';
 
 import View, {tags} from './view.js';
 import Index from './index.js';
-import {unscopeLinks} from '../utility.js';
+import { unscopeLinks, camelize } from '../utility.js';
 
 let template = Handlebars.compile(`
   <{{  tagName  }} class="{{  classes  }}"
@@ -31,7 +31,7 @@ export default class ArticleEmbed extends View {
 
 
   makeAttrs() {
-    return Object.assign(
+    return camelize(Object.assign(
       {},
       this.attrs.article.classed_content,
       this.attrs.article.metadata,
@@ -41,7 +41,7 @@ export default class ArticleEmbed extends View {
         javascript: this.article.attrs.javascript,
         content_origin: this.article.attrs.content_origin
       }
-    );
+    ))
   }
 
 
@@ -79,9 +79,9 @@ export default class ArticleEmbed extends View {
 
       return unscopeLinks(
         html,
-        this.article.attrs.path_prefix,
+        this.article.attrs.domain && this.article.attrs.domain.path,
         this.article.attrs.top_origin
-      );
+      )
     }
 
     let contentTemplate = this.article.templates.find(t => {
@@ -112,7 +112,7 @@ export default class ArticleEmbed extends View {
 
     return unscopeLinks(
       html,
-      this.article.attrs.path_prefix,
+      this.article.attrs.domain && this.article.attrs.domain.path,
       this.article.attrs.top_origin
     );
 

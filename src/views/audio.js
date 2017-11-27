@@ -1,7 +1,6 @@
-import Handlebars from 'handlebars';
-
-import View         from './view';
-import icons from '../icons';
+import Handlebars from '../../lib/handlebars.js';
+import View from './view.js';
+import icons from '../icons.js';
 
 let template = Handlebars.compile(`
 <div x-cp-audio x-cp-id={{  attrs.id  ~}}

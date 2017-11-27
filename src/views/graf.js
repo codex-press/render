@@ -1,5 +1,5 @@
-import View           from './view';
-import {unscopeLinks} from '../utility';
+import View from './view.js';
+import { unscopeLinks } from '../utility.js';
 
 let template = (`
 <{{  tagName  ~}}
@@ -33,12 +33,8 @@ export default class Graf extends View {
 
   html() {
 
-    if (this.isEmpty()) {
-      if (this.article.attrs.client)
-        return `<p x-cp-id="${this.attrs.id}" style="display: none;"></p>`;
-      else
-        return '';
-    }
+    if (this.isEmpty())
+      return `<p x-cp-id="${this.attrs.id}" style="display: none;"></p>`;
 
     let content = '';
 
@@ -61,17 +57,14 @@ export default class Graf extends View {
     }
     catch (error) {
       let message;
-      if (this.article.trigger) {
+      if (this.article.attrs.client) {
         this.article.trigger('assetMissing', this, error);
         message = 'Loading... ' + this.partials().join(' ');
       }
       else {
-        if (this.article.attrs.client) {
-          console.warn(source);
-          console.error(error);
-        }
         message = error.message;
       }
+
       return this.htmlFromContent(message);
     }
 
@@ -79,8 +72,13 @@ export default class Graf extends View {
 
 
   htmlFromContent(content) {
+
     // change links for virtual hosts
-    content = unscopeLinks(content, this.article.attrs.path_prefix);
+    content = unscopeLinks(
+      content,
+      this.article.attrs.domain && this.article.attrs.domain.path,
+      this.article.attrs.top_origin
+    );
 
     return this.article.handlebars.compile(template)({
       content,

@@ -1,10 +1,8 @@
-import Handlebars from 'handlebars';
+import Handlebars from '../../lib/handlebars.js';
+import prism from '../../lib/prism.js';
 
-import View from './view';
-import {unscopeLinks} from '../utility';
-
-// import hljs from 'highlight.js';
-import prism from 'prismjs';
+import View from './view.js';
+import { unscopeLinks } from '../utility.js';
 
 
 let template = Handlebars.compile(`
@@ -23,7 +21,8 @@ export default class HTMLBlock extends View {
 
     let content = unscopeLinks(
       this.attrs.body,
-      this.article.attrs.path_prefix
+      this.article.attrs.domain && this.article.attrs.domain.path,
+      this.article.attrs.top_origin
     );
 
     if (this.attrs.classes.includes('escaped')) {

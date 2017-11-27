@@ -1,7 +1,7 @@
-import Handlebars from 'handlebars';
-import dateFormat from 'dateformat';
-import * as u from './utility';
-import icons from './icons';
+import Handlebars from '../lib/handlebars.js';
+import dateFormat from '../lib/dateformat.js';
+import * as u from './utility.js';
+import icons from './icons.js';
 
 
 export default function factory() {
@@ -12,7 +12,7 @@ export default function factory() {
 
     br:         '<br>',
 
-    date:       '<time class=pubdate datetime="{{publication_date}}">{{ formatDate publication_date "longDate" }}</time>',
+    date:       '<time class="publication-date" datetime="{{publicationDate}}">{{ formatDate publicationDate "longDate" }}</time>',
 
     play:       `<span class="cp-play-button">${icons.play_pause}</span>`,
     audio:      `<span class="cp-audio-button">${icons.audio}</span>`,
@@ -24,14 +24,14 @@ export default function factory() {
     twitter:     '{{{ twitter message }}}',
     facebook:    '{{{ facebook }}}',
 
-    play_icon:        icons.play,
-    audio_icon:       icons.audio,
-    fullscreen_icon:  icons.fullscreen,
-    share_icon:       icons.share,
-    email_icon:       icons.email,
-    reddit_icon:      icons.reddit,
-    twitter_icon:     icons.twitter,
-    facebook_icon:    icons.facebook,
+    'play-icon':        icons.play,
+    'audio-icon':       icons.audio,
+    'fullscreen-icon':  icons.fullscreen,
+    'share-icon':       icons.share,
+    'email-icon':       icons.email,
+    'reddit-icon':      icons.reddit,
+    'twitter-icon':     icons.twitter,
+    'facebook-icon':    icons.facebook,
 
   });
 
@@ -74,9 +74,9 @@ export default function factory() {
 
     let url;
     if (options.data.root.javascript)
-      url = cover.media.base64_thumb;
+      url = cover.media.base64Thumb;
     else
-      url = options.data.root.content_origin + source.url;
+      url = options.data.root.contentOrigin + source.url;
 
     let aspectRatio = source.height / source.width;
     let padding = Math.round(aspectRatio * 1000) / 10;
@@ -88,7 +88,7 @@ export default function factory() {
       position = ` background-position: ${x}% ${y}%`;
     }
 
-    let maxWidth = Math.round(1.2 * cover.media.original_width);
+    let maxWidth = Math.round(1.2 * cover.media.originalWidth);
     maxWidth = `max-width: ${ maxWidth }px`;
 
     if (options.fn) {
@@ -113,13 +113,13 @@ export default function factory() {
   handlebars.registerHelper('facebook', function(options) {
 
     let urlToShare = (
-      options.data.root.canonical_url +
+      options.data.root.canonicalURL +
       '?utm_campaign=social&utm_source=facebook'
     );
 
     let url = (
       'https://www.facebook.com/dialog/share?' +
-      'app_id=' + encodeURIComponent(options.data.root.facebook_app_id) +
+      'app_id=' + encodeURIComponent(options.data.root.facebookAppID) +
       '&display=popup' +
       '&href=' + encodeURIComponent(urlToShare)
     );
@@ -138,17 +138,17 @@ export default function factory() {
     
     // if not passed in, it will go to Article metadata share_message, then
     // title.
-    let message = options.data.root.share_message;
+    let message = options.data.root.shareMessage;
     if (arguments.length > 1 && arguments[0])
       message = arguments[0];
 
     let urlToShare = (
-      options.data.root.canonical_url +
+      options.data.root.canonicalURL +
       '?utm_campaign=social&utm_source=twitter'
     );
 
     // can replace with default Codex twitter (when one is created)
-    let via = (options.data.root.twitter_handle || '').replace(/^@/,'');
+    let via = (options.data.root.twitterHandle || '').replace(/^@/,'');
 
     let url = (
       'https://twitter.com/intent/tweet' +
@@ -167,7 +167,7 @@ export default function factory() {
   handlebars.registerHelper('reddit', function(options) {
 
     let urlToShare = encodeURIComponent(
-      options.data.root.canonical_url +
+      options.data.root.canonicalURL +
       '?utm_campaign=social&utm_source=reddit'
     );
 
@@ -191,11 +191,11 @@ export default function factory() {
     // if not passed in, it will go to article metadata one, then title.
     // (these set in ContentCollection)
     let message = (
-      (arguments.length > 1 ? arguments[0] : options.data.root.share_message)
+      (arguments.length > 1 ? arguments[0] : options.data.root.shareMessage)
     );
 
     let urlToShare = encodeURIComponent(
-      options.data.root.canonical_url +
+      options.data.root.canonicalURL +
       '?utm_campaign=social&utm_source=email'
     );
 

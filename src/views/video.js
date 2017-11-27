@@ -1,6 +1,6 @@
-import Handlebars from 'handlebars';
+import Handlebars from '../../lib/handlebars.js';
 
-import View from './view';
+import View from './view.js';
 
 let attributes = `
   {{#if id }} id={{  id  }}{{/if }}
@@ -121,15 +121,6 @@ export default class VideoView extends View {
     else
       return figureTemplate(attributes);
 
-  }
-
-
-  quality() {
-    var classes = (this.attrs.classes || []);
-    if (classes.includes('low-quality')) return 'low';
-    if (classes.includes('medium-quality')) return 'medium';
-    if (classes.includes('high-quality')) return 'high';
-    return this.article.attrs.quality;
   }
 
 

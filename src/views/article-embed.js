@@ -1,8 +1,8 @@
-import Handlebars from 'handlebars';
+import Handlebars from '../../lib/handlebars.js';
 
-import View, {tags} from './view';
-import Index from './index';
-import {unscopeLinks} from '../utility';
+import View, {tags} from './view.js';
+import Index from './index.js';
+import { unscopeLinks, camelize } from '../utility.js';
 
 let template = Handlebars.compile(`
   <{{  tagName  }} class="{{  classes  }}"
@@ -31,7 +31,7 @@ export default class ArticleEmbed extends View {
 
 
   makeAttrs() {
-    return Object.assign(
+    return camelize(Object.assign(
       {},
       this.attrs.article.classed_content,
       this.attrs.article.metadata,
@@ -41,7 +41,7 @@ export default class ArticleEmbed extends View {
         javascript: this.article.attrs.javascript,
         content_origin: this.article.attrs.content_origin
       }
-    );
+    ))
   }
 
 
@@ -76,7 +76,12 @@ export default class ArticleEmbed extends View {
       let html;
       try { html = this.parent.entryTemplate.compiled(this.makeAttrs()); }
       catch (e) { html = `<div>${e.message}</div>`; }
-      return unscopeLinks(html, this.article.attrs.path_prefix);
+
+      return unscopeLinks(
+        html,
+        this.article.attrs.domain && this.article.attrs.domain.path,
+        this.article.attrs.top_origin
+      )
     }
 
     let contentTemplate = this.article.templates.find(t => {
@@ -105,7 +110,12 @@ export default class ArticleEmbed extends View {
       html = e.message;
     }
 
-    return unscopeLinks(html, this.article.attrs.path_prefix);
+    return unscopeLinks(
+      html,
+      this.article.attrs.domain && this.article.attrs.domain.path,
+      this.article.attrs.top_origin
+    );
+
   }
 
 }

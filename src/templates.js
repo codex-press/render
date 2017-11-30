@@ -153,7 +153,7 @@ export default function factory() {
     let url = (
       'https://twitter.com/intent/tweet' +
       '?text=' + encodeURIComponent(message) +
-      '&via=' + encodeURIComponent(via) +
+      // '&via=' + encodeURIComponent(via) +
       '&url=' + encodeURIComponent(urlToShare)
     );
 

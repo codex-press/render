@@ -82,6 +82,7 @@ export default class ClientRenderer extends EventEmitter() {
     }
 
     article.setup();
+    article.focusChange(true);
     article.tick();
   }
 

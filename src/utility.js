@@ -5,8 +5,10 @@ export function unscopeLinks(html, pathPrefix, origin) {
   let newHTML = html.replace(hrefRE, (string, url) => {
 
     // if it's an absolute path, fix the path
-    if (url.startsWith('/'))
+    if (url.startsWith('/')) {
+      console.log(origin, url, unscopedPath(pathPrefix, url, origin))
       return string.replace(url, unscopedPath(pathPrefix, url, origin));
+      }
     // these are external links
     else
       return string.replace('<a ', '<a target=_blank ');
@@ -41,7 +43,7 @@ export function scopedPath(pathPrefix, path) {
 export function unscopedPath(pathPrefix, path, origin) {
 
   if (!pathPrefix)
-    return path;
+    return origin + path;
   else if (path.startsWith(pathPrefix)) {
     path = path.slice(pathPrefix.length)
     return origin + (path.length > 0 ? path : '/');

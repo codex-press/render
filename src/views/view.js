@@ -1,7 +1,7 @@
 import Handlebars from '../../lib/handlebars.js';
 import EventEmitter from '../events.js';
 
-export let tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table tbody thead th tr td pre figure figcaption video'.split(' ');
+export let tags = 'nav article header main section footer h1 h2 h3 h4 h5 h6 div p aside blockquote li ul ol menu menuitem button address table tbody thead th tr td pre figure figcaption video fx-carousel'.split(' ');
 
 let template = Handlebars.compile(`
 <{{  tagName  ~}}
